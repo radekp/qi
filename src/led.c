@@ -8,7 +8,7 @@
 
 extern void delay(int time);
 
-int main()
+int blink_led()
 {
     GPBCON = 0x5;
     GPBDW = 0xffff;
