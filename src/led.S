@@ -186,7 +186,7 @@ cpu_init_crit:
 	 */
 	mov	ip, lr
  
-/*	bl	lowlevel_init*/
+	bl	lowlevel_init
 
 	mov	lr, ip
 	mov	pc, lr
