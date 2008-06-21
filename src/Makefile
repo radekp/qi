@@ -19,11 +19,11 @@ INCLUDE		=../include
 IMAGE		=../image
 CFLAGS		=-Wall -I $(INCLUDE) -g -c -o
 
-all:led.S led.c lowlevel_init.S
-	$(CC) $(CFLAGS) led_S.o led.S
-	$(CC) $(CFLAGS) led_C.o led.c
+all:start.S blink_led.c lowlevel_init.S
+	$(CC) $(CFLAGS) start.o start.S
+	$(CC) $(CFLAGS) blink_led.o blink_led.c
 	$(CC) $(CFLAGS) lowlevel_init.o lowlevel_init.S
-	$(LD) -T$(LDS) -g led_S.o led_C.o lowlevel_init.o -o led.o
+	$(LD) -T$(LDS) -g start.o blink_led.o lowlevel_init.o -o led.o
 	$(OBJCOPY) -O binary -S led.o $(IMAGE)/led_on 
 
 clean:

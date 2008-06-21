@@ -32,8 +32,9 @@ SECTIONS
 	. = ALIGN(4);
 	.text      :
 	{
-	  led_S.o	(.text)
-	  led_C.o (.text)
+	  start.o	(.text)
+	  lowlevel_init.o(.text)
+	  blink_led.o 	(.text)
 	  *(.text)
 	}
 
@@ -48,6 +49,6 @@ SECTIONS
 
 	. = ALIGN(4);
 	__bss_start = .;
-	.bss (NOLOAD) : { *(.bss) }
+	.bss : { *(.bss) }
 	_end = .;
 }
