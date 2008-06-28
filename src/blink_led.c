@@ -53,3 +53,8 @@ int blink_led()
     return 0;
 }
 
+int start_armboot()
+{
+  blink_led();
+  return 0;
+}
