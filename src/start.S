@@ -1,7 +1,7 @@
 /*
  * (C) Copyright 2007 OpenMoko, Inc.
  * 
- * Configuation settings for the FIC Neo GTA02 Linux GSM phone
+ * Configuation settings for the OPENMOKO Neo GTA02 Linux GSM phone
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -25,10 +25,6 @@ _start:	b       start_code
 
 _TEXT_BASE:
 	.word	TEXT_BASE
-
-.globl _armboot_start
-_armboot_start:
-	.word _start
 
 /*
  * These are defined in the board-specific linker script.
@@ -159,11 +155,10 @@ clbss_l:
 	cmp	r0, r1
 	ble	clbss_l
 
-	/* blink led */
 	ldr	pc, _start_armboot
 
 _start_armboot:	
-	.word 	start_armboot
+	.word 	start_kboot
 
 /*
  *************************************************************************

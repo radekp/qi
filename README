@@ -1,6 +1,0 @@
-use follow command to run this program
-start OpenOCD,then do this
-
-  > reset halt
-  > load_image /path/to/led_on 0
-  > resume

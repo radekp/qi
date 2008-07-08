@@ -34,7 +34,7 @@ SECTIONS
 	{
 	  start.o	(.text)
 	  lowlevel_init.o(.text)
-	  blink_led.o 	(.text)
+	  start_kboot.o	(.text)
 	  *(.text)
 	}
 

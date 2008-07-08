@@ -14,20 +14,32 @@
 # MA 02111-1307 USA
 #
 
-LDS		=kboot-stage1.lds
-INCLUDE		=../include
-IMAGE		=../image
-CFLAGS		=-Wall -I $(INCLUDE) -g -c -o
+include ../config.mk
 
-all:start.S blink_led.c lowlevel_init.S
+LDS	= kboot-stage1.lds
+INCLUDE	= ../include
+IMAGE	= ../image
+CFLAGS	= -Wall -I $(INCLUDE) -g -c -o
+
+START	= start.o lowlevel_init.o
+COBJS	= start_kboot.o nand_read.o
+
+SRCS	:= $(START: .o=.S) $(COBJS: .o=.c)
+
+all:start.S lowlevel_init.S nand_read.c start_kboot.c
 	$(CC) $(CFLAGS) start.o start.S
-	$(CC) $(CFLAGS) blink_led.o blink_led.c
 	$(CC) $(CFLAGS) lowlevel_init.o lowlevel_init.S
-	$(LD) -T$(LDS) -g start.o blink_led.o lowlevel_init.o -o led.o
-	$(OBJCOPY) -O binary -S led.o $(IMAGE)/led_on 
+	$(CC) $(CFLAGS) nand_read.o nand_read.c
+	$(CC) $(CFLAGS) start_kboot.o start_kboot.c
+	$(LD) -T$(LDS) -g $(START) $(COBJS) -o start_kboot_all.o
+	$(OBJCOPY) -O binary -S start_kboot_all.o $(IMAGE)/start 
+
+blink_led:led_on.S
+	$(CC) $(CFLAGS) led_on.o led_on.S
+	$(LD) -g led_on.o -o led_on_temp.o
+	$(OBJCOPY) -O binary -S led_on_temp.o $(IMAGE)/led_on 
 
 clean:
 	rm -f *.o
-	rm -f led_on
 	rm -f $(IMAGE)/*
 
