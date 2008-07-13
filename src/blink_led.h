@@ -23,6 +23,19 @@
 #ifndef __BLINK_LED_H
 #define __BLINK_LED_H
 
+#define GPBCON        (*(volatile unsigned *)0x56000010)
+#define GPBDAT        (*(volatile unsigned *)0x56000014)
+#define GPBDW         (*(volatile unsigned *)0x56000018)   
+#define ORANGE_OFF()    (GPBDAT &= ~(0x1))  
+#define BLUE_OFF()    (GPBDAT &= ~(0x2))   
+#define ORANGE_ON()     (GPBDAT |= (0x1))
+#define BLUE_ON()     (GPBDAT |= (0x2))
+
+#define ORANGE	1;
+#define BLUE	0;
+
+int orange_on(int times);
+int blue_on(int times);
 int blink_led();
 
 #endif /* __BLINK_LED_H */

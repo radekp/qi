@@ -38,19 +38,15 @@ unsigned char buf[2048];
 
 int start_kboot()
 {
-    if(nand_read_ll(buf, 0x32000000, sizeof(buf))==-1) {
-	blink_led();
+  if(nand_read_ll(buf, 0x32000000, sizeof(buf))==-1) 
+    {
+      while(1){blink_led(1);}
     }
-
-  /* 
-     void (*fp)(void)=(void (*)(void))&buf;
-     (fp)();
-  */
 
   asm volatile("mov pc, %0\n"
        :              /* output */
        :"r"(ADDR)     /* input */
        );    
+
   return 0;
 }
-

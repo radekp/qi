@@ -20,36 +20,70 @@
  * MA 02111-1307 USA
  */
 #include "blink_led.h"
-#define GPBCON        (*(volatile unsigned *)0x56000010)
-#define GPBDAT        (*(volatile unsigned *)0x56000014)
-#define GPBDW         (*(volatile unsigned *)0x56000018)   
-#define LED3_ON()    (GPBDAT &= ~(0x1))  
-#define LED4_ON()    (GPBDAT &= ~(0x2))   
-#define LED3_OFF()     (GPBDAT |= (0x1))
-#define LED4_OFF()     (GPBDAT |= (0x2))
 
 int delay(int time)
 {
-	int i=0;
-	for(i=0;i<time;i++);
-	return 0;
+  int i=0;
+  for(i=0;i<time;i++);
+  return 0;
+}
+int set_GPB()
+{
+  GPBCON = 0x5;
+  GPBDW = 0xffff;
+  return 0;
+}
+
+int orange_on(int times)
+{
+  int count=0;
+  set_GPB();
+
+  for(count=0;count<times;count++)
+    {
+      ORANGE_ON();
+      delay(0xfffff);
+      ORANGE_OFF() ;
+      delay(0xfffff);
+    }
+
+  return 0;
+}
+
+int blue_on(int times)
+{
+  int count=0;
+  set_GPB();
+
+  for(count=0;count<times;count++)
+    {
+      BLUE_ON();
+      delay(0xfffff);
+      BLUE_OFF();
+      delay(0xfffff);
+    }
+
+  return 0;
 }
 
 int blink_led()
 {
-    GPBCON = 0x5;
-    GPBDW = 0xffff;
-    while(1)
-    {
-	LED3_ON();
-	delay(0xfffff);
-	LED3_OFF() ;
-	delay(0xfffff);
+  set_GPB();
 
-	LED4_ON();
-	delay(0xfffff);
-	LED4_OFF();
-	delay(0xfffff);
+  while(1)
+    {
+      ORANGE_ON();
+      delay(0xfffff);
+      ORANGE_OFF() ;
+      delay(0xfffff);
+
+      BLUE_ON();
+      delay(0xfffff);
+      BLUE_OFF();
+      delay(0xfffff);
     }
-    return 0;
+
+  return 0;
 }
+
+

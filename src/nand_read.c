@@ -19,6 +19,7 @@
 #include <linux/mtd/nand.h>
 */
 #include "nand_read.h"
+#include "blink_led.h"
 
 #define NAND_CMD_READ0 0
 #define NAND_CMD_READSTART 0x30
@@ -106,36 +107,35 @@ static int nand_read_page_ll(unsigned char *buf, unsigned long addr)
 /* low level nand read function */
 int nand_read_ll(unsigned char *buf, unsigned long start_addr, int size)
 {
-	int i, j;
+  int i, j;
 
-	if ((start_addr & NAND_BLOCK_MASK) || (size & NAND_BLOCK_MASK))
-		return -1;	/* invalid alignment */
+  if ((start_addr & NAND_BLOCK_MASK) || (size & NAND_BLOCK_MASK))
+    return -1;	/* invalid alignment */
 
-	/* chip Enable */
-	nand_select();
-	nand_clear_RnB();
-	for (i=0; i<10; i++);
+  /* chip Enable */
+  nand_select();
+  nand_clear_RnB();
+  for (i=0; i<10; i++);
 
-	for (i=start_addr; i < (start_addr + size);) {
+  for (i=start_addr; i < (start_addr + size);) {
+    if (i % NAND_BLOCK_SIZE == 0) {
+      if (is_bad_block(i) ||
+	  is_bad_block(i + NAND_PAGE_SIZE)) {
+	orange_on(1);    
+	i += NAND_BLOCK_SIZE;
+	size += NAND_BLOCK_SIZE;
+	continue;
+      }
+    }
+    blue_on(1);
+    j = nand_read_page_ll(buf, i);
+    i += j;
+    /*    buf += j;*/
+  }
 
-		if (i % NAND_BLOCK_SIZE == 0) {
-			if (is_bad_block(i) ||
-			    is_bad_block(i + NAND_PAGE_SIZE)) {
-				/* Bad block */
-				i += NAND_BLOCK_SIZE;
-				size += NAND_BLOCK_SIZE;
-				continue;
-			}
-		}
-
-		j = nand_read_page_ll(buf, i);
-		i += j;
-		buf += j;
-	}
-
-	/* chip Disable */
-	nand_deselect();
-
-	return 0;
+  /* chip Disable */
+  nand_deselect();
+  
+  return 0;
 }
 
