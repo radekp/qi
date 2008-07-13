@@ -15,22 +15,24 @@
  * Author: Harald Welte <laforge@openmoko.org>
  */
 
+/*#include <common.h>
+#include <linux/mtd/nand.h>
+*/
+#include "nand_read.h"
 
-#define NAND_CMD_READ0		0
-#define NAND_CMD_READ1		1
-/* Extended commands for large page devices */
-#define NAND_CMD_READSTART	0x30
+#define NAND_CMD_READ0 0
+#define NAND_CMD_READSTART 0x30
 
-#define __REGb(x)		(*(volatile unsigned char *)(x))
-#define __REGw(x)		(*(volatile unsigned short *)(x))
-#define __REGi(x)		(*(volatile unsigned int *)(x))
+#define __REGb(x)	(*(volatile unsigned char *)(x))
+#define __REGw(x)	(*(volatile unsigned short *)(x))
+#define __REGi(x)	(*(volatile unsigned int *)(x))
 #define NF_BASE		0x4e000000
 #define NFCONF		__REGi(NF_BASE + 0x0)
 #define NFCONT		__REGi(NF_BASE + 0x4)
 #define NFCMD		__REGb(NF_BASE + 0x8)
 #define NFADDR		__REGb(NF_BASE + 0xc)
 #define NFDATA		__REGb(NF_BASE + 0x10)
-#define NFDATA16		__REGw(NF_BASE + 0x10)
+#define NFDATA16	__REGw(NF_BASE + 0x10)
 #define NFSTAT		__REGb(NF_BASE + 0x20)
 #define NFSTAT_BUSY	1
 #define nand_select()	(NFCONT &= ~(1 << 1))
@@ -39,7 +41,8 @@
 
 static inline void nand_wait(void)
 {
-        int i=0;
+	int i;
+
 	while (!(NFSTAT & NFSTAT_BUSY))
 		for (i=0; i<10; i++);
 }
@@ -49,7 +52,7 @@ static inline void nand_wait(void)
 #define NAND_PAGE_SIZE		2048
 #define BAD_BLOCK_OFFSET	NAND_PAGE_SIZE
 #define	NAND_BLOCK_MASK		(NAND_PAGE_SIZE - 1)
-#define NAND_BLOCK_SIZE		(NAND_PAGE_SIZE * 64)#endif
+#define NAND_BLOCK_SIZE		(NAND_PAGE_SIZE * 64)
 
 static int is_bad_block(unsigned long i)
 {
@@ -81,6 +84,7 @@ static int nand_read_page_ll(unsigned char *buf, unsigned long addr)
 	nand_clear_RnB();
 
 	NFCMD = NAND_CMD_READ0;
+
 	page_num = addr >> 11; /* addr / 2048 */
 	/* Write Address */
 	NFADDR = 0;
@@ -95,11 +99,12 @@ static int nand_read_page_ll(unsigned char *buf, unsigned long addr)
 		*ptr16 = NFDATA16;
 		ptr16++;
 	}
+
 	return NAND_PAGE_SIZE;
 }
 
 /* low level nand read function */
- int nand_read_ll(unsigned char *buf, unsigned long start_addr, int size)
+int nand_read_ll(unsigned char *buf, unsigned long start_addr, int size)
 {
 	int i, j;
 
@@ -112,6 +117,17 @@ static int nand_read_page_ll(unsigned char *buf, unsigned long addr)
 	for (i=0; i<10; i++);
 
 	for (i=start_addr; i < (start_addr + size);) {
+
+		if (i % NAND_BLOCK_SIZE == 0) {
+			if (is_bad_block(i) ||
+			    is_bad_block(i + NAND_PAGE_SIZE)) {
+				/* Bad block */
+				i += NAND_BLOCK_SIZE;
+				size += NAND_BLOCK_SIZE;
+				continue;
+			}
+		}
+
 		j = nand_read_page_ll(buf, i);
 		i += j;
 		buf += j;
@@ -122,3 +138,4 @@ static int nand_read_page_ll(unsigned char *buf, unsigned long addr)
 
 	return 0;
 }
+

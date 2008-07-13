@@ -22,7 +22,7 @@ IMAGE	= ../image
 CFLAGS	= -Wall -I $(INCLUDE) -g -c -o
 
 START	= start.o lowlevel_init.o
-COBJS	= start_kboot.o nand_read.o
+COBJS	= start_kboot.o nand_read.o blink_led.o
 
 SRCS	:= $(START: .o=.S) $(COBJS: .o=.c)
 
@@ -30,6 +30,7 @@ all:start.S lowlevel_init.S nand_read.c start_kboot.c
 	$(CC) $(CFLAGS) start.o start.S
 	$(CC) $(CFLAGS) lowlevel_init.o lowlevel_init.S
 	$(CC) $(CFLAGS) nand_read.o nand_read.c
+	$(CC) $(CFLAGS) blink_led.o blink_led.c
 	$(CC) $(CFLAGS) start_kboot.o start_kboot.c
 	$(LD) -T$(LDS) -g $(START) $(COBJS) -o start_kboot_all.o
 	$(OBJCOPY) -O binary -S start_kboot_all.o $(IMAGE)/start 
