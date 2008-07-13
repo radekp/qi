@@ -20,4 +20,9 @@
  * MA 02111-1307 USA
  */
 
+#ifndef __BLINK_LED_H
+#define __BLINK_LED_H
+
 int blink_led();
+
+#define /* __BLINK_LED_H */

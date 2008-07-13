@@ -14,5 +14,9 @@
  * u-boot integration and bad-block skipping (C) 2006 by OpenMoko, Inc.
  * Author: Harald Welte <laforge@openmoko.org>
  */
+#ifndef __NAND_READ_H
+#define __NAND_READ_H
 
 int nand_read_ll(unsigned char *buf, unsigned long start_addr, int size);
+
+#endif /* __NAND_READ_H */

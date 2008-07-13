@@ -43,4 +43,4 @@ blink_led:led_on.S
 clean:
 	rm -f *.o
 	rm -f $(IMAGE)/*
-
+	rm -f *~
