@@ -25,4 +25,4 @@
 
 int blink_led();
 
-#define /* __BLINK_LED_H */
+#endif /* __BLINK_LED_H */
