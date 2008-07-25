@@ -40,7 +40,7 @@ unsigned char buf[2048];
 int start_kboot(void)
 {
     /*1 say hello to uart */ 
-    serial_puti (123);
+    serial_putc ('a');
     blue_on(1);
     /*2. test nand flash */
     if(nand_read_ll(buf, 0x40000, sizeof(buf))==-1) {

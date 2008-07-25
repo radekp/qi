@@ -25,9 +25,9 @@
 /*
  * Output a single byte to the serial port.
  */
-void serial_puti (const int i)
+void serial_putc (const char c)
 {
     while (!(UTRSTAT & 0x2));
 
-    rUTXH0 |= i;
+    rUTXH0 = c;
 }

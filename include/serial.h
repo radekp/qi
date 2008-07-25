@@ -23,10 +23,6 @@
 #define rUTXH0	(*(volatile unsigned char *)0x50000023)
 #define UTRSTAT	(*(volatile unsigned char *)0x50000010)
 
-/*
-#define PUT_CHAR()        (rUTXH0 
-#define ORANGE_OFF()    (GPBDAT &= ~(0x1))  
-*/
+void serial_putc (const char c);
 
-void serial_puti (const int i);
 
