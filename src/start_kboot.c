@@ -21,6 +21,7 @@
  */
 #include "blink_led.h"
 #include "nand_read.h"
+#include "serial.h"
 /*
 unsigned char buf[]={
 0x0d,0xc0,0xa0,0xe1,0x00,0xd8,0x2d,0xe9,0x04,0xb0,0x4c,0xe2,0x4c,0x20,0x9f,0xe5,
@@ -36,14 +37,19 @@ unsigned char buf[2048];
 
 #define ADDR  ((volatile unsigned *)&buf) 
 
-int start_kboot()
+int start_kboot(void)
 {
-  if(nand_read_ll(buf, 0x32000000, sizeof(buf))==-1) 
-    {
-      while(1){blink_led(1);}
+    /*1 say hello to uart */ 
+    serial_puti (123);
+    blue_on(1);
+    /*2. test nand flash */
+    if(nand_read_ll(buf, 0x40000, sizeof(buf))==-1) {
+        while(1) {
+            blink_led();
+        }
     }
 
-  asm volatile("mov pc, %0\n"
+    asm volatile("mov pc, %0\n"
        :              /* output */
        :"r"(ADDR)     /* input */
        );    

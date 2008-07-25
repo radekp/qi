@@ -1,6 +1,7 @@
 #
 # Include the make variables (CC, etc...)
 #
+#CROSS_COMPILE=arm-softfloat-linux-gnu-
 CROSS_COMPILE=arm-angstrom-linux-gnueabi-
 
 AS	= $(CROSS_COMPILE)as

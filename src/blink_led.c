@@ -66,7 +66,7 @@ int blue_on(int times)
   return 0;
 }
 
-int blink_led()
+int blink_led(void)
 {
   set_GPB();
 

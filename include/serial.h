@@ -1,9 +1,8 @@
 /*
- * (C) Copyright 2002
- * Gary Jennejohn, DENX Software Engineering, <gj@denx.de>
+ * (C) Copyright 2007 OpenMoko, Inc.
+ * Author: xiangfu liu <xiangfu@openmoko.org>
  *
- * See file CREDITS for list of people who contributed to this
- * project.
+ * Configuation settings for the FIC Neo GTA02 Linux GSM phone
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -21,46 +20,13 @@
  * MA 02111-1307 USA
  */
 
-OUTPUT_FORMAT("elf32-littlearm", "elf32-littlearm", "elf32-littlearm")
-/*OUTPUT_FORMAT("elf32-arm", "elf32-arm", "elf32-arm")*/
-OUTPUT_ARCH(arm)
-ENTRY(_start)
-SECTIONS
-{
-	. = 0x00000000;
+#define rUTXH0	(*(volatile unsigned char *)0x50000023)
+#define UTRSTAT	(*(volatile unsigned char *)0x50000010)
 
-	. = ALIGN(4);
-	.text      :
-	{
-	  src/start.o	(.text)
-	  src/lowlevel_init.o(.text)
-	  src/start_kboot.o	(.text)
-	  *(.text)
-	}
+/*
+#define PUT_CHAR()        (rUTXH0 
+#define ORANGE_OFF()    (GPBDAT &= ~(0x1))  
+*/
 
-	. = ALIGN(4);
-	.rodata : 
-    { 
-        *(.rodata) 
-    }
+void serial_puti (const int i);
 
-	. = ALIGN(4);
-	.data : 
-    { 
-        *(.data) 
-    }
-
-	. = ALIGN(4);
-	.got : 
-    { 
-        *(.got) 
-    }
-
-	. = ALIGN(4);
-	__bss_start = .;
-	.bss : 
-    { 
-        *(.bss) 
-    }
-	_end = .;
-}

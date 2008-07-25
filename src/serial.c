@@ -1,9 +1,8 @@
 /*
- * (C) Copyright 2002
- * Gary Jennejohn, DENX Software Engineering, <gj@denx.de>
+ * (C) Copyright 2007 OpenMoko, Inc.
+ * Author: xiangfu liu <xiangfu@openmoko.org>
  *
- * See file CREDITS for list of people who contributed to this
- * project.
+ * Configuation settings for the FIC Neo GTA02 Linux GSM phone
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -21,46 +20,14 @@
  * MA 02111-1307 USA
  */
 
-OUTPUT_FORMAT("elf32-littlearm", "elf32-littlearm", "elf32-littlearm")
-/*OUTPUT_FORMAT("elf32-arm", "elf32-arm", "elf32-arm")*/
-OUTPUT_ARCH(arm)
-ENTRY(_start)
-SECTIONS
+# include <serial.h>
+
+/*
+ * Output a single byte to the serial port.
+ */
+void serial_puti (const int i)
 {
-	. = 0x00000000;
+    while (!(UTRSTAT & 0x2));
 
-	. = ALIGN(4);
-	.text      :
-	{
-	  src/start.o	(.text)
-	  src/lowlevel_init.o(.text)
-	  src/start_kboot.o	(.text)
-	  *(.text)
-	}
-
-	. = ALIGN(4);
-	.rodata : 
-    { 
-        *(.rodata) 
-    }
-
-	. = ALIGN(4);
-	.data : 
-    { 
-        *(.data) 
-    }
-
-	. = ALIGN(4);
-	.got : 
-    { 
-        *(.got) 
-    }
-
-	. = ALIGN(4);
-	__bss_start = .;
-	.bss : 
-    { 
-        *(.bss) 
-    }
-	_end = .;
+    rUTXH0 |= i;
 }
