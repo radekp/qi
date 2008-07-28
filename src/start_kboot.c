@@ -33,26 +33,29 @@ unsigned char buf[]={
 0x10,0x00,0x00,0x56,0x18,0x00,0x00,0x56,0xff,0xff,0x00,0x00,0x14,0x00,0x00,0x56,
 0x01,0x00,0x50,0xe2,0xfd,0xff,0xff,0x1a,0x0e,0xf0,0xa0,0xe1,0x0a};
 */
-unsigned char buf[2048];
+unsigned char buf[2*1024];
 
 #define ADDR  ((volatile unsigned *)&buf) 
 
 int start_kboot(void)
 {
-    /*1 say hello to uart */ 
-    serial_putc ('a');
+  serial_init(0x11,UART0);
+  while(1){
+    serial_putc (UART0,'0');
     blue_on(1);
-    /*2. test nand flash */
-    if(nand_read_ll(buf, 0x40000, sizeof(buf))==-1) {
-        while(1) {
-            blink_led();
-        }
-    }
+  }
 
-    asm volatile("mov pc, %0\n"
-       :              /* output */
-       :"r"(ADDR)     /* input */
-       );    
+    /*2. test nand flash */
+  if(nand_read_ll(buf, 0x000, sizeof(buf))==-1) {
+      while(1) {
+          blink_led();
+      }
+  }
+
+  asm volatile("mov pc, %0\n"
+     :              /* output */
+     :"r"(ADDR)     /* input */
+     );    
 
   return 0;
 }

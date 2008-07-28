@@ -15,11 +15,7 @@
  * Author: Harald Welte <laforge@openmoko.org>
  */
 
-/*#include <common.h>
-#include <linux/mtd/nand.h>
-*/
 #include "nand_read.h"
-#include "blink_led.h"
 
 #define NAND_CMD_READ0 0
 #define NAND_CMD_READSTART 0x30
@@ -108,6 +104,7 @@ static int nand_read_page_ll(unsigned char *buf, unsigned long addr)
 int nand_read_ll(unsigned char *buf, unsigned long start_addr, int size)
 {
   int i, j;
+  int bad_count = 0;
 
   if ((start_addr & NAND_BLOCK_MASK) || (size & NAND_BLOCK_MASK))
     return -1;	/* invalid alignment */
@@ -121,13 +118,15 @@ int nand_read_ll(unsigned char *buf, unsigned long start_addr, int size)
     if (i % NAND_BLOCK_SIZE == 0) {
       if (is_bad_block(i) ||
 	  is_bad_block(i + NAND_PAGE_SIZE)) {
-	orange_on(1);    
 	i += NAND_BLOCK_SIZE;
 	size += NAND_BLOCK_SIZE;
+	if(bad_count++ == 4) {
+	  return -1;
+	}
 	continue;
       }
     }
-    blue_on(1);
+
     j = nand_read_page_ll(buf, i);
     i += j;
     /*    buf += j;*/
