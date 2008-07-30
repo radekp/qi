@@ -89,8 +89,8 @@ start_code:
 # define UPLLCON	0x4c000008
 # define MPLLCON_val 	((142 << 12) + (7 << 4) + 1)
 # define UPLLCON_val   	(( 88 << 12) + (8 << 4) + 2)
-/*# define MPLLCON_val    ((0x7d << 12) + (0x2 << 4) + 0x1)
-# define UPLLCON_val    ((0x38 << 12) + (0x2 << 4) + 0x2)*/
+/* # define MPLLCON_val    ((0x7d << 12) + (0x2 << 4) + 0x1)
+# define UPLLCON_val    ((0x38 << 12) + (0x2 << 4) + 0x2) */
 	
 	ldr	r0, =UPLLCON
 	ldr	r1, =UPLLCON_val

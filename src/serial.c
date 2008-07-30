@@ -30,9 +30,6 @@ void serial_init (const int ubrdiv_val,const int uart)
     case UART0:
       rULCON0 = 0x3;
       rUCON0 = 0x245;
-      rGPHCON = rGPHCON & ~(3 << 16);
-      delay(1);
-      rGPHCON = rGPHCON & ~(3 << 16)|(1 << 17);
       rUFCON0 = 0x0;
       rUMCON0 = 0x0;
       rUBRDIV0 = ubrdiv_val;
@@ -47,10 +44,7 @@ void serial_init (const int ubrdiv_val,const int uart)
     case UART2:
       rULCON2 = 0x3;
       rUCON2 = 0x245;
-      rGPHCON = rGPHCON & ~(3 << 16);
-      delay(1);
-      rGPHCON = rGPHCON & ~(3 << 16)|(1 << 17);
-      rUFCON2 = 0x0;
+      rUFCON2 = 0x1;
       rUBRDIV2 = ubrdiv_val;
       break;
     default:

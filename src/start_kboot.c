@@ -40,9 +40,9 @@ unsigned char buf[2*1024];
 int start_kboot(void)
 {
   port_init();
-  serial_init(0x7,UART0);
+  serial_init(0x11,UART2);
   while(1){
-    serial_putc (UART0,'0');
+    serial_putc (UART2,'2');
     blue_on(1);
   }
 
