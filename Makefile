@@ -56,4 +56,4 @@ blink_led:src/led_on.S
 	$(OBJCOPY) -O binary -S led_on_temp.o $(IMAGE)/led_on 
 
 clean:
-	rm -f src/*.o  src/*~ ${IMAGE}* ${TARGET}
+	rm -f src/*.o  src/*~ include/*~ ${IMAGE}* ${TARGET}

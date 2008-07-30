@@ -85,11 +85,13 @@ start_code:
 	ldr	r0, =LOCKTIME
 	mov	r1, #0xffffff
 	str	r1, [r0]
-
-# define MPLLCON_val 	((142 << 12) + (7 << 4) + 1)
+	
 # define UPLLCON	0x4c000008
+# define MPLLCON_val 	((142 << 12) + (7 << 4) + 1)
 # define UPLLCON_val   	(( 88 << 12) + (8 << 4) + 2)
-
+/*# define MPLLCON_val    ((0x7d << 12) + (0x2 << 4) + 0x1)
+# define UPLLCON_val    ((0x38 << 12) + (0x2 << 4) + 0x2)*/
+	
 	ldr	r0, =UPLLCON
 	ldr	r1, =UPLLCON_val
 	str	r1, [r0]
@@ -116,7 +118,7 @@ start_code:
 
 	/* enable uart */
 	ldr	r0, =0x4c00000c		/* clkcon */
-	ldr	r1, =0xffff0		/* all clocks on */
+	ldr	r1, =0x7fff0		/* all clocks on */
 	str	r1, [r0]
 
 	/* gpio UART0 init */
@@ -134,7 +136,7 @@ start_code:
 	str	r1, [r0, #0x08]
 	mov	r1, #0x00
 	str	r1, [r0, #0x0c] 
-	mov	r1, #0x11
+	mov	r1, #0x7
 	str	r1, [r0, #0x28] */
 
 	bl	cpu_init_crit
