@@ -1,3 +1,26 @@
+/*
+ * (C) Copyright 2008 Openmoko, Inc.
+ * Author: Andy Green <andy@openmoko.org>
+ *
+ * Parse the U-Boot header and Boot Linux
+ * based on various code from U-Boot
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+ * MA 02111-1307 USA
+ */
+
 #include "kboot.h"
 #include <neo_gta02.h>
 #include "blink_led.h"
@@ -12,32 +35,26 @@ typedef unsigned int uint32_t;
 #include <setup.h>
 #include "nand_read.h"
 
-/* See also ARM920T    Technical reference Manual */
-#define C1_MMU          (1<<0)          /* mmu off/on */
-#define C1_ALIGN        (1<<1)          /* alignment faults off/on */
-#define C1_DC           (1<<2)          /* dcache off/on */
+#include <device_configuration.h>
 
-#define C1_BIG_ENDIAN   (1<<7)          /* big endian off/on */
-#define C1_SYS_PROT     (1<<8)          /* system protection */
-#define C1_ROM_PROT     (1<<9)          /* ROM protection */
+#define C1_DC           (1<<2)          /* dcache off/on */
 #define C1_IC           (1<<12)         /* icache off/on */
-#define C1_HIGH_VECTORS (1<<13)         /* location of vectors: low/high addresses */
 
 void bootloader_second_phase(void)
 {
 	image_header_t	*hdr;
         unsigned long i = 0;
-	int	machid = 1304; /* GTA02 */
-	void	(*theKernel)(int zero, int arch, uint params);
-	struct tag * params_base = (struct tag *)0x30000100; /* atags need to live here */
+	void	(*the_kernel)(int zero, int arch, uint params);
+	struct tag * params_base = (struct tag *)CFG_LINUX_ATAG_ADDRESS;
 	struct tag *params = params_base;
-	const char * cmdline = "rootfstype=ext2 root=/dev/mmcblk0p1 console=ttySAC2,115200 loglevel=8 init=/sbin/init ro";
+	const char * cmdline = CFG_LINUX_CMDLINE;
 	const char *p = cmdline;
-	void * kernel_nand = (void *)(TEXT_BASE - 4 * 1024 * 1024);
+	void * kernel_nand = (void *)(TEXT_BASE - CFG_LINUX_BIGGEST_KERNEL);
 
 	puts("Checking kernel... ");
 
-	if (nand_read_ll(kernel_nand, 0x80000, 4096) < 0) {
+	if (nand_read_ll(kernel_nand, CFG_NAND_OFFSET_FOR_KERNEL_PARTITION,
+								    4096) < 0) {
 		puts ("Kernel header read failed\n");
 		goto unhappy;
 	}
@@ -54,18 +71,17 @@ void bootloader_second_phase(void)
 
 	puts("Fetching kernel...");
 
-	if (nand_read_ll(kernel_nand, 0x80000, ((32 * 1024) +
-						(_ntohl(hdr->ih_size) +
-						sizeof(hdr) + 2048)) &
-					       ~(2048 - 1)) < 0) {
+	if (nand_read_ll(kernel_nand, CFG_NAND_OFFSET_FOR_KERNEL_PARTITION,
+		((32 * 1024) + (_ntohl(hdr->ih_size) + sizeof(hdr) + 2048)) &
+							     ~(2048 - 1)) < 0) {
 		puts ("Kernel body read failed\n");
 		goto unhappy;
 	}
 
 	puts(" Done");
 
-	theKernel = (void (*)(int, int, uint))
-				(((char *)hdr) + sizeof(image_header_t));
+	the_kernel = (void (*)(int, int, uint))
+				       (((char *)hdr) + sizeof(image_header_t));
 
 	/* first tag */
 	params->hdr.tag = ATAG_CORE;
@@ -78,14 +94,14 @@ void bootloader_second_phase(void)
 	/* revision tag */
 	params->hdr.tag = ATAG_REVISION;
 	params->hdr.size = tag_size (tag_revision);
-	params->u.revision.rev = 0x350;
+	params->u.revision.rev = CFG_MACHINE_REVISION;
 	params = tag_next (params);
 
 	/* memory tags */
 	params->hdr.tag = ATAG_MEM;
 	params->hdr.size = tag_size (tag_mem32);
-	params->u.mem.start = 0x30000000;
-	params->u.mem.size = 128 * 1024 * 1024;
+	params->u.mem.start = CFG_MEMORY_REGION_START;
+	params->u.mem.size = CFG_MEMORY_REGION_SIZE;
 	params = tag_next (params);
 
 	/* kernel commandline */
@@ -104,7 +120,7 @@ void bootloader_second_phase(void)
 	params->hdr.tag = ATAG_NONE;
 	params->hdr.size = 0;
 
-	puts ("Running Linux...\n\n");
+	puts ("Running Linux --->\n\n");
 
 	/* trash the cache */
 
@@ -119,7 +135,7 @@ void bootloader_second_phase(void)
 
 	/* ooh that's it, we're gonna try boot this image! */
 
-	theKernel(0, machid, (unsigned int)params_base);
+	the_kernel(0, CFG_LINUX_MACHINE_ID, (unsigned int)params_base);
 
 	/* that didn't quite pan out */
 

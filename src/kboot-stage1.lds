@@ -29,6 +29,11 @@ SECTIONS
 {
 	. = 0x00000000;
 
+	/* this is intended to take the first 4KBytes of stuff initially.
+	 * We have to make sure we have .rodata* in there for everything
+	 * because we do not compile PIC.
+	 */
+
 	. = ALIGN(4);
 	.text      :
 	{
