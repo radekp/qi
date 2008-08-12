@@ -25,7 +25,10 @@ BUILD_VERSION := ${BUILD_BRANCH}_${BUILD_HEAD}
 LDS	= src/kboot-stage1.lds
 INCLUDE	= include
 IMAGE_DIR	= image
-CFLAGS	= -Wall -Werror -I $(INCLUDE) -g -c -DBUILD_HOST="${BUILD_HOST}" -DBUILD_VERSION="${BUILD_VERSION}" -DBUILD_DATE="${BUILD_DATE}"
+CFLAGS	= -Wall -Werror -fno-builtin -ffreestanding -fno-strict-aliasing \
+	  -fno-common -ffixed-r8 -I $(INCLUDE) -g -c \
+	  -DBUILD_HOST="${BUILD_HOST}" -DBUILD_VERSION="${BUILD_VERSION}" \
+	  -DBUILD_DATE="${BUILD_DATE}"
 LDFLAGS = 
 #START	= start.o lowlevel_init.o
 S_SRCS	= src/start.S src/lowlevel_init.S

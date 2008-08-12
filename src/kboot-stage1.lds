@@ -34,10 +34,8 @@ SECTIONS
 	{
 	  src/start.o	(.text)
 	  src/lowlevel_init.o(.text)
-	  src/start_kboot.o	(.text)
-	  src/start_kboot.o	(.rodata)
-	  *(.text)
-	  *(.rodata)
+	  src/start_kboot.o	(.text .rodata)
+	  *(.text .rodata)
 	}
 
 	. = ALIGN(4);
