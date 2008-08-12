@@ -32,17 +32,16 @@ SECTIONS
 	. = ALIGN(4);
 	.text      :
 	{
-	  src/start.o	(.text)
-	  src/lowlevel_init.o(.text)
-	  src/start_kboot.o	(.text .rodata)
-	  *(.text .rodata)
+	  src/start.o	(.text .rodata* .data)
+	  src/lowlevel_init.o(.text .rodata* .data)
+	  src/start_kboot.o	(.text .rodata* .data)
+	  src/serial.o	(.text .rodata* .data)
+	  src/blink_led.o	(.text .rodata* .data)
+	  * (.rodata* .data)
 	}
 
 	. = ALIGN(4);
-	.data : 
-    { 
-        *(.data) 
-    }
+	.everything_else : { *(.text) }
 
 	. = ALIGN(4);
 	.got : 
@@ -50,7 +49,7 @@ SECTIONS
         *(.got) 
     }
 
-	. = ALIGN(4);
+	. = 0x32000000 ;
 	__bss_start = .;
 	.bss (NOLOAD) : 
     { 

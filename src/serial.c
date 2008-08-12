@@ -109,6 +109,23 @@ void print32(unsigned int u)
 	printhex(u);
 }
 
+void hexdump(unsigned char *start, int len)
+{
+	int n;
+
+	while (len > 0) {
+		print32((int)start);
+		serial_putc(DEBUG_CONSOLE_UART, ':');
+		serial_putc(DEBUG_CONSOLE_UART, ' ');
+		for (n = 0; n < 16; n++) {
+			printhex(*start++);
+			serial_putc(DEBUG_CONSOLE_UART, ' ');
+		}
+		serial_putc(DEBUG_CONSOLE_UART, '\n');
+		len -= 16;
+	}
+}
+
 int printk(const char *fmt, ...)
 {
 	va_list args;

@@ -25,8 +25,9 @@ BUILD_VERSION := ${BUILD_BRANCH}_${BUILD_HEAD}
 LDS	= src/kboot-stage1.lds
 INCLUDE	= include
 IMAGE_DIR	= image
-CFLAGS	= -Wall -Werror -fno-builtin -ffreestanding -fno-strict-aliasing \
-	  -fno-common -ffixed-r8 -I $(INCLUDE) -g -c \
+CFLAGS	= -Wall -Werror -I $(INCLUDE) -g -c -O2 -fno-strict-aliasing \
+	  -fno-common -ffixed-r8 -msoft-float -fno-builtin -ffreestanding \
+	  -march=armv4t -mno-thumb-interwork -Wstrict-prototypes \
 	  -DBUILD_HOST="${BUILD_HOST}" -DBUILD_VERSION="${BUILD_VERSION}" \
 	  -DBUILD_DATE="${BUILD_DATE}"
 LDFLAGS = 

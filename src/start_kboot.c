@@ -35,7 +35,8 @@ extern void bootloader_second_phase(void);
 
 void start_kboot(void)
 {
-	void (*phase2)(void) = bootloader_second_phase + TEXT_BASE;
+	void (*phase2)(void) = (void (*)(void))((int)bootloader_second_phase +
+								     TEXT_BASE);
 
 	port_init();
 	serial_init(0x11, UART2);
@@ -43,18 +44,15 @@ void start_kboot(void)
 	puts("Openmoko KBOOT "stringify2(BUILD_HOST)" "
 			      stringify2(BUILD_VERSION)" "
 			      stringify2(BUILD_DATE)"\n");
-
 	/*
-	 * pull the whole U-Boot image into SDRAM
+	 * pull the whole bootloader image into SDRAM
 	 */
 
-	if (nand_read_ll((unsigned char *)TEXT_BASE, 0, 256 * 1024) < 0)
+	if (nand_read_ll((unsigned char *)TEXT_BASE, 0, 24 * 1024) < 0)
 		while(1)
 			blink_led();
-
 	/*
 	 * jump to bootloader_second_phase() running from DRAM copy
 	 */
-
 	(phase2)();
 }

@@ -27,7 +27,7 @@ int delay(int time)
   for(i=0;i<time;i++);
   return 0;
 }
-int set_GPB()
+int set_GPB(void)
 {
   GPBCON = 0x5;
   GPBDW = 0xffff;

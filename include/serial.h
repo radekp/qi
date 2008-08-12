@@ -107,7 +107,6 @@ void port_init(void);
 void serial_init (const int ubrdiv_val,const int uart);
 void serial_putc (const int uart,const char c);
 int printk(const char *fmt, ...);
-int vsprintf(char *buf, const char *fmt, va_list args);
 int puts(const char *string);
 
 #endif

@@ -89,6 +89,8 @@ static int nand_read_page_ll(unsigned char *buf, unsigned long addr)
 {
 	unsigned short *ptr16 = (unsigned short *)buf;
 	unsigned int i, page_num;
+	unsigned char ecc[64];
+	unsigned short *p16 = (unsigned short *)ecc;
 
 	nand_clear_RnB();
 
@@ -104,9 +106,11 @@ static int nand_read_page_ll(unsigned char *buf, unsigned long addr)
 	NFCMD = NAND_CMD_READSTART;
 	nand_wait();
 
-	for (i = 0; i < NAND_PAGE_SIZE/2; i++) {
-		*ptr16 = NFDATA16;
-		ptr16++;
+	for (i = 0; i < NAND_PAGE_SIZE/2; i++)
+		*ptr16++ = NFDATA16;
+
+	for (i = 0; i < 64 / 2; i++) {
+		*p16++ = NFDATA16;
 	}
 
 	return NAND_PAGE_SIZE;
@@ -129,26 +133,20 @@ int nand_read_ll(unsigned char *buf, unsigned long start_addr, int size)
 		;
 
 	for (i = start_addr; i < (start_addr + size);) {
-#ifdef DEBUG
-		serial_putc(2, 'i');
-		serial_putc(2, '0');
-		serial_putc(2, 'x');
-		print32((unsigned int)i);
-		serial_putc(2, ' ');
-#endif
-		if (i % NAND_BLOCK_SIZE == 0) {
+		if ((i & (NAND_BLOCK_SIZE - 1)) == 0) {
 			if (is_bad_block(i) ||
 					is_bad_block(i + NAND_PAGE_SIZE)) {
-#ifdef DEBUG
-				serial_putc(2, '?');
-#endif
+				serial_putc(2, '!');
+				serial_putc(2, '0');
+				serial_putc(2, 'x');
+				print32((unsigned int)i);
+				serial_putc(2, ' ');
+
 				i += NAND_BLOCK_SIZE;
 				size += NAND_BLOCK_SIZE;
 				if (bad_count++ == 4) {
-#ifdef DEBUG
 					serial_putc(2, '+');
 					serial_putc(2, '\n');
-#endif
 					return -1;
 				}
 				serial_putc(2, '\n');
@@ -157,18 +155,8 @@ int nand_read_ll(unsigned char *buf, unsigned long start_addr, int size)
 		}
 
 		j = nand_read_page_ll(buf, i);
-#ifdef DEBUG
-		serial_putc(2, 'j');
-		serial_putc(2, '0');
-		serial_putc(2, 'x');
-		print32((unsigned int)j);
-		serial_putc(2, ' ');
-#endif
 		i += j;
 		buf += j;
-#if DEBUG
-		serial_putc(2, '\n');
-#endif
 	}
 
 	/* chip Disable */
