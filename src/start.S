@@ -140,6 +140,19 @@ start_code:
 	str	r1, [r0, #0x28] */
 
 	bl	cpu_init_crit
+
+/* reset nand controller, or it is dead to us */
+
+        mov     r1, #0x4E000000
+        ldr     r2, =0xfff0             @ initial value tacls=3,rph0=7,rph1=7
+        ldr     r3, [r1, #0]
+        orr     r3, r3, r2
+        str     r3, [r1, #0]
+
+        ldr     r3, [r1, #4]
+        orr     r3, r3, #1              @ enable nand controller
+        str     r3, [r1, #4]
+
 										/* >> CFG_VIDEO_LOGO_MAX_SIZE */
 #define CFG_GBL_DATA_SIZE		128			/* size in bytes reserved for initial data */
 stack_setup:

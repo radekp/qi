@@ -19,6 +19,9 @@
  * MA 02111-1307 USA
  */
 
+/* NOTE this stuff runs in steppingstone context! */
+
+
 /*
  * #include <config.h>
  * #include <version.h>

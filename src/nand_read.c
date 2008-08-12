@@ -15,7 +15,11 @@
  * Author: Harald Welte <laforge@openmoko.org>
  */
 
+/* NOTE this stuff runs in steppingstone context! */
+
+
 #include "nand_read.h"
+#include "kboot.h"
 
 #define NAND_CMD_READ0 0
 #define NAND_CMD_READSTART 0x30
@@ -67,6 +71,14 @@ static int is_bad_block(unsigned long i)
 	NFCMD = NAND_CMD_READSTART;
 	nand_wait();
 	data = (NFDATA & 0xff);
+#ifdef DEBUG
+	serial_putc(2, '$');
+	serial_putc(2, '0');
+	serial_putc(2, 'x');
+	print32((unsigned int)data);
+	serial_putc(2, ' ');
+#endif
+
 	if (data != 0xff)
 		return 1;
 
@@ -103,38 +115,65 @@ static int nand_read_page_ll(unsigned char *buf, unsigned long addr)
 /* low level nand read function */
 int nand_read_ll(unsigned char *buf, unsigned long start_addr, int size)
 {
-  int i, j;
-  int bad_count = 0;
+	int i, j;
+	int bad_count = 0;
 
-  if ((start_addr & NAND_BLOCK_MASK) || (size & NAND_BLOCK_MASK))
-    return -1;	/* invalid alignment */
+	if ((start_addr & NAND_BLOCK_MASK) || (size & NAND_BLOCK_MASK))
+		return -1;	/* invalid alignment */
 
-  /* chip Enable */
-  nand_select();
-  nand_clear_RnB();
-  for (i=0; i<10; i++);
+	/* chip Enable */
+	nand_select();
+	nand_clear_RnB();
 
-  for (i=start_addr; i < (start_addr + size);) {
-    if (i % NAND_BLOCK_SIZE == 0) {
-      if (is_bad_block(i) ||
-	  is_bad_block(i + NAND_PAGE_SIZE)) {
-	i += NAND_BLOCK_SIZE;
-	size += NAND_BLOCK_SIZE;
-	if(bad_count++ == 4) {
-	  return -1;
+	for (i = 0; i < 10; i++)
+		;
+
+	for (i = start_addr; i < (start_addr + size);) {
+#ifdef DEBUG
+		serial_putc(2, 'i');
+		serial_putc(2, '0');
+		serial_putc(2, 'x');
+		print32((unsigned int)i);
+		serial_putc(2, ' ');
+#endif
+		if (i % NAND_BLOCK_SIZE == 0) {
+			if (is_bad_block(i) ||
+					is_bad_block(i + NAND_PAGE_SIZE)) {
+#ifdef DEBUG
+				serial_putc(2, '?');
+#endif
+				i += NAND_BLOCK_SIZE;
+				size += NAND_BLOCK_SIZE;
+				if (bad_count++ == 4) {
+#ifdef DEBUG
+					serial_putc(2, '+');
+					serial_putc(2, '\n');
+#endif
+					return -1;
+				}
+				serial_putc(2, '\n');
+				continue;
+			}
+		}
+
+		j = nand_read_page_ll(buf, i);
+#ifdef DEBUG
+		serial_putc(2, 'j');
+		serial_putc(2, '0');
+		serial_putc(2, 'x');
+		print32((unsigned int)j);
+		serial_putc(2, ' ');
+#endif
+		i += j;
+		buf += j;
+#if DEBUG
+		serial_putc(2, '\n');
+#endif
 	}
-	continue;
-      }
-    }
 
-    j = nand_read_page_ll(buf, i);
-    i += j;
-    /*    buf += j;*/
-  }
+	/* chip Disable */
+	nand_deselect();
 
-  /* chip Disable */
-  nand_deselect();
-  
-  return 0;
+	return 0;
 }
 

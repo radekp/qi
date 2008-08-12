@@ -19,9 +19,15 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307 USA
  */
+
+/* NOTE this stuff runs in steppingstone context! */
+
+
 #include "blink_led.h"
 #include "nand_read.h"
 #include "kboot.h"
+#include <neo_gta02.h>
+
 /*
 unsigned char buf[]={
 0x0d,0xc0,0xa0,0xe1,0x00,0xd8,0x2d,0xe9,0x04,0xb0,0x4c,0xe2,0x4c,0x20,0x9f,0xe5,
@@ -33,21 +39,20 @@ unsigned char buf[]={
 0x10,0x00,0x00,0x56,0x18,0x00,0x00,0x56,0xff,0xff,0x00,0x00,0x14,0x00,0x00,0x56,
 0x01,0x00,0x50,0xe2,0xfd,0xff,0xff,0x1a,0x0e,0xf0,0xa0,0xe1,0x0a};
 */
-unsigned char buf[2*1024];
-
-#define ADDR  ((volatile unsigned *)&buf) 
 #define stringify(x) #x
 
-static char * hello = "hello";
+extern void bootloader_second_phase(void);
 
-int start_kboot(void)
+void start_kboot(void)
 {
-	static int n = 0;
-	void (*p)(unsigned int) = print32;
+	void (*phase2)(void) = bootloader_second_phase + TEXT_BASE;
 
 	port_init();
 	serial_init(0x11, UART2);
 
+	puts("Openmoko KBOOT BUILD_HOST BUILD_VERSION BUILD_DATE\n");
+
+#if 0
 	while(1) {
 		serial_putc(2, '0');
 		serial_putc(2, 'x');
@@ -63,21 +68,26 @@ int start_kboot(void)
 
 		serial_putc(2, '\n');
 
-
-//		printk("Openmoko KBOOT "stringify(BUILD_HOST)" "stringify(BUILD_VERSION)" "stringify(BUILD_DATE)"\n");
 		blue_on(1);
 		n++;
 	}
 
-	/*2. test nand flash */
-	if(nand_read_ll(buf, 0x000, sizeof(buf))==-1)
+#endif
+
+	/*
+	 * pull the whole U-Boot image into SDRAM
+	 */
+
+	if (nand_read_ll((unsigned char *)TEXT_BASE, 0, 256 * 1024) < 0)
 		while(1)
 			blink_led();
 
-	asm volatile("mov pc, %0\n"
-		:              /* output */
-		:"r"(ADDR)     /* input */
-	);
+		serial_putc(2, '0');
+		serial_putc(2, 'x');
+		print32((unsigned int)bootloader_second_phase);
+		serial_putc(2, ' ');
+		serial_putc(2, '\n');
 
-	return 0;
+
+	(phase2)();
 }
