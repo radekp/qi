@@ -99,19 +99,3 @@ void hexdump(unsigned char *start, int len)
 	}
 }
 
-int printk(const char *fmt, ...)
-{
-	va_list args;
-	int r;
-	static char buf[512];
-	const char *p = buf;
-
-	va_start(args, fmt);
-	r = vsprintf(buf, fmt, args);
-	va_end(args);
-	p = fmt;
-	while (*p)
-		serial_putc(DEBUG_CONSOLE_UART, *p++);
-
-	return r;
-}
