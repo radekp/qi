@@ -31,8 +31,14 @@ C_OBJS	= $(patsubst %.c,%.o, $(C_SRCS))
 SRCS	= ${S_SRCS} ${C_SRCS}
 OBJS	= ${S_OBJS} ${C_OBJS}
 
+# GTA02 A5 and A6 U-Boot will eat these for DFU action
+UDFU_VID = 0x1d50
+UDFU_PID = 0x5119
+UDFU_REV = 0x350
+
 TARGET	= src/start_kboot_all
-IMAGE = $(IMAGE_DIR)/start
+IMAGE = $(IMAGE_DIR)/kboot
+UDFU_IMAGE = $(IMAGE_DIR)/kboot.udfu
 
 %.o: %.S
 	@$(CC) $(CFLAGS) -o $@ $<
@@ -40,13 +46,15 @@ IMAGE = $(IMAGE_DIR)/start
 %.o: %.c
 	@$(CC) $(CFLAGS) -o $@ $<
 
-all:${TARGET}
+all:${UDFU_IMAGE}
 
 ${OBJS}:${SRCS}
 
-${TARGET}:${OBJS}
+${UDFU_IMAGE}:${OBJS}
 	$(LD) ${LDFLAGS} -T$(LDS) -g $(OBJS) -o ${TARGET}  
 	$(OBJCOPY) -O binary -S ${TARGET} ${IMAGE}
+	$(MKUDFU) -v ${UDFU_VID} -p ${UDFU_PID} -r ${UDFU_REV} \
+						-d ${IMAGE} ${UDFU_IMAGE}
 	$(OBJDUMP) -D ${TARGET} >${IMAGE}.dis
 
 blink_led:src/led_on.S
@@ -55,4 +63,4 @@ blink_led:src/led_on.S
 	$(OBJCOPY) -O binary -S led_on_temp.o $(IMAGE)/led_on 
 
 clean:
-	rm -f src/*.o  src/*~ include/*~ ${IMAGE}* ${TARGET}
+	rm -f src/*.o  src/*~ include/*~ ${IMAGE}* ${TARGET} ${UDFU_IMAGE}
