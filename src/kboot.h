@@ -12,6 +12,7 @@ int puts(const char *string);
 void printhex(unsigned char v);
 void print32(unsigned int u);
 void hexdump(unsigned char *start, int len);
+unsigned int _ntohl(unsigned int n);
 
 #endif
 

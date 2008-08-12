@@ -23,31 +23,6 @@ typedef unsigned int uint32_t;
 #define C1_IC           (1<<12)         /* icache off/on */
 #define C1_HIGH_VECTORS (1<<13)         /* location of vectors: low/high addresses */
 
-size_t strlen(const char *s)
-{
-	size_t n = 0;
-
-	while (*s++)
-		n++;
-
-	return n;
-}
-
-char *strcpy(char *dest, const char *src)
-{
-	char * dest_orig = dest;
-
-	while (*src)
-		*dest++ = *src++;
-
-	return dest_orig;
-}
-
-unsigned int _ntohl(unsigned int n) {
-	return ((n & 0xff) << 24) | ((n & 0xff00) << 8) |
-			       ((n & 0xff0000) >> 8) | ((n & 0xff000000) >> 24);
-}
-
 void bootloader_second_phase(void)
 {
 	image_header_t	*hdr;
