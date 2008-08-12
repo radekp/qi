@@ -86,17 +86,40 @@ int puts(const char *string)
 	return 1;
 }
 
+/* done like this to avoid needing statics in steppingstone */
+void printnybble(unsigned char n)
+{
+	if (n < 10)
+		serial_putc(DEBUG_CONSOLE_UART, '0' + n);
+	else
+		serial_putc(DEBUG_CONSOLE_UART, 'a' + n - 10);
+}
+
+void printhex(unsigned char n)
+{
+	printnybble((n >> 4) & 15);
+	printnybble(n & 15);
+}
+
+void print32(unsigned int u)
+{
+	printhex(u >> 24);
+	printhex(u >> 16);
+	printhex(u >> 8);
+	printhex(u);
+}
+
 int printk(const char *fmt, ...)
 {
 	va_list args;
 	int r;
 	static char buf[512];
-	char *p = buf;
+	const char *p = buf;
 
 	va_start(args, fmt);
 	r = vsprintf(buf, fmt, args);
 	va_end(args);
-
+	p = fmt;
 	while (*p)
 		serial_putc(DEBUG_CONSOLE_UART, *p++);
 

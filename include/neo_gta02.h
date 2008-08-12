@@ -23,6 +23,6 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
-#define TEXT_BASE 0x33F80000	/* xiangfu add*/
+#define TEXT_BASE 0x33000000
 
 #endif	/* __CONFIG_H */

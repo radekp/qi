@@ -40,15 +40,19 @@ unsigned char buf[2*1024];
 
 int start_kboot(void)
 {
+	static int n = 0;
+
 	port_init();
 	serial_init(0x11, UART2);
 
 	while(1) {
+		serial_putc(2, '0');
 		serial_putc(2, 'x');
-		serial_putc(2, 'x');
-		serial_putc(2, 'x');
-		printk("Openmoko KBOOT "stringify(BUILD_HOST)" "stringify(BUILD_VERSION)" "stringify(BUILD_DATE)"\n");
+		print32((unsigned int)&n);
+		serial_putc(2, '\n');
+//		printk("Openmoko KBOOT "stringify(BUILD_HOST)" "stringify(BUILD_VERSION)" "stringify(BUILD_DATE)"\n");
 		blue_on(1);
+		n++;
 	}
 
 	/*2. test nand flash */

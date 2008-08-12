@@ -158,6 +158,8 @@ clbss_l:
 	cmp	r0, r1
 	ble	clbss_l
 
+/* we are going to jump into the C part of the init now */
+
 	ldr	pc, _start_armboot
 
 _start_armboot:	

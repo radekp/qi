@@ -120,9 +120,6 @@
 #define REFCNT		 	997	/* period=17.5us, HCLK=60Mhz, (2048+1-15.6*60) */
 /**************************************/
 
-_TEXT_BASE:
-	.word	TEXT_BASE
-
 .globl lowlevel_init
 lowlevel_init:
 	/* memory control configuration */

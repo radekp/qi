@@ -8,7 +8,9 @@
 
 int printk(const char *fmt, ...);
 int vsprintf(char *buf, const char *fmt, va_list args);
-void puts(const char *string);
+int puts(const char *string);
+void printhex(unsigned char v);
+void print32(unsigned int u);
 
 #endif
 
