@@ -16,10 +16,16 @@
 
 include config.mk
 
+BUILD_DATE := $(shell date)
+BUILD_HOST := $(shell hostname)
+BUILD_BRANCH := $(shell git branch | grep ^\* | cut -d' ' -f2)
+BUILD_HEAD := $(shell git show --pretty=oneline | head -n1 | cut -d' ' -f1 | cut -b1-16)
+BUILD_VERSION := ${BUILD_BRANCH}_${BUILD_HEAD}
+
 LDS	= src/kboot-stage1.lds
 INCLUDE	= include
 IMAGE_DIR	= image
-CFLAGS	= -Wall -Werror -I $(INCLUDE) -g -c 
+CFLAGS	= -Wall -Werror -I $(INCLUDE) -g -c -DBUILD_HOST="${BUILD_HOST}" -DBUILD_VERSION="${BUILD_VERSION}" -DBUILD_DATE="${BUILD_DATE}"
 LDFLAGS = 
 #START	= start.o lowlevel_init.o
 S_SRCS	= src/start.S src/lowlevel_init.S

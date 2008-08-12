@@ -23,7 +23,7 @@
 #include "blink_led.h"
 #include "kboot.h"
 
-#define DEBUG_CONSOLE_UART 2
+#define DEBUG_CONSOLE_UART UART2
 
 void serial_init (const int ubrdiv_val,const int uart)
 {

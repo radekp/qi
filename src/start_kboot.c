@@ -36,27 +36,30 @@ unsigned char buf[]={
 unsigned char buf[2*1024];
 
 #define ADDR  ((volatile unsigned *)&buf) 
+#define stringify(x) #x
 
 int start_kboot(void)
 {
-  port_init();
-  serial_init(0x11,UART2);
-  while(1){
-    serial_putc (UART2,'2');
-    blue_on(1);
-  }
+	port_init();
+	serial_init(0x11, UART2);
 
-    /*2. test nand flash */
-  if(nand_read_ll(buf, 0x000, sizeof(buf))==-1) {
-      while(1) {
-          blink_led();
-      }
-  }
+	while(1) {
+		serial_putc(2, 'x');
+		serial_putc(2, 'x');
+		serial_putc(2, 'x');
+		printk("Openmoko KBOOT "stringify(BUILD_HOST)" "stringify(BUILD_VERSION)" "stringify(BUILD_DATE)"\n");
+		blue_on(1);
+	}
 
-  asm volatile("mov pc, %0\n"
-     :              /* output */
-     :"r"(ADDR)     /* input */
-     );    
+	/*2. test nand flash */
+	if(nand_read_ll(buf, 0x000, sizeof(buf))==-1)
+		while(1)
+			blink_led();
 
-  return 0;
+	asm volatile("mov pc, %0\n"
+		:              /* output */
+		:"r"(ADDR)     /* input */
+	);
+
+	return 0;
 }
