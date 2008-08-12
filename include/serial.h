@@ -20,6 +20,11 @@
  * MA 02111-1307 USA
  */
 
+#include <stdarg.h>
+
+#ifndef __SERIAL_H__
+#define __SERIAL_H__
+
 #define UART0	    0
 #define UART1	    1
 #define UART2	    2
@@ -102,3 +107,8 @@
 void port_init(void);
 void serial_init (const int ubrdiv_val,const int uart);
 void serial_putc (const int uart,const char c);
+int printk(const char *fmt, ...);
+int vsprintf(char *buf, const char *fmt, va_list args);
+int puts(const char *string);
+
+#endif

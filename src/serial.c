@@ -23,6 +23,8 @@
 #include "serial.h"
 #include "blink_led.h"
 
+#define DEBUG_CONSOLE_UART 2
+
 void serial_init (const int ubrdiv_val,const int uart)
 {
   switch(uart)
@@ -60,17 +62,14 @@ void serial_putc (const int uart,const char c)
     {
     case UART0:
       while ( !( rUTRSTAT0 & 0x2 ) );
-      delay(1);
       WrUTXH0(c);
       break;
     case UART1:
       while ( !( rUTRSTAT1 & 0x2 ) );
-      delay(1);
       WrUTXH1(c);
       break;
     case UART2:
       while ( !( rUTRSTAT2 & 0x2 ) );
-      delay(1);
       WrUTXH2(c);
       break;
     default:
@@ -78,6 +77,31 @@ void serial_putc (const int uart,const char c)
     }
 }
 
+int puts(const char *string)
+{
+	while (*string)
+		serial_putc(DEBUG_CONSOLE_UART, *string++);
+	serial_putc(DEBUG_CONSOLE_UART, '\n');
+
+	return 1;
+}
+
+int printk(const char *fmt, ...)
+{
+	va_list args;
+	int r;
+	static char buf[512];
+	char *p = buf;
+
+	va_start(args, fmt);
+	r = vsprintf(buf, fmt, args);
+	va_end(args);
+
+	while (*p)
+		serial_putc(DEBUG_CONSOLE_UART, *p++);
+
+	return r;
+}
 
 /*
  * =====================================================================
