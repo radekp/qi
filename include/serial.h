@@ -20,7 +20,6 @@
  * MA 02111-1307 USA
  */
 
-#include <stdarg.h>
 
 #ifndef __SERIAL_H__
 #define __SERIAL_H__

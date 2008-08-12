@@ -20,8 +20,8 @@
  * MA 02111-1307 USA
  */
 
-#include "serial.h"
 #include "blink_led.h"
+#include "kboot.h"
 
 #define DEBUG_CONSOLE_UART 2
 
