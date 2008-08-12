@@ -19,8 +19,7 @@ include config.mk
 LDS	= src/kboot-stage1.lds
 INCLUDE	= include
 IMAGE_DIR	= image
-#CFLAGS	= -Wall -I $(INCLUDE) -msoft-float -g -c 
-CFLAGS	= -Wall -I $(INCLUDE) -g -c 
+CFLAGS	= -Wall -Werror -I $(INCLUDE) -g -c 
 LDFLAGS = 
 #START	= start.o lowlevel_init.o
 S_SRCS	= src/start.S src/lowlevel_init.S
