@@ -30,6 +30,7 @@ C_OBJS	= $(patsubst %.c,%.o, $(C_SRCS))
 #SRCS	:= $(START: .o=.S) $(COBJS: .o=.c)
 SRCS	= ${S_SRCS} ${C_SRCS}
 OBJS	= ${S_OBJS} ${C_OBJS}
+LIBS	= -L${COMPILER_LIB_PATH} -lgcc
 
 # GTA02 A5 and A6 U-Boot will eat these for DFU action
 UDFU_VID = 0x1d50
@@ -51,7 +52,7 @@ all:${UDFU_IMAGE}
 ${OBJS}:${SRCS}
 
 ${UDFU_IMAGE}:${OBJS}
-	$(LD) ${LDFLAGS} -T$(LDS) -g $(OBJS) -o ${TARGET}  
+	$(LD) ${LDFLAGS} -T$(LDS) -g $(OBJS) -o ${TARGET} ${LIBS}
 	$(OBJCOPY) -O binary -S ${TARGET} ${IMAGE}
 	$(MKUDFU) -v ${UDFU_VID} -p ${UDFU_PID} -r ${UDFU_REV} \
 						-d ${IMAGE} ${UDFU_IMAGE}
