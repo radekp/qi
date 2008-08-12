@@ -38,9 +38,12 @@ unsigned char buf[2*1024];
 #define ADDR  ((volatile unsigned *)&buf) 
 #define stringify(x) #x
 
+static char * hello = "hello";
+
 int start_kboot(void)
 {
 	static int n = 0;
+	void (*p)(unsigned int) = print32;
 
 	port_init();
 	serial_init(0x11, UART2);
@@ -49,7 +52,18 @@ int start_kboot(void)
 		serial_putc(2, '0');
 		serial_putc(2, 'x');
 		print32((unsigned int)&n);
+		serial_putc(2, ' ');
+		serial_putc(2, '0');
+		serial_putc(2, 'x');
+		print32((unsigned int)p);
+		serial_putc(2, ' ');
+		serial_putc(2, '0');
+		serial_putc(2, 'x');
+		print32((unsigned int)hello);
+
 		serial_putc(2, '\n');
+
+
 //		printk("Openmoko KBOOT "stringify(BUILD_HOST)" "stringify(BUILD_VERSION)" "stringify(BUILD_DATE)"\n");
 		blue_on(1);
 		n++;

@@ -36,13 +36,8 @@ SECTIONS
 	  src/lowlevel_init.o(.text)
 	  src/start_kboot.o	(.text)
 	  *(.text)
+	  *(.rodata)
 	}
-
-	. = ALIGN(4);
-	.rodata : 
-    { 
-        *(.rodata) 
-    }
 
 	. = ALIGN(4);
 	.data : 
@@ -58,7 +53,7 @@ SECTIONS
 
 	. = ALIGN(4);
 	__bss_start = .;
-	.bss : 
+	.bss (NOLOAD) : 
     { 
         *(.bss) 
     }
