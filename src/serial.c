@@ -23,8 +23,9 @@
 #include "blink_led.h"
 #include "kboot.h"
 
-void serial_init (const int ubrdiv_val,const int uart)
+void serial_init (const int uart)
 {
+    int ubrdiv_val = 0x11;
   switch(uart)
     {
     case UART0:

@@ -89,8 +89,6 @@ start_code:
 # define UPLLCON	0x4c000008
 # define MPLLCON_val 	((142 << 12) + (7 << 4) + 1)
 # define UPLLCON_val   	(( 88 << 12) + (8 << 4) + 2)
-/* # define MPLLCON_val    ((0x7d << 12) + (0x2 << 4) + 0x1)
-# define UPLLCON_val    ((0x38 << 12) + (0x2 << 4) + 0x2) */
 	
 	ldr	r0, =UPLLCON
 	ldr	r1, =UPLLCON_val
@@ -108,7 +106,7 @@ start_code:
 	ldr	r1, =MPLLCON_val
 	str	r1, [r0, #-4]		/* MPLLCON */
 
-# define CLKDIVN		0x4C000014	/* clock divisor register */
+# define CLKDIVN	0x4C000014	/* clock divisor register */
 # define CLKDIVN_val  	7 /* FCLK:HCLK:PCLK = 1:3:6 */
 
 	/* FCLK:HCLK:PCLK = 1:3:6 */
@@ -126,19 +124,6 @@ start_code:
 	ldr	r1, =0x2afaaa
 	str	r1, [r0]
 
-	/* init uart0 */
-/*	ldr	r0, =0x50000000
-	mov	r1, #0x03
-	str	r1, [r0]
-	ldr	r1, =0x245
-	str	r1, [r0, #0x04]
-	mov	r1, #0x00
-	str	r1, [r0, #0x08]
-	mov	r1, #0x00
-	str	r1, [r0, #0x0c] 
-	mov	r1, #0x7
-	str	r1, [r0, #0x28] */
-
 	bl	cpu_init_crit
 
 /* reset nand controller, or it is dead to us */
@@ -153,7 +138,7 @@ start_code:
         orr     r3, r3, #1              @ enable nand controller
         str     r3, [r1, #4]
 
-										/* >> CFG_VIDEO_LOGO_MAX_SIZE */
+								/* >> CFG_VIDEO_LOGO_MAX_SIZE */
 #define CFG_GBL_DATA_SIZE		128			/* size in bytes reserved for initial data */
 stack_setup:
 	ldr	r0, _TEXT_BASE		/* upper 128 KiB: relocated uboot   */

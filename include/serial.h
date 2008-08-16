@@ -104,7 +104,7 @@
 #define rGPJUP			(*(volatile unsigned *)0x560000d8)	//Port J data
 
 void port_init(void);
-void serial_init (const int ubrdiv_val,const int uart);
+void serial_init (const int uart);
 void serial_putc (const int uart,const char c);
 int printk(const char *fmt, ...);
 int puts(const char *string);

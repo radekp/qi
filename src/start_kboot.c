@@ -155,7 +155,7 @@ void start_kboot(void)
 								     TEXT_BASE);
 
 	port_init();
-	serial_init(0x11, UART2);
+	serial_init(UART2);
 
 	puts("Openmoko KBOOT "stringify2(BUILD_HOST)" "
 			      stringify2(BUILD_VERSION)" "
