@@ -37,5 +37,6 @@
 int orange_on(int times);
 int blue_on(int times);
 int blink_led(void);
+int delay(int time);
 
 #endif /* __BLINK_LED_H */

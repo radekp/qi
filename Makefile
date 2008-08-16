@@ -64,9 +64,9 @@ ${OBJS}:${SRCS}
 ${UDFU_IMAGE}:${OBJS}
 	$(LD) ${LDFLAGS} -T$(LDS) -g $(OBJS) -o ${TARGET} ${LIBS}
 	$(OBJCOPY) -O binary -S ${TARGET} ${IMAGE}
+	$(OBJDUMP) -D ${TARGET} >${IMAGE}.dis
 	$(MKUDFU) -v ${UDFU_VID} -p ${UDFU_PID} -r ${UDFU_REV} \
 						-d ${IMAGE} ${UDFU_IMAGE}
-	$(OBJDUMP) -D ${TARGET} >${IMAGE}.dis
 
 blink_led:src/led_on.S
 	$(CC) $(CFLAGS) led_on.o led_on.S
