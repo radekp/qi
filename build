@@ -4,3 +4,8 @@ make clean && \
 make CPU=s3c6410 && \
 make CPU=s3c2442
 
+# as root then...
+#
+# ./6410-partition-sd.sh sde sdhc image/qi-s3c6410-andy_???????????????? x
+# mount /dev/sde2 /mnt ; cp ../kernel/linux-2.6/uImage.bin /mnt/boot ; umount /dev/sde2
+

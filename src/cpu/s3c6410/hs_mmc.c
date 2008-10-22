@@ -31,27 +31,10 @@
 
 /*  Global variables */
 
-static u32 rd_cnt_HSMMC;
-//static u32 wt_cnt_HSMMC;
-static u32 BlockNum_HSMMC = 0;
-
-//static u32 WriteBlockCnt_INT = 0;
-static u32 ReadBlockCnt_INT = 0;
-//static u32 WRITEINT_DONE = 0;
-//static u32 READINT_DONE = 0;
-//static u32 COMPARE_INT_DONE = 0;
-//static u32 CompareCnt_INT = 0;
-//static u32 BufferBoundary_INT_Cnt = 0;
-
 static u32 HS_DMA_END = 0;
-//static u32 HS_CARD_DETECT = 0;
-
-//static u32 ocr_check = 0;
-//static u32 mmc_card = 0;
 static u32 rca = 0;
 
 static ulong HCLK;
-//static u32 card_mid = 0;
 
 int movi_hc = 1; /* sdhc style block indexing */
 enum card_type card_type;
@@ -392,7 +375,7 @@ static void check_dma_int (void)
 {
 	u32 i;
 
-	for (i = 0; i < 0x1000000; i++) {
+	for (i = 0; i < 0x10000000; i++) {
 		if (s3c_hsmmc_readw(HM_NORINTSTS) & 0x0002) {
 			HS_DMA_END = 1;
 			s3c_hsmmc_writew(s3c_hsmmc_readw(HM_NORINTSTS) | 0x0002, HM_NORINTSTS);
@@ -404,6 +387,7 @@ static void check_dma_int (void)
 			break;
 		}
 	}
+	puts("check_dma_int: timeout\n");
 }
 
 
@@ -623,23 +607,10 @@ unsigned long s3c6410_mmc_bread(int dev_num, unsigned long start_blk, unsigned l
 	u32 blksize; //j, , Addr_temp = start_blk;
 	u32 dma = 0, cmd, multi; //, TotalReadByte, read_blk_cnt = 0;
 
-	rd_cnt_HSMMC = 0;
 	HS_DMA_END = 0;
-	BlockNum_HSMMC = 0;
-	rd_cnt_HSMMC = 0;
-	ReadBlockCnt_INT = 0;
-
-//	printf("\nHS-MMC block Read test: %d, 0x%x 0x%x\n", test, start_blk, blknum);
-
-	BlockNum_HSMMC = blknum;
 
 	blksize = Card_OneBlockSize_ver1;
 
-#if 0
-	Rx_buffer_HSMMC = (u32 *) SDI_Rx_buffer_HSMMC;
-	for (i = 0; i < (blksize * BlockNum_HSMMC) / 4; i++)
-		*(Rx_buffer_HSMMC + i) = 0x0;
-#endif
 	while (!check_card_status());
 
 	s3c_hsmmc_writew(s3c_hsmmc_readw(HM_NORINTSTSEN) & ~(DMA_STS_INT_EN | BLOCKGAP_EVENT_STS_INT_EN), HM_NORINTSTSEN);
@@ -649,7 +620,7 @@ unsigned long s3c6410_mmc_bread(int dev_num, unsigned long start_blk, unsigned l
 	dma = 1;
 
 	set_blksize_register(7, 512);	// Maximum DMA Buffer Size, Block Size
-	set_blkcnt_register(BlockNum_HSMMC);	// Block Numbers to Write
+	set_blkcnt_register(blknum);	// Block Numbers to Write
 
 	if (movi_hc)
 		set_arg_register(start_blk);		// Card Start Block Address to Write
@@ -671,12 +642,8 @@ unsigned long s3c6410_mmc_bread(int dev_num, unsigned long start_blk, unsigned l
 
 	check_dma_int();
 	while (!HS_DMA_END);
-//	puts("\nDMA Read End\n");
 
 	HS_DMA_END = 0;
-	BlockNum_HSMMC = 0;
-	rd_cnt_HSMMC = 0;
-	ReadBlockCnt_INT = 0;
 
 	return 0;
 }

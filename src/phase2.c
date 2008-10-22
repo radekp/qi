@@ -66,7 +66,7 @@ void bootloader_second_phase(void)
 		/* eat leading white space */
 		for (p = this_kernel->commandline; *p == ' '; p++);
 
-		puts("\n\nTrying kernel: ");
+		puts("\nTrying kernel: ");
 		puts(this_kernel->name);
 		puts("\n");
 
