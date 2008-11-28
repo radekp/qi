@@ -808,11 +808,20 @@ void port_init_gta03(void)
 int gta03_get_pcb_revision(void)
 {
 	u32 v = __REG(GPIDAT);
+        /*
+         * PCB rev is 3 bit code (info from Dkay)
+         * (b2, b1, b0) = (0,0,1) => pcb rev A1
+         * maximum rev = A7
+         * bit0 = GPI8
+         * bit1 = GPI1
+         * bit2 = GPI0
+         */
 
-	return (v & (1 << 8)) >> (8 - 2) |
-	       (v & (1 << 1)) >> 0 |
-	       (v & (1 << 0)) >> 0
-	;
+        return (
+                ((v & (1 << 8)) ? 1 : 0) |
+                ((v & (1 << 1)) ? 2 : 0) |
+                ((v & (1 << 0)) ? 4 : 0)
+                );
 }
 
 const struct board_variant const * get_board_variant_gta03(void)
