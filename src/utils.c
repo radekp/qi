@@ -271,7 +271,7 @@ void *malloc(size_t size)
 {
 	void *p = malloc_pointer;
 
-	malloc_pointer += size;
+	malloc_pointer += (size & ~3) + 4;
 
 	if (((u8 *)malloc_pointer - &malloc_pool[0]) > sizeof(malloc_pool)) {
 		puts("Ran out of malloc pool\n");
