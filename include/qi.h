@@ -74,6 +74,7 @@ struct board_api {
 	int (*is_this_board)(void);
 	void (*port_init)(void);
 	void (*putc)(char);
+	void (*close)(void);
 	struct kernel_source kernel_source[8];
 };
 

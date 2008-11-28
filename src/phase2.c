@@ -252,6 +252,12 @@ void bootloader_second_phase(void)
 		params->hdr.tag = ATAG_NONE;
 		params->hdr.size = 0;
 
+		/* give board implementation a chance to shut down
+		 * anything it may have going on, leave GPIO set for Linux
+		 */
+		if (this_board->close)
+			(this_board->close)();
+
 		puts ("Starting --->\n\n");
 
 		/*

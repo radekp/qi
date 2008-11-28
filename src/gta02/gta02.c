@@ -324,6 +324,21 @@ static void putc_gta02(char c)
 	serial_putc_s3c24xx(GTA02_DEBUG_UART, c);
 }
 
+static void close_gta02(void)
+{
+	/* clear any pending timeouts by reading interrupts */
+
+	i2c_read_sync(&bb_s3c24xx, PCF50633_I2C_ADS, PCF50633_REG_INT1);
+	i2c_read_sync(&bb_s3c24xx, PCF50633_I2C_ADS, PCF50633_REG_INT2);
+	i2c_read_sync(&bb_s3c24xx, PCF50633_I2C_ADS, PCF50633_REG_INT3);
+	i2c_read_sync(&bb_s3c24xx, PCF50633_I2C_ADS, PCF50633_REG_INT4);
+	i2c_read_sync(&bb_s3c24xx, PCF50633_I2C_ADS, PCF50633_REG_INT5);
+
+	/* set I2C GPIO back to peripheral unit */
+
+	(bb_s3c24xx.close)();
+}
+
 /*
  * our API for bootloader on this machine
  */
@@ -338,6 +353,7 @@ const struct board_api board_api_gta02 = {
 	.is_this_board = is_this_board_gta02,
 	.port_init = port_init_gta02,
 	.putc = putc_gta02,
+	.close = close_gta02,
 	/* these are the ways we could boot GTA02 in order to try */
 	.kernel_source = {
 		[0] = {
