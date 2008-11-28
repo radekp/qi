@@ -40,6 +40,13 @@ unsigned long s3c6410_mmc_bread(int dev_num, unsigned long blknr, unsigned long 
 /*
  * our API for bootloader on this machine
  */
+
+/* for initrd:
+ * 			.initramfs_filepath = "boot/initramfs.gz",
+ * and
+ *  "root=/dev/ram ramdisk_size=6000000"
+ */
+
 const struct board_api board_api_gta03 = {
 	.name = "GTA03",
 	.linux_machine_id = 1866,
@@ -57,10 +64,9 @@ const struct board_api board_api_gta03 = {
 			.filesystem = FS_EXT2,
 			.partition_index = 2,
 			.filepath = "boot/uImage.bin",
-			.initramfs_filepath = "boot/initramfs.gz",
 			.commandline = "console=ttySAC3,115200 " \
 				       "loglevel=8 init=/bin/sh " \
-				       "root=/dev/ram ramdisk_size=6000000"
+				       "root=/dev/mmcblk0p2 rootfstype=ext3"
 		},
 		[1] = {
 			.name = "SD Card backup rootfs",
@@ -68,9 +74,10 @@ const struct board_api board_api_gta03 = {
 			.filesystem = FS_EXT2,
 			.partition_index = 3,
 			.filepath = "boot/uImage.bin",
-			.initramfs_filepath = "boot/initramfs.gz",
 			.commandline = "console=ttySAC3,115200 " \
-				       "loglevel=8 init=/bin/sh "
-		},	},
+				       "loglevel=8 init=/bin/sh " \
+				       "root=/dev/mmcblk0p3 rootfstype=ext3"
+		},
+	},
 };
 
