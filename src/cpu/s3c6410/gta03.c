@@ -292,10 +292,10 @@ void port_init_gta03(void)
 		(2 << 12) | /* GPG3  - MMC_DATA10 */
 		(2 << 16) | /* GPG4  - MMC_DATA20 */
 		(2 << 20) | /* GPG5  - MMC_DATA30 */
-		(1 << 24)   /* GPG6  - (NC) OUTPUT 0 */
+		(2 << 24)   /* GPG6  - (NC) MMC CARD DETECT */
 	;
 
-	__REG(GPGPUD) = 0; /* all pullup and pulldown disabled */
+	__REG(GPGPUD) = (1 << (6 * 2)); /* pull down card detect */
 
 	__REG(GPGDAT) = 0; /* just for determinism */
 
