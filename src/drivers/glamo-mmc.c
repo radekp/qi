@@ -47,6 +47,9 @@ static int mmc_ready = 0;
 //static int wide = 0;
 static enum card_type card_type = CARDTYPE_NONE;
 
+
+#define MULTI_READ_BLOCKS_PER_COMMAND 64
+
 int mmc_read(unsigned long src, u8 *dst, int size);
 
 #define UNSTUFF_BITS(resp,start,size)                                   \
@@ -422,6 +425,7 @@ int mmc_read(unsigned long src, u8 *dst, int size)
 	int resp;
 	u8 response[16];
 	int size_original = size;
+	int lump;
 
 	if (((int)dst) & 1) {
 		puts("Bad align on dst\n");
@@ -435,18 +439,23 @@ int mmc_read(unsigned long src, u8 *dst, int size)
 		return resp;
 
 	while (size) {
+		/* glamo mmc times out as this increases too much */
+		lump = MULTI_READ_BLOCKS_PER_COMMAND;
+		if (lump > size)
+			lump = size;
+
 		switch (card_type) {
 		case CARDTYPE_SDHC: /* block addressing */
-			resp = mmc_cmd(MMC_READ_SINGLE_BLOCK,
+			resp = mmc_cmd(MMC_READ_MULTIPLE_BLOCK,
 				       src,
 				       MMC_CMD_ADTC | MMC_RSP_R1 |
-				       MMC_DATA_READ, MMC_BLOCK_SIZE, 1, 0,
+				       MMC_DATA_READ, MMC_BLOCK_SIZE, lump, 1,
 				       (u16 *)&response[0]);
 			break;
 		default: /* byte addressing */
-			resp = mmc_cmd(MMC_READ_SINGLE_BLOCK, src * MMC_BLOCK_SIZE,
+			resp = mmc_cmd(MMC_READ_MULTIPLE_BLOCK, src * MMC_BLOCK_SIZE,
 				MMC_CMD_ADTC | MMC_RSP_R1 | MMC_DATA_READ,
-				MMC_BLOCK_SIZE, 1, 0,
+				MMC_BLOCK_SIZE, lump, 1,
 				(u16 *)&response[0]);
 			break;
 		}
@@ -459,14 +468,22 @@ int mmc_read(unsigned long src, u8 *dst, int size)
 					     0xff00) | 2, GLAMO_REG_CLOCK_GEN8);
 
 
-		do_pio_read((u16 *)dst, MMC_BLOCK_SIZE >> 1);
+		do_pio_read((u16 *)dst, lump * MMC_BLOCK_SIZE >> 1);
 
 		if (size)
-			size--;
+			size -= lump;
 
-		dst += MMC_BLOCK_SIZE;
-		src++;
+		dst += lump * MMC_BLOCK_SIZE;
+		src += lump;
+
+		resp = mmc_cmd(MMC_STOP_TRANSMISSION, 0,
+			MMC_CMD_AC | MMC_RSP_R1B, 0, 0, 0,
+			(u16 *)&response[0]);
+		if (resp)
+			return resp;
+
 	}
+
 	return size_original;
 }
 

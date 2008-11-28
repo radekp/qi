@@ -400,7 +400,7 @@ const struct board_api board_api_gta02 = {
 				       "rootfstype=ext3 " \
 				       "root=/dev/mmcblk0p1 " \
 				       "console=ttySAC2,115200 " \
-				       "loglevel=8 " \
+				       "loglevel=4 " \
 				       "init=/sbin/init "\
 				       "ro"
 		},
@@ -420,7 +420,7 @@ const struct board_api board_api_gta02 = {
 				       "rootfstype=jffs2 " \
 				       "root=/dev/mtdblock6 " \
 				       "console=ttySAC2,115200 " \
-				       "loglevel=3 " \
+				       "loglevel=8 " \
 				       "init=/sbin/init "\
 				       "ro"
 		},
