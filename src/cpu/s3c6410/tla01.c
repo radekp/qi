@@ -206,7 +206,7 @@ const struct board_api board_api_tla01 = {
 			.commandline = "rootfstype=ext3 " \
 				       "root=/dev/mmcblk0p1 " \
 				       "console=ttySAC2,115200 " \
-				       "loglevel=4 " \
+				       "loglevel=8 " \
 				       "init=/sbin/init "\
 				       "ro"
 		},
@@ -219,7 +219,7 @@ const struct board_api board_api_tla01 = {
 			.commandline = "rootfstype=ext3 " \
 				       "root=/dev/mmcblk0p1 " \
 				       "console=ttySAC2,115200 " \
-				       "loglevel=4 " \
+				       "loglevel=8 " \
 				       "init=/sbin/init "\
 				       "ro"
 		},	},
