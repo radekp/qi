@@ -45,6 +45,9 @@ const struct board_api board_api_smdk6410 = {
 	.get_board_variant = get_board_variant_smdk6410,
 	.is_this_board = is_this_board_smdk6410,
 	.putc = putc_smdk6410,
+	.commandline_board = "console=ttySAC0,115200 " \
+			     "loglevel=3 " \
+			     "init=/bin/sh",
 	.kernel_source = {
 		[0] = {
 			.name = "SD Card rootfs",
@@ -52,9 +55,7 @@ const struct board_api board_api_smdk6410 = {
 			.filesystem = FS_EXT2,
 			.partition_index = 2,
 			.filepath = "boot/uImage.bin",
-			.commandline = "console=ttySAC0,115200 " \
-				       "loglevel=3 init=/bin/sh " \
-				       "root=/dev/mmcblk0p2"
+			.commandline_append = " root=/dev/mmcblk0p2"
 		},
 		[1] = {
 			.name = "SD Card backup rootfs",
@@ -62,9 +63,8 @@ const struct board_api board_api_smdk6410 = {
 			.filesystem = FS_EXT2,
 			.partition_index = 3,
 			.filepath = "boot/uImage.bin",
-			.commandline = "console=ttySAC0,115200 " \
-				       "loglevel=8 init=/bin/sh " \
-				       "root=/dev/mmcblk0p3"
-		},	},
+			.commandline_append = " root=/dev/mmcblk0p3"
+		},
+	},
 };
 

@@ -224,6 +224,17 @@ const struct board_api board_api_gta01 = {
 	.port_init = port_init_gta01,
 	.putc = putc_gta01,
 	.close = close_gta01,
+	.commandline_board = "mtdparts=" \
+				"neo1973-nand:" \
+				 "0x00040000(qi)," \
+				 "0x00004000(u-boot_env)," \
+				 "0x00200000(kernel)," \
+				 "0x000a0000(splash)," \
+				 "0x03d1c000(rootfs) " \
+			       "console=ttySAC0,115200 " \
+			       "init=/sbin/init "\
+			       "ro",
+	.commandline_board_debug = " loglevel=8 console=tty0",
 	/* these are the ways we could boot GTA01 in order to try */
 	.kernel_source = {
 		[0] = {
@@ -233,18 +244,7 @@ const struct board_api board_api_gta01 = {
 			.partition_index = 1,
 			.filesystem = FS_EXT2,
 			.filepath = "boot/uImage-GTA01.bin",
-			.commandline = "mtdparts=" \
-					"neo1973-nand:" \
-					 "0x00040000(qi)," \
-					 "0x00004000(u-boot_env)," \
-					 "0x00200000(kernel)," \
-					 "0x000a0000(splash)," \
-					 "0x03d1c000(rootfs) " \
-				       "root=/dev/mmcblk0p2 " \
-				       "console=ttySAC0,115200 " \
-				       "loglevel=4 " \
-				       "init=/sbin/init "\
-				       "ro"
+			.commandline_append = " root=/dev/mmcblk0p1",
 		},
 		[1] = {
 			.name = "SD Card EXT2 Kernel p2",
@@ -253,18 +253,7 @@ const struct board_api board_api_gta01 = {
 			.partition_index = 2,
 			.filesystem = FS_EXT2,
 			.filepath = "boot/uImage-GTA01.bin",
-			.commandline = "mtdparts=" \
-					"neo1973-nand:" \
-					 "0x00040000(qi)," \
-					 "0x00004000(u-boot_env)," \
-					 "0x00200000(kernel)," \
-					 "0x000a0000(splash)," \
-					 "0x03d1c000(rootfs) " \
-				       "root=/dev/mmcblk0p2 " \
-				       "console=ttySAC0,115200 " \
-				       "loglevel=4 " \
-				       "init=/sbin/init "\
-				       "ro"
+			.commandline_append = " root=/dev/mmcblk0p2",
 		},
 		[2] = {
 			.name = "SD Card EXT2 Kernel p3",
@@ -273,37 +262,15 @@ const struct board_api board_api_gta01 = {
 			.partition_index = 3,
 			.filesystem = FS_EXT2,
 			.filepath = "boot/uImage-GTA01.bin",
-			.commandline = "mtdparts=" \
-					"neo1973-nand:" \
-					 "0x00040000(qi)," \
-					 "0x00004000(u-boot_env)," \
-					 "0x00200000(kernel)," \
-					 "0x000a0000(splash)," \
-					 "0x03d1c000(rootfs) " \
-				       "root=/dev/mmcblk0p2 " \
-				       "console=ttySAC0,115200 " \
-				       "loglevel=4 " \
-				       "init=/sbin/init "\
-				       "ro"
+			.commandline_append = " root=/dev/mmcblk0p3",
 		},
 		[3] = {
 			.name = "NAND Kernel",
 			.block_read = nand_read_ll,
 			.offset_blocks512_if_no_partition = 0x44000 / 512,
 			.filesystem = FS_RAW,
-			.commandline = "mtdparts=" \
-					"neo1973-nand:" \
-					 "0x00040000(qi)," \
-					 "0x00004000(u-boot_env)," \
-					 "0x00200000(kernel)," \
-					 "0x000a0000(splash)," \
-					 "0x03d1c000(rootfs) " \
-				       "rootfstype=jffs2 " \
-				       "root=/dev/mtdblock4 " \
-				       "console=ttySAC0,115200 " \
-				       "loglevel=4 " \
-				       "init=/sbin/init "\
-				       "ro"
+			.commandline_append = " rootfstype=jffs2 " \
+				       "root=/dev/mtdblock4 ",
 		},
 	},
 };

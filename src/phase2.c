@@ -94,6 +94,7 @@ void bootloader_second_phase(void)
 
 	while (this_kernel->name) {
 		const char *p;
+		char * cmdline;
 		struct tag *params = (struct tag *)this_board->linux_tag_placement;
 		void * kernel_dram = (void *)this_board->linux_mem_start + 0x8000;
 		unsigned long crc;
@@ -104,7 +105,7 @@ void bootloader_second_phase(void)
 		partition_length_blocks = 0;
 
 		/* eat leading white space */
-		for (p = this_kernel->commandline; *p == ' '; p++);
+		for (p = this_board->commandline_board; *p == ' '; p++);
 
 		puts("\nTrying kernel: ");
 		puts(this_kernel->name);
@@ -208,10 +209,6 @@ void bootloader_second_phase(void)
 			}
 		}
 
-		puts("      Cmdline: ");
-		puts(p);
-		puts("\n");
-
 		/*
 		 * It's good for now to know that our kernel is intact from
 		 * the storage before we jump into it and maybe crash silently
@@ -266,10 +263,20 @@ void bootloader_second_phase(void)
 		/* kernel commandline */
 
 		if (*p) {
+			cmdline = params->u.cmdline.cmdline;
+			cmdline += strlen(strcpy(cmdline, p));
+			if (this_kernel->commandline_append)
+				cmdline += strlen(strcpy(cmdline,
+					      this_kernel->commandline_append));
+
 			params->hdr.tag = ATAG_CMDLINE;
 			params->hdr.size = (sizeof (struct tag_header) +
-						       strlen (p) + 1 + 4) >> 2;
-			strcpy (params->u.cmdline.cmdline, p);
+				strlen(params->u.cmdline.cmdline) + 1 + 4) >> 2;
+
+			puts("      Cmdline: ");
+			puts(params->u.cmdline.cmdline);
+			puts("\n");
+
 			params = tag_next (params);
 		}
 

@@ -383,7 +383,20 @@ const struct board_api board_api_gta02 = {
 	.port_init = port_init_gta02,
 	.putc = putc_gta02,
 	.close = close_gta02,
-	/* these are the ways we could boot GTA02 in order to try */
+	.commandline_board = "mtdparts=physmap-flash:-(nor);" \
+				       "neo1973-nand:" \
+				       "0x00040000(qi)," \
+				       "0x00040000(cmdline)," \
+				       "0x00800000(backupkernel)," \
+				       "0x000a0000(extra)," \
+				       "0x00040000(identity)," \
+				       "0x0f6a0000(backuprootfs) " \
+				      "console=ttySAC2,115200 " \
+				      "init=/sbin/init " \
+				      "ro",
+	.commandline_board_debug = " console=tty0 " \
+				   "loglevel=8",
+	/* these are the ways we could boot GTA02 in the order to try */
 	.kernel_source = {
 		[0] = {
 			.name = "SD Card EXT2 P1 Kernel",
@@ -392,19 +405,7 @@ const struct board_api board_api_gta02 = {
 			.partition_index = 1,
 			.filesystem = FS_EXT2,
 			.filepath = "boot/uImage-GTA02.bin",
-			.commandline = "mtdparts=physmap-flash:-(nor);" \
-					"neo1973-nand:" \
-					 "0x00040000(qi)," \
-					 "0x00040000(cmdline)," \
-					 "0x00800000(backupkernel)," \
-					 "0x000a0000(extra)," \
-					 "0x00040000(identity)," \
-					 "0x0f6a0000(backuprootfs) " \
-				       "root=/dev/mmcblk0p1 " \
-				       "console=ttySAC2,115200 " \
-				       "loglevel=8 console=tty0 " \
-				       "init=/sbin/init "\
-				       "ro"
+			.commandline_append = " root=/dev/mmcblk0p1",
 		},
 		[1] = {
 			.name = "SD Card EXT2 P2 Kernel",
@@ -413,19 +414,7 @@ const struct board_api board_api_gta02 = {
 			.partition_index = 2,
 			.filesystem = FS_EXT2,
 			.filepath = "boot/uImage-GTA02.bin",
-			.commandline = "mtdparts=physmap-flash:-(nor);" \
-					"neo1973-nand:" \
-					 "0x00040000(qi)," \
-					 "0x00040000(cmdline)," \
-					 "0x00800000(backupkernel)," \
-					 "0x000a0000(extra)," \
-					 "0x00040000(identity)," \
-					 "0x0f6a0000(backuprootfs) " \
-				       "root=/dev/mmcblk0p2 " \
-				       "console=ttySAC2,115200 " \
-				       "loglevel=8 console=tty0 " \
-				       "init=/sbin/init "\
-				       "ro"
+			.commandline_append = " root=/dev/mmcblk0p2",
 		},
 		[2] = {
 			.name = "SD Card EXT2 P3 Kernel",
@@ -434,39 +423,15 @@ const struct board_api board_api_gta02 = {
 			.partition_index = 3,
 			.filesystem = FS_EXT2,
 			.filepath = "boot/uImage-GTA02.bin",
-			.commandline = "mtdparts=physmap-flash:-(nor);" \
-					"neo1973-nand:" \
-					 "0x00040000(qi)," \
-					 "0x00040000(cmdline)," \
-					 "0x00800000(backupkernel)," \
-					 "0x000a0000(extra)," \
-					 "0x00040000(identity)," \
-					 "0x0f6a0000(backuprootfs) " \
-				       "root=/dev/mmcblk0p3 " \
-				       "console=ttySAC2,115200 " \
-				       "loglevel=8 console=tty0 " \
-				       "init=/sbin/init "\
-				       "ro"
+			.commandline_append = " root=/dev/mmcblk0p3",
 		},
 		[3] = {
 			.name = "NAND Kernel",
 			.block_read = nand_read_ll,
 			.offset_blocks512_if_no_partition = 0x80000 / 512,
 			.filesystem = FS_RAW,
-			.commandline = "mtdparts=physmap-flash:-(nor);" \
-					"neo1973-nand:" \
-					 "0x00040000(qi)," \
-					 "0x00040000(cmdline)," \
-					 "0x00800000(backupkernel)," \
-					 "0x000a0000(extra)," \
-					 "0x00040000(identity)," \
-					 "0x0f6a0000(backuprootfs) " \
-				       "rootfstype=jffs2 " \
-				       "root=/dev/mtdblock6 " \
-				       "console=ttySAC2,115200 " \
-				       "loglevel=8 console=tty0 " \
-				       "init=/sbin/init "\
-				       "ro"
+			.commandline_append = " rootfstype=jffs2 " \
+					      "root=/dev/mtdblock6",
 		},
 	},
 };

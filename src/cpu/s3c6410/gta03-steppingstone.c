@@ -57,6 +57,9 @@ const struct board_api board_api_gta03 = {
 	.is_this_board = is_this_board_gta03,
 	.port_init = port_init_gta03,
 	.putc = putc_gta03,
+	.commandline_board = "console=ttySAC3,115200 " \
+			     "init=/bin/sh " \
+			     "loglevel=8 ",
 	.kernel_source = {
 		[0] = {
 			.name = "SD Card rootfs",
@@ -64,9 +67,7 @@ const struct board_api board_api_gta03 = {
 			.filesystem = FS_EXT2,
 			.partition_index = 2,
 			.filepath = "boot/uImage-GTA03.bin",
-			.commandline = "console=ttySAC3,115200 " \
-				       "loglevel=8 init=/bin/sh " \
-				       "root=/dev/mmcblk0p2"
+			.commandline_append = "root=/dev/mmcblk0p2",
 		},
 		[1] = {
 			.name = "SD Card backup rootfs",
@@ -74,9 +75,7 @@ const struct board_api board_api_gta03 = {
 			.filesystem = FS_EXT2,
 			.partition_index = 3,
 			.filepath = "boot/uImage-GTA03.bin",
-			.commandline = "console=ttySAC3,115200 " \
-				       "loglevel=8 init=/bin/sh " \
-				       "root=/dev/mmcblk0p3"
+			.commandline_append = "root=/dev/mmcblk0p3",
 		},
 	},
 };

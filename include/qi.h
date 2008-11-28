@@ -54,7 +54,7 @@ struct kernel_source {
 	int partition_index; /* -1 means no partition table */
 	int offset_blocks512_if_no_partition; /* used if partition_index is -1 */
 	enum filesystem filesystem;
-	const char * commandline;
+	const char * commandline_append;
 };
 
 /* describes a board variant, eg, PCB revision */
@@ -72,6 +72,8 @@ struct board_api {
 	unsigned long linux_mem_start;
 	unsigned long linux_mem_size;
 	unsigned long linux_tag_placement;
+	const char *commandline_board;
+	const char *commandline_board_debug;
 	const struct board_variant const * (*get_board_variant)(void);
 	int (*is_this_board)(void);
 	void (*early_port_init)(void);
