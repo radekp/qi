@@ -50,11 +50,6 @@ _start_armboot:
 _TEXT_BASE:
 	.word	TEXT_BASE
 
-processor_id:
-	.word	0
-	.word	0x41129200 /* s3c2442 ID */
-	.word	0x410fb760 /* s3c6410 ID */
-
 /*
  * These are defined in the board-specific linker script.
  */
@@ -65,6 +60,15 @@ _bss_start:
 .globl _bss_end
 _bss_end:
 	.word _end
+/*
+ * we have a stack in steppingstone because we can want to run full memory
+ * memory tests
+ */
+
+	.fill   128
+.globl _ss_stack
+_ss_stack:
+
 
 start_code:	
 	/*

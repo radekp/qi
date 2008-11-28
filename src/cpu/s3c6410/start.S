@@ -152,6 +152,15 @@ _bss_start:
 _bss_end:
 	.word _end
 
+/*
+ * we have a stack in steppingstone because we can want to run full memory
+ * memory tests
+ */
+
+	.fill   128
+.globl _ss_stack
+_ss_stack:
+
 start_code:	
 	/*
 	 * set the cpu to SVC32 mode

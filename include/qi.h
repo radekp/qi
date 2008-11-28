@@ -106,5 +106,7 @@ unsigned long crc32(unsigned long crc, const unsigned char *buf,
 							      unsigned int len);
 int nand_read_ll(unsigned char *buf, unsigned long start512, int blocks512);
 
+extern void memory_test(void * start, unsigned int length);
+
 #endif
 
