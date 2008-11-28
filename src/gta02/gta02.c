@@ -166,6 +166,12 @@ void port_init_gta02(void)
 	 * We have to talk to the PMU a little bit
 	 */
 
+	/* We need SD Card rail (HCLDO) at 3.0V */
+	i2c_write_sync(&bb_s3c24xx, PCF50633_I2C_ADS, 0x39, 21);
+
+	/* switch HCLDO on */
+	i2c_write_sync(&bb_s3c24xx, PCF50633_I2C_ADS, 0x3a, 1);
+
 	/* push DOWN1 (CPU Core rail) to 1.3V, allowing 400MHz */
 	i2c_write_sync(&bb_s3c24xx, PCF50633_I2C_ADS, 0x1e, 0x1b);
 
@@ -189,6 +195,7 @@ void port_init_gta02(void)
 	*MPLLCON = ((42 << 12) + (1 << 4) + 0);
 
 	serial_init_115200_s3c24xx(GTA02_DEBUG_UART, 50 /* 50MHz PCLK */);
+
 }
 
 /**
