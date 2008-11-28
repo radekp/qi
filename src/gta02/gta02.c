@@ -198,14 +198,13 @@ void port_init_gta02(void)
 	/* configure MPLL */
 	*MPLLCON = ((42 << 12) + (1 << 4) + 0);
 
+	/* get debug UART working at 115kbps */
+	serial_init_115200_s3c24xx(GTA02_DEBUG_UART, 50 /* 50MHz PCLK */);
+
 	/* we're going to use Glamo for SD Card access, so we need to init the
 	 * evil beast
 	 */
 	glamo_core_init();
-
-	/* get debug UART working at 115kbps */
-	serial_init_115200_s3c24xx(GTA02_DEBUG_UART, 50 /* 50MHz PCLK */);
-
 }
 
 /**
@@ -257,7 +256,12 @@ int gta02_get_pcb_revision(void)
 	return n;
 }
 
+int sd_card_init_gta02(void)
+{
+	extern int mmc_init(int verbose);
 
+	return mmc_init(1);
+}
 
 /* return nonzero if we believe we run on GTA02 */
 
@@ -297,6 +301,27 @@ const struct board_api board_api_gta02 = {
 	/* these are the ways we could boot GTA02 in order to try */
 	.kernel_source = {
 		[0] = {
+			.name = "SD Card FAT Kernel",
+			.block_init = sd_card_init_gta02,
+			.block_read = nand_read_ll,
+			.partition_index = 0,
+			.filesystem = FS_FAT,
+			.commandline = "mtdparts=physmap-flash:-(nor);" \
+					"neo1973-nand:" \
+					 "0x00040000(qi)," \
+					 "0x00040000(cmdline)," \
+					 "0x00800000(backupkernel)," \
+					 "0x000a0000(extra)," \
+					 "0x00040000(identity)," \
+					 "0x0f6a0000(backuprootfs) " \
+				       "rootfstype=jffs2 " \
+				       "root=/dev/mtdblock6 " \
+				       "console=ttySAC2,115200 " \
+				       "loglevel=8 " \
+				       "init=/sbin/init "\
+				       "ro"
+		},
+		[1] = {
 			.name = "NAND Kernel",
 			.block_read = nand_read_ll,
 			.partition_index = -1,

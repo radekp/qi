@@ -122,19 +122,19 @@ struct sd_cid {
 	char		pnm_0;	/* product name */
 	char		oid_1;	/* OEM/application ID */
 	char		oid_0;
-	uint8_t		mid;	/* manufacturer ID */
+	u8		mid;	/* manufacturer ID */
 	char		pnm_4;
 	char		pnm_3;
 	char		pnm_2;
 	char		pnm_1;
-	uint8_t		psn_2;	/* product serial number */
-	uint8_t		psn_1;
-	uint8_t		psn_0;	/* MSB */
-	uint8_t		prv;	/* product revision */
-	uint8_t		crc;	/* CRC7 checksum, b0 is unused and set to 1 */
-	uint8_t		mdt_1;	/* manufacturing date, LSB, RRRRyyyy yyyymmmm */
-	uint8_t		mdt_0;	/* MSB */
-	uint8_t		psn_3;	/* LSB */
+	u8		psn_2;	/* product serial number */
+	u8		psn_1;
+	u8		psn_0;	/* MSB */
+	u8		prv;	/* product revision */
+	u8		crc;	/* CRC7 checksum, b0 is unused and set to 1 */
+	u8		mdt_1;	/* manufacturing date, LSB, RRRRyyyy yyyymmmm */
+	u8		mdt_0;	/* MSB */
+	u8		psn_3;	/* LSB */
 };
 
 enum card_type {

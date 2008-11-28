@@ -25,22 +25,15 @@
  * published by the Free Software Foundation.
  */
 
-#if 0
-
-#include <config.h>
-#include <common.h>
+#include <qi.h>
 #include <mmc.h>
-#include <asm/errno.h>
-#include <asm/io.h>
-#include <part.h>
-#include <fat.h>
-#include <pcf50633.h>
 
-#include "glamo-regs.h"
-#include "glamo-mmc.h"
+#include <glamo-regs.h>
+#include <glamo-mmc.h>
+
+#define CONFIG_GLAMO_BASE 0x08000000
 
 #define MMC_BLOCK_SIZE_BITS 9
-#define MMC_BLOCK_SIZE (1 << MMC_BLOCK_SIZE_BITS)
 
 #define GLAMO_REG(x) (*(volatile u16 *)(CONFIG_GLAMO_BASE + x))
 #define GLAMO_INTRAM_OFFSET (8 * 1024 * 1024)
@@ -49,25 +42,29 @@
 				  GLAMO_INTRAM_OFFSET + GLAMO_FB_SIZE))
 
 static int ccnt;
-static block_dev_desc_t mmc_dev;
-static mmc_csd_t mmc_csd;
+//static mmc_csd_t mmc_csd;
 static int mmc_ready = 0;
-static int wide = 0;
+//static int wide = 0;
 static enum card_type card_type = CARDTYPE_NONE;
 
-block_dev_desc_t * mmc_get_dev(int dev)
+int mmc_read(unsigned long src, u8 *dst, int size);
+
+int q;
+
+void udelay(int n)
 {
-	return (block_dev_desc_t *)&mmc_dev;
+	while (n--)
+		q+=n * q;
 }
 
 static void
-glamo_reg_write(u_int16_t val, u_int16_t reg)
+glamo_reg_write(u16 val, u16 reg)
 {
 	GLAMO_REG(reg) = val;
 }
 
-static u_int16_t
-glamo_reg_read(u_int16_t reg)
+static u16
+glamo_reg_read(u16 reg)
 {
 	return GLAMO_REG(reg);
 }
@@ -89,9 +86,10 @@ unsigned char CRC7(u8 * pu8, int cnt)
 	return (crc << 1) | 1;
 }
 
-ulong mmc_bread(int dev_num, ulong blknr, ulong blkcnt, void *dst)
+unsigned long mmc_bread(int dev_num, unsigned long blknr, unsigned long blkcnt,
+								      void *dst)
 {
-	ulong src = blknr * MMC_BLOCK_SIZE;
+	unsigned long src = blknr * MMC_BLOCK_SIZE;
 
 	if (!blkcnt)
 		return 0;
@@ -103,7 +101,7 @@ ulong mmc_bread(int dev_num, ulong blknr, ulong blkcnt, void *dst)
 
 /* MMC_DEFAULT_RCA should probably be just 1, but this may break other code
    that expects it to be shifted. */
-static u_int16_t rca = MMC_DEFAULT_RCA >> 16;
+static u16 rca = MMC_DEFAULT_RCA >> 16;
 
 static void do_pio_read(u16 *buf, int count_words)
 {
@@ -160,7 +158,7 @@ static int mmc_cmd(int opcode, int arg, int flags,
 			GLAMO_REGOFS_MMC + GLAMO_REG_MMC_WDATADS1);
 		glamo_reg_write((u16)(GLAMO_FB_SIZE >> 16),
 			GLAMO_REGOFS_MMC + GLAMO_REG_MMC_WDATADS2);
-		glamo_reg_write((u16)GLAMO_FB_SIZE,
+		glamo_reg_write((u16)GLAMO_FB_/*SIZE*/,
 			GLAMO_REGOFS_MMC + GLAMO_REG_MMC_RDATADS1);
 		glamo_reg_write((u16)(GLAMO_FB_SIZE >> 16),
 			GLAMO_REGOFS_MMC + GLAMO_REG_MMC_RDATADS2);
@@ -318,8 +316,12 @@ static int mmc_cmd(int opcode, int arg, int flags,
 		return 0;
 
 	if (error) {
-		printf("cmd 0x%x, arg 0x%x flags 0x%x\n", opcode, arg, flags);
-		printf("Error after cmd: 0x%x\n", error);
+//		printf("cmd 0x%x, arg 0x%x flags 0x%x\n", opcode, arg, flags);
+#if 0
+		puts("Error after cmd: 0x");
+		print32(error);
+		puts("\n");
+#endif
 		goto done;
 	}
 	/*
@@ -357,8 +359,12 @@ static int mmc_cmd(int opcode, int arg, int flags,
 	if (status & GLAMO_STAT1_MMC_RTOUT)
 		error = -5;
 	if (error) {
-		printf("cmd 0x%x, arg 0x%x flags 0x%x\n", opcode, arg, flags);
-		printf("Error after resp: 0x%x\n", status);
+//		printf("cmd 0x%x, arg 0x%x flags 0x%x\n", opcode, arg, flags);
+#if 0
+		puts("Error after resp: 0x");
+		print32(status);
+		puts("\n");
+#endif
 		goto done;
 	}
 #if 0
@@ -386,7 +392,6 @@ static void glamo_mci_reset(void)
 		   GLAMO_CLOCK_MMC_EN_TCLK | GLAMO_CLOCK_MMC_DG_M9CLK |
 		   GLAMO_CLOCK_MMC_EN_M9CLK,
 		  GLAMO_REG_CLOCK_MMC);
-	udelay(100000);
 	/* and disable reset */
 	glamo_reg_write(GLAMO_CLOCK_MMC_DG_TCLK |
 		   GLAMO_CLOCK_MMC_EN_TCLK | GLAMO_CLOCK_MMC_DG_M9CLK |
@@ -395,30 +400,21 @@ static void glamo_mci_reset(void)
 }
 
 
-static u_int8_t ldo_voltage(unsigned int millivolts)
-{
-	if (millivolts < 900)
-		return 0;
-	else if (millivolts > 3600)
-		return 0x1f;
 
-	millivolts -= 900;
-	return millivolts / 100;
-}
-
-int mmc_read(ulong src, uchar *dst, int size)
+int mmc_read(unsigned long src, u8 *dst, int size)
 {
 	int resp;
 	u8 response[16];
 	int size_original = size;
 
 	if ((!size) || (size & (MMC_BLOCK_SIZE - 1))) {
-		printf("Bad size %d\n", size);
+		puts("Bad size 0x");
+		print32(size);
 		return 0;
 	}
 
 	if (((int)dst) & 1) {
-		printf("Bad align on dst\n");
+		puts("Bad align on dst\n");
 		return 0;
 	}
 
@@ -454,19 +450,20 @@ int mmc_read(ulong src, uchar *dst, int size)
 	return size_original;
 }
 
-int mmc_write(uchar *src, ulong dst, int size)
+int mmc_write(u8 *src, unsigned long dst, int size)
 {
 	int resp;
 	u8 response[16];
 	int size_original = size;
 
 	if ((!size) || (size & (MMC_BLOCK_SIZE - 1))) {
-		printf("Bad size %d\n", size);
+		puts("Bad size 0x");
+		print32(size);
 		return 0;
 	}
 
 	if (((int)dst) & 1) {
-		printf("Bad align on dst\n");
+		puts("Bad align on dst\n");
 		return 0;
 	}
 
@@ -503,40 +500,46 @@ int mmc_write(uchar *src, ulong dst, int size)
 	return size_original;
 }
 
+#if 0
 static void print_mmc_cid(mmc_cid_t *cid)
 {
-	printf("MMC found. Card desciption is:\n");
-	printf("Manufacturer ID = %02x%02x%02x\n",
-		cid->id[0], cid->id[1], cid->id[2]);
-	printf("HW/FW Revision = %x %x\n",cid->hwrev, cid->fwrev);
-	cid->hwrev = cid->fwrev = 0;	/* null terminate string */
-	printf("Product Name = %s\n",cid->name);
+	puts("MMC found. Card desciption is:\n");
+	puts("Manufacturer ID = ");
+	print8(cid->id[0]);
+	print8(cid->id[1]);
+	print8(cid->id[2]);
+/*
+	puts("HW/FW Revision = %x %x\n",cid->hwrev, cid->fwrev);
+	cid->hwrev = cid->fwrev = 0;
+	puts("Product Name = %s\n",cid->name);
 	printf("Serial Number = %02x%02x%02x\n",
 		cid->sn[0], cid->sn[1], cid->sn[2]);
 	printf("Month = %d\n",cid->month);
 	printf("Year = %d\n",1997 + cid->year);
+*/
 }
-
+#endif
 static void print_sd_cid(const struct sd_cid *cid)
 {
-	printf("Card Type:          ");
+	puts("Card Type:          ");
 	switch (card_type) {
 	case CARDTYPE_NONE:
-		printf("(None)\n");
+		puts("(None)\n");
 		break;
 	case CARDTYPE_MMC:
-		printf("MMC\n");
+		puts("MMC\n");
 		break;
 	case CARDTYPE_SD:
-		printf("SD\n");
+		puts("SD\n");
 		break;
 	case CARDTYPE_SD20:
-		printf("SD 2.0\n");
+		puts("SD 2.0\n");
 		break;
 	case CARDTYPE_SDHC:
-		printf("SD 2.0 SDHC\n");
+		puts("SD 2.0 SDHC\n");
 		break;
 	}
+#if 0
 	printf("Manufacturer:       0x%02x, OEM \"%c%c\"\n",
 	    cid->mid, cid->oid_0, cid->oid_1);
 	printf("Product name:       \"%c%c%c%c%c\", revision %d.%d\n",
@@ -548,6 +551,7 @@ static void print_sd_cid(const struct sd_cid *cid)
 	printf("Manufacturing date: %d/%d\n",
 	    cid->mdt_1 & 15,
 	    2000+((cid->mdt_0 & 15) << 4)+((cid->mdt_1 & 0xf0) >> 4));
+#endif
 /*	printf("CRC:                0x%02x, b0 = %d\n",
 	    cid->crc >> 1, cid->crc & 1); */
 }
@@ -555,11 +559,11 @@ static void print_sd_cid(const struct sd_cid *cid)
 
 int mmc_init(int verbose)
 {
- 	int retries = 14, rc = -ENODEV;
+	int retries = 14, rc = -1;
 	int resp;
 	u8 response[16];
-	mmc_cid_t *mmc_cid = (mmc_cid_t *)response;
-	struct sd_cid *sd_cid = (struct sd_cid *)response;
+//	mmc_cid_t *mmc_cid = (mmc_cid_t *)response;
+//	struct sd_cid *sd_cid = (struct sd_cid *)response;
 	u32 hcs = 0;
 
 	card_type = CARDTYPE_NONE;
@@ -576,14 +580,6 @@ int mmc_init(int verbose)
 	/* controller reset */
 
 	glamo_mci_reset();
-
-	/* power the sdcard slot */
-
-	pcf50633_reg_write(PCF50633_REG_HCLDOOUT, ldo_voltage(3300));
-	udelay(10000);
-	pcf50633_reg_write(PCF50633_REG_HCLDOOUT + 1,
-		pcf50633_reg_read(PCF50633_REG_HCLDOOUT + 1) | 1); /* on */
-	udelay(10000);
 
 	/* start the clock -- slowly (50MHz / 250 == 195kHz */
 
@@ -613,6 +609,7 @@ int mmc_init(int verbose)
 	udelay(100000);
 	udelay(100000);
 	udelay(100000);
+	udelay(100000);
 
 	/* SDHC card? */
 
@@ -628,6 +625,7 @@ int mmc_init(int verbose)
 
 	while (retries--) {
 
+		udelay(100000);
 		udelay(100000);
 
 		resp = mmc_cmd(MMC_APP_CMD, 0x00000000,
@@ -650,17 +648,18 @@ int mmc_init(int verbose)
 			break;
 		}
 	}
-	if (retries < 0)
+	if (retries < 0) {
+		puts("no response\n");
 		return 1;
+	}
 
 	if (card_type == CARDTYPE_NONE) {
 		retries = 10;
-		printf("failed to detect SD Card, trying MMC\n");
+		puts("failed to detect SD Card, trying MMC\n");
 		do {
 			resp = mmc_cmd(MMC_SEND_OP_COND, 0x00ffc000,
 				       MMC_CMD_BCR | MMC_RSP_R3, 0, 0, 0,
 				       (u16 *)&response[0]);
-			debug("resp %x %x\n", response[0], response[1]);
 			udelay(50);
 		} while (retries-- && !(response[3] & 0x80));
 		if (retries >= 0)
@@ -670,6 +669,7 @@ int mmc_init(int verbose)
 	}
 
 	/* fill in device description */
+#if 0
 	mmc_dev.if_type = IF_TYPE_MMC;
 	mmc_dev.part_type = PART_TYPE_DOS;
 	mmc_dev.dev = 0;
@@ -679,7 +679,7 @@ int mmc_init(int verbose)
 	mmc_dev.block_read = mmc_bread;
 	mmc_dev.blksz = 512;
 	mmc_dev.lba = 1 << 16; /* 64K x 512 blocks = 32MB default */
-
+#endif
 	/* try to get card id */
 	resp = mmc_cmd(MMC_ALL_SEND_CID, hcs,
 			MMC_CMD_BCR | MMC_RSP_R2, 0, 0, 0,
@@ -691,7 +691,7 @@ int mmc_init(int verbose)
 	case CARDTYPE_MMC:
 		/* TODO configure mmc driver depending on card
 			attributes */
-
+#if 0
 		if (verbose)
 			print_mmc_cid(mmc_cid);
 		sprintf((char *) mmc_dev.vendor,
@@ -701,7 +701,7 @@ int mmc_init(int verbose)
 		sprintf((char *) mmc_dev.product, "%s", mmc_cid->name);
 		sprintf((char *) mmc_dev.revision, "%x %x",
 			mmc_cid->hwrev, mmc_cid->fwrev);
-
+#endif
 		/* MMC exists, get CSD too */
 		resp = mmc_cmd(MMC_SET_RELATIVE_ADDR, MMC_DEFAULT_RCA,
 				MMC_CMD_AC | MMC_RSP_R1, 0, 0, 0,
@@ -713,6 +713,7 @@ int mmc_init(int verbose)
 	case CARDTYPE_SDHC:
 		if (verbose)
 			print_sd_cid(sd_cid);
+#if 0
 		sprintf((char *) mmc_dev.vendor,
 			"Man %02 OEM %c%c \"%c%c%c%c%c\"",
 			sd_cid->mid, sd_cid->oid_0, sd_cid->oid_1,
@@ -723,7 +724,7 @@ int mmc_init(int verbose)
 			sd_cid->psn_2 << 8 | sd_cid->psn_3);
 		sprintf((char *) mmc_dev.revision, "%d.%d",
 			sd_cid->prv >> 4, sd_cid->prv & 15);
-
+#endif
 		resp = mmc_cmd(SD_SEND_RELATIVE_ADDR, MMC_DEFAULT_RCA,
 				MMC_CMD_BCR | MMC_RSP_R6, 0, 0, 0,
 				(u16 *)&response[0]);
@@ -742,17 +743,20 @@ int mmc_init(int verbose)
 	if (!resp) {
 		mmc_csd_t *csd = (mmc_csd_t *)response;
 
-		memcpy(&mmc_csd, csd, sizeof(csd));
+//		memcpy(&mmc_csd, csd, sizeof(csd));
 		rc = 0;
 		mmc_ready = 1;
 		/* FIXME add verbose printout for csd */
 		/* printf("READ_BL_LEN=%u, C_SIZE_MULT=%u, C_SIZE=%u\n",
 			csd->read_bl_len, csd->c_size_mult1,
 			csd->c_size); */
-		mmc_dev.blksz = 512;
-		mmc_dev.lba = (((unsigned long)1 << csd->c_size_mult1) *
-				(unsigned long)csd->c_size) >> 9;
-		printf("MMC/SD size:        %dMiB\n", mmc_dev.lba >> 1);
+//		mmc_dev.blksz = 512;
+//		mmc_dev.lba = (((unsigned long)1 << csd->c_size_mult1) *
+//				(unsigned long)csd->c_size) >> 9;
+		puts("  MMC/SD size: ");
+		print32((((unsigned long)1 << csd->c_size_mult1) *
+				(unsigned long)csd->c_size) >> 10);
+		puts(" MiB\n");
 	}
 
 	resp = mmc_cmd(MMC_SELECT_CARD, rca<<16, MMC_CMD_AC | MMC_RSP_R1,
@@ -779,50 +783,8 @@ int mmc_init(int verbose)
 	glamo_reg_write((glamo_reg_read(GLAMO_REG_CLOCK_GEN8) & 0xff00) | 2,
 			 GLAMO_REG_CLOCK_GEN8);
 
-	fat_register_device(&mmc_dev, 1); /* partitions start counting with 1 */
-
 	return rc;
 }
 
-void mmc_depower(void)
-{
-	u8 response[16];
 
-	/* reset */
-	mmc_cmd(MMC_GO_IDLE_STATE, 0, MMC_CMD_BCR, 0, 0, 0,
-		(u16 *)&response[0]);
-
-	/* hold engine reset, remove clocks */
-
-	glamo_reg_write(GLAMO_CLOCK_MMC_RESET, GLAMO_REG_CLOCK_MMC);
-
-	/* disable engine */
-
-	glamo_reg_write(0, GLAMO_REG_CLOCK_MMC);
-	glamo_reg_write(glamo_reg_read(GLAMO_REG_HOSTBUS(2)) &
-			(~GLAMO_HOSTBUS2_MMIO_EN_MMC), GLAMO_REG_HOSTBUS(2));
-
-	/* remove power */
-
-	pcf50633_reg_write(PCF50633_REG_HCLDOOUT + 1,
-		pcf50633_reg_read(PCF50633_REG_HCLDOOUT + 1) & ~1); /* off */
-}
-
-int
-mmc_ident(block_dev_desc_t *dev)
-{
-	return 0;
-}
-
-int
-mmc2info(ulong addr)
-{
-	/* FIXME hard codes to 32 MB device */
-	if (addr >= CFG_MMC_BASE && addr < CFG_MMC_BASE + 0x02000000)
-		return 1;
-
-	return 0;
-}
-
-#endif
 

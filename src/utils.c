@@ -71,7 +71,7 @@ void printnybble(unsigned char n)
 		this_board->putc('a' + n - 10);
 }
 
-void printhex(unsigned char n)
+void print8(unsigned char n)
 {
 	printnybble((n >> 4) & 15);
 	printnybble(n & 15);
@@ -79,10 +79,10 @@ void printhex(unsigned char n)
 
 void print32(unsigned int u)
 {
-	printhex(u >> 24);
-	printhex(u >> 16);
-	printhex(u >> 8);
-	printhex(u);
+	print8(u >> 24);
+	print8(u >> 16);
+	print8(u >> 8);
+	print8(u);
 }
 
 void hexdump(unsigned char *start, int len)
@@ -94,7 +94,7 @@ void hexdump(unsigned char *start, int len)
 		this_board->putc(':');
 		this_board->putc(' ');
 		for (n = 0; n < 16; n++) {
-			printhex(*start++);
+			print8(*start++);
 			this_board->putc(' ');
 		}
 		this_board->putc('\n');

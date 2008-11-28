@@ -98,8 +98,8 @@ enum glamo_register_generic {
 	GLAMO_REG_DFT_GEN3	= 0x0074,
 	GLAMO_REG_DFT_GEN4	= 0x0076,
 
-	GLAMO_REG_DFT_GEN5	= 0x01e0,
-	GLAMO_REG_DFT_GEN6	= 0x01f0,
+        GLAMO_REG_PLL_GEN6      = 0x01e0,
+        GLAMO_REG_PLL_GEN7      = 0x01f0,
 };
 
 #define GLAMO_REG_HOSTBUS(x)	(GLAMO_REGOFS_HOSTBUS-2+(x*2))
