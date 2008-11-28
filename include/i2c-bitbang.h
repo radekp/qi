@@ -53,7 +53,8 @@ enum i2c_bitbang_states {
 
 	IBS_STOP1,
 	IBS_STOP2,
-	IBS_STOP3
+	IBS_STOP3,
+	IBS_STOP4
 };
 
 /* context for bitbang GPIO pins and transaction */

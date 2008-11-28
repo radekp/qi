@@ -194,6 +194,11 @@ int i2c_next_state(struct i2c_bitbang * bb)
 
 	case IBS_STOP3:
 		(bb->set)(1, 1);
+		bb->state = IBS_STOP4;
+		break;
+
+	case IBS_STOP4:
+		(bb->set)(1, 1);
 		return 1; /* done */
 	}
 
