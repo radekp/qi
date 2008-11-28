@@ -175,7 +175,7 @@ stack_setup:
 	ldr	r0, _TEXT_BASE		/* upper 128 KiB: relocated uboot   */
 	sub	r0, r0, #CFG_GBL_DATA_SIZE 	/* bdinfo                        */
 	sub	sp, r0, #12		/* leave 3 words for abort-stack    */
-#if 0
+
 clear_bss:
 	ldr	r0, _bss_start		/* find start of bss segment        */
 	ldr	r1, _bss_end		/* stop here                        */
@@ -186,7 +186,6 @@ clbss_l:
 	add	r0, r0, #4
 	cmp	r0, r1
 	ble	clbss_l
-#endif
 
 /* we are going to jump into the C part of the init now */
 spin:
