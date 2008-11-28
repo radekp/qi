@@ -113,7 +113,7 @@ void port_init_gta02(void)
 	 *     Binary :  1       1      1      1   , 1       1      1      1   ,  1       1     1      1
 	 */
 	rGPACON = 0x007E5FFF;
-	rGPADAT |= (1 << 16);      /* Set GPA16 to high (nNAND_WP) */
+	rGPADAT = 0x00000000;
 	/*
 	 * ===* PORT B GROUP
 	 *      Ports  : GPB10    GPB9    GPB8    GPB7    GPB6     GPB5    GPB4   GPB3   GPB2     GPB1      GPB0
@@ -123,6 +123,7 @@ void port_init_gta02(void)
 	 */
 	rGPBCON = 0x00155555;
 	rGPBUP = 0x000007FF;
+	rGPBDAT = 0x00000000;
 	/*
 	 * === PORT C GROUP
 	 *     Ports  : GPC15 GPC14 GPC13 GPC12 GPC11 GPC10 GPC9 GPC8  GPC7   GPC6   GPC5 GPC4 GPC3  GPC2  GPC1 GPC0
@@ -131,7 +132,7 @@ void port_init_gta02(void)
 	 */
 	rGPCCON = 0x55555155;
 	rGPCUP = 0x0000FFFF & ~(1 << 5);
-	rGPCDAT |= (1 << 13) | (1 << 15); /* index detect -> hi */
+	rGPCDAT = (1 << 13) | (1 << 15); /* index detect -> hi */
 	/*
 	 * === PORT D GROUP
 	 *     Ports  : GPD15 GPD14 GPD13 GPD12 GPD11 GPD10 GPD9 GPD8 GPD7 GPD6 GPD5 GPD4 GPD3 GPD2 GPD1 GPD0
@@ -140,7 +141,7 @@ void port_init_gta02(void)
 	 */
 	rGPDCON = 0x55555555;
 	rGPDUP = 0x0000FFFF;
-	rGPDDAT |= (1 << 0) | (1 << 3) | (1 << 4); /* index detect -> hi */
+	rGPDDAT = (1 << 0) | (1 << 3) | (1 << 4); /* index detect -> hi */
 	/*
 	 * === PORT E GROUP
 	 *     Ports  : GPE15  GPE14 GPE13   GPE12   GPE11   GPE10   GPE9    GPE8     GPE7  GPE6  GPE5   GPE4
@@ -153,6 +154,7 @@ void port_init_gta02(void)
 	 */
 	rGPECON = 0xAAAAAAAA;
 	rGPEUP = 0x0000FFFF & ~(1 << 11);
+	rGPEDAT = 0x00000000;
 	/*
 	 * === PORT F GROUP
 	 *     Ports  : GPF7   GPF6   GPF5   GPF4      GPF3     GPF2  GPF1   GPF0
@@ -163,6 +165,7 @@ void port_init_gta02(void)
 	/* pulldown on GPF03: TP-4705+debug - debug conn will float */
 	rGPFCON = 0x0000AAAA;
 	rGPFUP = 0x000000FF & ~(1 << 3);
+	rGPFDAT = 0x00000000;
 
 
 	/*
@@ -179,6 +182,8 @@ void port_init_gta02(void)
 	 */
 	rGPGCON = 0x01AAFE79;
 	rGPGUP = 0x0000FFFF;
+	rGPGDAT = 0x00000000;
+
 	/*
 	 * === PORT H GROUP
 	 *     Ports  :  GPH10    GPH9  GPH8 GPH7  GPH6  GPH5 GPH4 GPH3 GPH2 GPH1  GPH0
@@ -191,11 +196,14 @@ void port_init_gta02(void)
 	 */
 	rGPHCON = 0x001AAAAA;
 	rGPHUP = 0x000007FF & ~(1 << 8) & ~(1 << 0) & ~(1 << 3);
+	rGPHDAT = 0x00000000;
 
 	/* pulldown on GPJ00: input, just floats! */
 	/* pulldown on GPJ07: WLAN module WLAN_GPIO0, no ext pull */
 	rGPJCON = 0x1551544;
 	rGPJUP = 0x1ffff & ~(1 << 0) & ~(1 << 7);
+	rGPJDAT = 0x00000100;
+
 	rGPJDAT |= (1 << 4) | (1 << 6);
 					/* Set GPJ4 to high (nGSM_EN) */
 					/* Set GPJ6 to high (nDL_GSM) */
