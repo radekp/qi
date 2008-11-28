@@ -35,6 +35,42 @@
 
 #define PCF50633_I2C_ADS 0x73
 
+struct pcf50633_init {
+	u8 index;
+	u8 value;
+};
+
+const struct pcf50633_init pcf50633_init[] = {
+
+	{ PCF50633_REG_OOCWAKE,		0xd3 }, /* wake from ONKEY,EXTON!,RTC,USB,ADP */
+	{ PCF50633_REG_OOCTIM1,		0xaa },	/* debounce 14ms everything */
+	{ PCF50633_REG_OOCTIM2,		0x4a },
+	{ PCF50633_REG_OOCMODE,		0x55 },
+	{ PCF50633_REG_OOCSHDWN,	0x04 }, /* defeat 8s death from lowsys on A5 */
+	{ PCF50633_REG_OOCCTL,		0x47 },
+
+	{ PCF50633_REG_SVMCTL,		0x08 },	/* 3.10V SYS voltage thresh. */
+	{ PCF50633_REG_BVMCTL,		0x02 },	/* 2.80V BAT voltage thresh. */
+
+	{ PCF50633_REG_AUTOENA,		0x01 },	/* always on */
+
+	{ PCF50633_REG_DOWN1OUT,	0x1b }, /* 1.3V (0x1b * .025V + 0.625V) */
+	{ PCF50633_REG_DOWN1ENA,	0x02 }, /* enabled if GPIO1 = HIGH */
+	{ PCF50633_REG_HCLDOOUT,	21 },	/* 3.0V (21 * 0.1V + 0.9V) */
+	{ PCF50633_REG_HCLDOENA,	0x01 }, /* ON by default*/
+	{ PCF50633_REG_MBCC1,		0xe6 },
+	{ PCF50633_REG_MBCC2,		0x28 },	/* Vbatconid=2.7V, Vmax=4.20V */
+	{ PCF50633_REG_MBCC3,		0x19 },	/* 25/255 == 98mA pre-charge */
+	{ PCF50633_REG_MBCC4,		0xff }, /* 255/255 == 1A adapter fast */
+	{ PCF50633_REG_MBCC5,		0x19 },	/* 25/255 == 98mA soft-start usb fast */
+	{ PCF50633_REG_MBCC6,		0x00 }, /* cutoff current 1/32 * Ichg */
+	{ PCF50633_REG_MBCC7,		0x00 },	/* 1.6A max bat curr, USB 100mA */
+	{ PCF50633_REG_MBCC8,		0x00 },
+
+	{ PCF50633_REG_BBCCTL,		0x19 },	/* 3V, 200uA, on */
+
+};
+
 static const struct board_variant board_variants[] = {
 	[0] = {
 		.name = "A5 PCB",
@@ -52,6 +88,7 @@ void port_init_gta02(void)
 	unsigned int * MPLLCON = (unsigned int *)0x4c000004;
 	unsigned int * UPLLCON = (unsigned int *)0x4c000008;
 	unsigned int * CLKDIVN = (unsigned int *)0x4c000014;
+	int n;
 
 	//CAUTION:Follow the configuration order for setting the ports.
 	// 1) setting value(GPnDAT)
@@ -168,16 +205,10 @@ void port_init_gta02(void)
 	 * We have to talk to the PMU a little bit
 	 */
 
-	/* We need SD Card rail (HCLDO) at 3.0V */
-	i2c_write_sync(&bb_s3c24xx, PCF50633_I2C_ADS, PCF50633_REG_HCLDOOUT,
-									    21);
+	for (n = 0; n < ARRAY_SIZE(pcf50633_init); n++)
+		i2c_write_sync(&bb_s3c24xx, PCF50633_I2C_ADS,
+			       pcf50633_init[n].index, pcf50633_init[n].value);
 
-	/* switch HCLDO on */
-	i2c_write_sync(&bb_s3c24xx, PCF50633_I2C_ADS, PCF50633_REG_HCLDOENA, 1);
-
-	/* push DOWN1 (CPU Core rail) to 1.3V, allowing 400MHz */
-	i2c_write_sync(&bb_s3c24xx, PCF50633_I2C_ADS, PCF50633_REG_DOWN1OUT,
-									  0x1b);
 
 	/* change CPU clocking to 400MHz 1:4:8 */
 
@@ -327,7 +358,7 @@ const struct board_api board_api_gta02 = {
 				       "rootfstype=ext3 " \
 				       "root=/dev/mmcblk0p1 " \
 				       "console=ttySAC2,115200 " \
-				       "loglevel=4 " \
+				       "loglevel=8 " \
 				       "init=/sbin/init "\
 				       "ro"
 		},
