@@ -25,6 +25,9 @@
 
 #include <qi.h>
 #include <neo_gta02.h>
+#include <i2c-bitbang-s3c24xx.h>
+
+#define PCF50633_I2C_ADS 0x73
 
 static const struct board_variant board_variants[] = {
 	[0] = {
@@ -40,13 +43,16 @@ static const struct board_variant board_variants[] = {
 
 void port_init_gta02(void)
 {
+	unsigned int * MPLLCON = (unsigned int *)0x4c000004;
+	unsigned int * UPLLCON = (unsigned int *)0x4c000008;
+	unsigned int * CLKDIVN = (unsigned int *)0x4c000014;
 
-    //CAUTION:Follow the configuration order for setting the ports.
-    // 1) setting value(GPnDAT)
-    // 2) setting control register  (GPnCON)
-    // 3) configure pull-up resistor(GPnUP)
+	//CAUTION:Follow the configuration order for setting the ports.
+	// 1) setting value(GPnDAT)
+	// 2) setting control register  (GPnCON)
+	// 3) configure pull-up resistor(GPnUP)
 
-    /* 32bit data bus configuration   */
+	/* 32bit data bus configuration   */
 	/*
 	 * === PORT A GROUP
 	 *     Ports  : GPA22 GPA21  GPA20 GPA19 GPA18 GPA17 GPA16 GPA15 GPA14 GPA13 GPA12
@@ -151,7 +157,34 @@ void port_init_gta02(void)
 
 	rGPJDAT |= (1 << 5);	/* Set GPJ5 to high 3D RST */
 
-	serial_init(UART2, 0x11);
+
+	/*
+	 * We have to talk to the PMU a little bit
+	 */
+
+	/* push DOWN1 (CPU Core rail) to 1.3V, allowing 400MHz */
+	i2c_write_sync(&bb_s3c24xx, PCF50633_I2C_ADS, 0x1e, 0x1b);
+
+	/* change CPU clocking to 400MHz 1:4:8 */
+
+	/* clock divide 1:4:8 - do it first */
+	*CLKDIVN = 5;
+	/* configure UPLL */
+	*UPLLCON = ((88 << 12) + (4 << 4) + 2);
+	/* Magic delay: Page 7-19, seven nops between UPLL and MPLL */
+	asm __volatile__ (
+		"nop\n"\
+		"nop\n"\
+		"nop\n"\
+		"nop\n"\
+		"nop\n"\
+		"nop\n"\
+		"nop\n"\
+ );
+	/* configure MPLL */
+	*MPLLCON = ((42 << 12) + (1 << 4) + 0);
+
+	serial_init(UART2, (((54 * 50) + 50) / 100) -1);
 }
 
 /**
@@ -254,7 +287,7 @@ const struct board_api board_api_gta02 = {
 				       "rootfstype=jffs2 " \
 				       "root=/dev/mtdblock6 " \
 				       "console=ttySAC2,115200 " \
-				       "loglevel=4 " \
+				       "loglevel=8 " \
 				       "init=/sbin/init "\
 				       "ro"
 		},
