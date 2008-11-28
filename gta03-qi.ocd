@@ -1,0 +1,33 @@
+# gta03 Qi script
+# Andy Green <andy@openmoko.com>
+
+reset halt
+wait_halt
+
+# bring the steppingstone part of qi image into steppingstone
+#
+load_binary /projects/openmoko/bootloader/image/qi 0x0
+#
+# mark ourselves as JTAG load
+#
+mww 0x4 0xffffffff
+
+#
+# we have to run that so SDRAM exists in a usable way
+# fixed jumpthrough at 0x8 is executed after steppingstone
+# init (including RAM) has completed
+#
+bp 0x8 4 hw
+resume 0x0
+wait_halt
+rbp 0x8
+
+#
+# now prep the SDRAM
+#
+load_binary /projects/openmoko/bootloader/image/qi 0x33000000
+#
+# and continue...
+resume 0x8
+#
+

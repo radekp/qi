@@ -28,6 +28,17 @@ _start:	b       start_code
 _is_jtag:
 	.word	0
 
+/* it's at a fixed address (+0x8) so we can breakpoint it in the JTAG script
+ * we need to go through this hassle because before this moment, SDRAM is not
+ * working so we can't prep it from JTAG
+ */
+
+_steppingstone_done:
+	ldr	pc, _start_armboot
+
+_start_armboot:
+	.word 	start_qi
+
 _TEXT_BASE:
 	.word	TEXT_BASE
 
@@ -192,10 +203,7 @@ clbss_l:
 
 /* we are going to jump into the C part of the init now */
 spin:
-	ldr	pc, _start_armboot
-
-_start_armboot:	
-	.word 	start_qi
+	b	_steppingstone_done
 
 /*
  *************************************************************************
