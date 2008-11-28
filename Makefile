@@ -25,20 +25,20 @@ BUILD_VERSION := ${BUILD_BRANCH}_${BUILD_HEAD}
 LDS	= src/qi.lds
 INCLUDE	= include
 IMAGE_DIR	= image
+TOOLS	= tools
 CFLAGS	= -Wall -Werror -I $(INCLUDE) -g -c -Os -fno-strict-aliasing -mlong-calls \
 	  -fno-common -ffixed-r8 -msoft-float -fno-builtin -ffreestanding \
 	  -march=armv4t -mno-thumb-interwork -Wstrict-prototypes \
 	  -DBUILD_HOST="${BUILD_HOST}" -DBUILD_VERSION="${BUILD_VERSION}" \
 	  -DBUILD_DATE="${BUILD_DATE}"
 LDFLAGS = 
-#START	= start.o lowlevel_init.o
+
 S_SRCS	= src/start.S src/lowlevel_init.S
 S_OBJS	= $(patsubst %.S,%.o, $(S_SRCS))
 C_SRCS	= $(wildcard src/*.c) $(wildcard src/gt*/*.c) \
 	  $(wildcard src/drivers/*.c)  $(wildcard src/fs/*.c)
 C_OBJS	= $(patsubst %.c,%.o, $(C_SRCS))
 
-#SRCS	:= $(START: .o=.S) $(COBJS: .o=.c)
 SRCS	= ${S_SRCS} ${C_SRCS}
 OBJS	= ${S_OBJS} ${C_OBJS}
 LIBS	= -L${COMPILER_LIB_PATH} -lgcc
@@ -52,6 +52,8 @@ TARGET	= image/start_qi_all
 IMAGE = $(IMAGE_DIR)/qi
 UDFU_IMAGE = $(IMAGE_DIR)/qi.udfu
 
+MKUDFU = $(TOOLS)/mkudfu
+
 %.o: %.S
 	@$(CC) $(CFLAGS) -o $@ $<
 
@@ -60,9 +62,12 @@ UDFU_IMAGE = $(IMAGE_DIR)/qi.udfu
 
 all:${UDFU_IMAGE}
 
-${OBJS}:${SRCS}
+${OBJS}:${SRCS} ${INCLUDE}/*.h
 
-${UDFU_IMAGE}:${OBJS}
+${MKUDFU}:
+	 make -C $(TOOLS)
+
+${UDFU_IMAGE}:${OBJS} ${MKUDFU}
 	@$(LD) ${LDFLAGS} -T$(LDS) -g $(OBJS) -o ${TARGET} ${LIBS}
 	@$(OBJCOPY) -O binary -S ${TARGET} ${IMAGE}
 	@$(MKUDFU) -v ${UDFU_VID} -p ${UDFU_PID} -r ${UDFU_REV} \
@@ -71,3 +76,4 @@ ${UDFU_IMAGE}:${OBJS}
 
 clean:
 	@rm -f src/*.o  src/*~ include/*~ ${IMAGE}* ${TARGET} ${UDFU_IMAGE}
+	@make clean -C $(TOOLS)
