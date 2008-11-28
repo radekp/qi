@@ -1,7 +1,7 @@
 #!/bin/bash
-../dfu-util/src/dfu-util -a 1 -d 0x1d50:0x5119 -D image/qi-*.udfu
+../dfu-util/src/dfu-util -a 1 -d 0x1d50:0x5119 -D image/qi-s3c2442*.udfu
 if [ $? -eq 1 ] ; then
-../dfu-util/src/dfu-util -a 1 -d 0x1d50:0x5120 -D image/qi-*.udfu
-../dfu-util/src/dfu-util -a 1 -d 0x1d50:0x5119 -D image/qi-*.udfu
+../dfu-util/src/dfu-util -a 1 -d 0x1d50:0x5120 -D image/qi-s3c2442*.udfu
+../dfu-util/src/dfu-util -a 1 -d 0x1d50:0x5119 -D image/qi-s3c2442*.udfu
 fi
 

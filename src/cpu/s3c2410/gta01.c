@@ -232,7 +232,7 @@ const struct board_api board_api_gta01 = {
 			.block_read = sd_card_block_read_gta01,
 			.partition_index = 1,
 			.filesystem = FS_EXT2,
-			.filepath = "boot/uImage",
+			.filepath = "boot/uImage-GTA01.bin",
 			.commandline = "mtdparts=" \
 					"neo1973-nand:" \
 					 "0x00040000(qi)," \
@@ -253,7 +253,7 @@ const struct board_api board_api_gta01 = {
 			.block_read = sd_card_block_read_gta01,
 			.partition_index = 2,
 			.filesystem = FS_EXT2,
-			.filepath = "boot/uImage",
+			.filepath = "boot/uImage-GTA01.bin",
 			.commandline = "mtdparts=" \
 					"neo1973-nand:" \
 					 "0x00040000(qi)," \

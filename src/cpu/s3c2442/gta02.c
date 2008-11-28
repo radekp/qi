@@ -383,7 +383,7 @@ const struct board_api board_api_gta02 = {
 			.block_read = sd_card_block_read_gta02,
 			.partition_index = 1,
 			.filesystem = FS_EXT2,
-			.filepath = "boot/uImage.bin",
+			.filepath = "boot/uImage-GTA02.bin",
 			.commandline = "mtdparts=physmap-flash:-(nor);" \
 					"neo1973-nand:" \
 					 "0x00040000(qi)," \
@@ -405,7 +405,7 @@ const struct board_api board_api_gta02 = {
 			.block_read = sd_card_block_read_gta02,
 			.partition_index = 2,
 			.filesystem = FS_EXT2,
-			.filepath = "boot/uImage.bin",
+			.filepath = "boot/uImage-GTA02.bin",
 			.commandline = "mtdparts=physmap-flash:-(nor);" \
 					"neo1973-nand:" \
 					 "0x00040000(qi)," \
