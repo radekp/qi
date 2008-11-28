@@ -65,6 +65,12 @@ extern int ext2fs_devread(int sector, int byte_offset, int byte_len,
 /* The size of an ext2 block in bytes.  */
 #define EXT2_BLOCK_SIZE(data)	  (1 << LOG2_BLOCK_SIZE(data))
 
+#define EXT2_GOOD_OLD_REV       0       /* The good old (original) format */
+#define EXT2_DYNAMIC_REV        1       /* V2 format w/ dynamic inode sizes */
+
+#define EXT2_GOOD_OLD_INODE_SIZE 128
+uint32_t ext2_inode_size = EXT2_GOOD_OLD_INODE_SIZE;
+
 /* The ext2 superblock.  */
 struct ext2_sblock {
 	uint32_t total_inodes;
@@ -216,7 +222,7 @@ static int ext2fs_read_inode
 	if (status == 0)
 		return 0;
 
-	inodes_per_block = EXT2_BLOCK_SIZE(data) / 128;
+	inodes_per_block = EXT2_BLOCK_SIZE(data) / ext2_inode_size;
 	blkno =(ino % __le32_to_cpu(sblock->inodes_per_group)) /
 		inodes_per_block;
 	blkoff =(ino % __le32_to_cpu(sblock->inodes_per_group)) %
@@ -225,9 +231,9 @@ static int ext2fs_read_inode
 	puts("ext2fs read inode blkno %d blkoff %d\n", blkno, blkoff);
 #endif
 	/* Read the inode.  */
-	status = ext2fs_devread(((__le32_to_cpu(blkgrp.inode_table_id) +
-				   blkno) << LOG2_EXT2_BLOCK_SIZE(data)),
-				 sizeof(struct ext2_inode) * blkoff,
+	status = ext2fs_devread((__le32_to_cpu(blkgrp.inode_table_id) +
+				   blkno) << LOG2_EXT2_BLOCK_SIZE(data),
+				 ext2_inode_size * blkoff,
 				 sizeof(struct ext2_inode),(char *) inode);
 
 	return !!status;
@@ -866,6 +872,11 @@ int ext2fs_mount(void) {
 	/* Make sure this is an ext2 filesystem.  */
 	if (__le16_to_cpu(data->sblock.magic) != EXT2_MAGIC)
 		goto fail;
+
+	if (__le32_to_cpu(data->sblock.revision_level) == EXT2_GOOD_OLD_REV)
+		ext2_inode_size = EXT2_GOOD_OLD_INODE_SIZE;
+	else
+		ext2_inode_size = __le16_to_cpu (data->sblock.inode_size);
 
 	data->diropen.data = data;
 	data->diropen.ino = 2;
