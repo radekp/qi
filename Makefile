@@ -69,6 +69,7 @@ ${MKUDFU}:
 	 make -C $(TOOLS)
 
 ${UDFU_IMAGE}:${OBJS} ${MKUDFU}
+	mkdir -p image
 	@$(LD) ${LDFLAGS} -T$(LDS) -g $(OBJS) -o ${TARGET} ${LIBS}
 	@$(OBJCOPY) -O binary -S ${TARGET} ${IMAGE}
 	@$(MKUDFU) -v ${UDFU_VID} -p ${UDFU_PID} -r ${UDFU_REV} \
