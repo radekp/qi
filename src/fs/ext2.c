@@ -465,13 +465,8 @@ static int ext2fs_iterate_dir(ext2fs_node_t dir, char *name, ext2fs_node_t * fno
 			puts("failed to read inode\n");
 			return(0);
 		}
-	} else {
-		puts("fail\n");
 	}
-	printdec(fpos);
-	puts(" ");
-	printdec(diro->inode.size);
-	puts("\n");
+
 	/* Search the file.  */
 	while (fpos < __le32_to_cpu(diro->inode.size)) {
 		struct ext2_dirent dirent;
