@@ -27,7 +27,7 @@
 #define TEXT_BASE 0x53000000
 
 
-#define S3C6410_POP_A 0
+#define S3C6410_POP_A 1
 
 #define set_pll(mdiv, pdiv, sdiv)	(1<<31 | mdiv<<16 | pdiv<<8 | sdiv)
 
