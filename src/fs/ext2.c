@@ -189,9 +189,6 @@ int indir2_blkno = -1;
 
 static int ext2fs_blockgroup
 	(struct ext2_data *data, int group, struct ext2_block_group *blkgrp) {
-#ifdef DEBUG
-	puts("ext2fs read blockgroup\n");
-#endif
 	return ext2fs_devread
 		((__le32_to_cpu(data->sblock.first_data_block) +
 		   1), LOG2_EXT2_BLOCK_SIZE(data),
@@ -212,9 +209,6 @@ static int ext2fs_read_inode
 
 	/* It is easier to calculate if the first inode is 0.  */
 	ino--;
-#ifdef DEBUG
-	puts("ext2fs read inode %d\n", ino);
-#endif
 	status = ext2fs_blockgroup(data,
 				    ino /
 				    __le32_to_cpu(sblock->inodes_per_group),
@@ -375,9 +369,9 @@ static int ext2fs_read_block(ext2fs_node_t node, int fileblock) {
 		}
 		blknr = __le32_to_cpu(indir2_block[rblock % perblock]);
 	}
-	/* Tripple indirect.  */
+	/* Triple indirect.  */
 	else {
-		puts("** ext2fs doesn't support tripple indirect blocks. **\n");
+		puts("** ext2fs doesn't support triple indirect blocks. **\n");
 		return -1;
 	}
 #ifdef DEBUG
@@ -387,13 +381,19 @@ static int ext2fs_read_block(ext2fs_node_t node, int fileblock) {
 }
 
 
-int ext2fs_read_file
-	(ext2fs_node_t node, int pos, unsigned int len, char *buf) {
+int ext2fs_read_file(ext2fs_node_t node, int pos, unsigned int len, char *buf) {
 	int i;
 	int blockcnt;
 	int log2blocksize = LOG2_EXT2_BLOCK_SIZE(node->data);
 	int blocksize = 1 <<(log2blocksize + DISK_SECTOR_BITS);
 	unsigned int filesize = __le32_to_cpu(node->inode.size);
+	int previous_block_number = -1;
+	int delayed_start = 0;
+	int delayed_extent = 0;
+	int delayed_skipfirst = 0;
+	int delayed_next = 0;
+	char * delayed_buf = NULL;
+	int status;
 
 	/* Adjust len so it we can't read past the end of the file.  */
 	if (len > filesize) {
@@ -435,14 +435,57 @@ int ext2fs_read_file
 		if (blknr) {
 			int status;
 
-			status = ext2fs_devread(blknr, 0 /* already accounted */, skipfirst, blockend, buf);
-			if (status == 0)
-				return -1;
-		} else
-			memset(buf, 0, blocksize - skipfirst);
+			if (previous_block_number != -1) {
+				if (delayed_next == blknr) {
+					delayed_extent += blockend;
+					delayed_next += blockend >> SECTOR_BITS;
+				} else { /* spill */
+					status = ext2fs_devread(delayed_start,
+						0, delayed_skipfirst,
+						delayed_extent, delayed_buf);
+					if (status == 0)
+						return -1;
+					previous_block_number = blknr;
+					delayed_start = blknr;
+					delayed_extent = blockend;
+					delayed_skipfirst = skipfirst;
+					delayed_buf = buf;
+					delayed_next = blknr + (blockend >> SECTOR_BITS);
+				}
+			} else {
+				previous_block_number = blknr;
+				delayed_start = blknr;
+				delayed_extent = blockend;
+				delayed_skipfirst = skipfirst;
+				delayed_buf = buf;
+				delayed_next = blknr + (blockend >> SECTOR_BITS);
+			}
 
+		} else {
+			if (previous_block_number != -1) {
+				/* spill */
+				status = ext2fs_devread(delayed_start,
+						0, delayed_skipfirst,
+						delayed_extent, delayed_buf);
+				if (status == 0)
+					return -1;
+				previous_block_number = -1;
+			}
+			memset(buf, 0, blocksize - skipfirst);
+		}
 		buf += blocksize - skipfirst;
 	}
+
+	if (previous_block_number != -1) {
+		/* spill */
+		status = ext2fs_devread(delayed_start,
+				0, delayed_skipfirst,
+				delayed_extent, delayed_buf);
+		if (status == 0)
+			return -1;
+		previous_block_number = -1;
+	}
+
 	return(len);
 }
 
