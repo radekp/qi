@@ -348,6 +348,10 @@ static void putc_gta02(char c)
 
 static void close_gta02(void)
 {
+	/* explicitly clear any pending 8s timeout */
+
+	i2c_write_sync(&bb_s3c24xx, PCF50633_I2C_ADS, PCF50633_REG_OOCSHDWN, 0x04);
+
 	/* clear any pending timeouts by reading interrupts */
 
 	i2c_read_sync(&bb_s3c24xx, PCF50633_I2C_ADS, PCF50633_REG_INT1);
