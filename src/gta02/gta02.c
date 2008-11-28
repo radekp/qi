@@ -284,6 +284,8 @@ int gta02_get_pcb_revision(void)
 	rGPDUP  |= (1 << 0) | (1 << 3) | (1 << 4);
 	rGPDDAT |= (1 << 0) | (1 << 3) | (1 << 4);
 
+	n &= 1;
+
 	return n;
 }
 
@@ -316,7 +318,7 @@ int is_this_board_gta02(void)
 
 const struct board_variant const * get_board_variant_gta02(void)
 {
-	return &board_variants[gta02_get_pcb_revision()];
+	return &board_variants[gta02_get_pcb_revision() & 1];
 }
 
 static void putc_gta02(char c)
