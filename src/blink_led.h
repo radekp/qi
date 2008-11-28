@@ -31,9 +31,6 @@
 #define ORANGE_ON()     (GPBDAT |= (0x1))
 #define BLUE_ON()     (GPBDAT |= (0x2))
 
-#define ORANGE	1;
-#define BLUE	0;
-
 int orange_on(int times);
 int blue_on(int times);
 int blink_led(void);
