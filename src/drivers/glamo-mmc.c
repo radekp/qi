@@ -673,16 +673,18 @@ int mmc_init(int verbose)
 		if (resp)
 			continue;
 
-		if (response[3] & (1 << 6)) /* asserts block addressing */
+		if (response[3] & (1 << 6)) { /* asserts block addressing */
+			retries = -2;
 			card_type = CARDTYPE_SDHC;
-
+		}
 		if (response[3] & (1 << 7)) { /* not busy */
 			if (card_type == CARDTYPE_NONE)
 				card_type = CARDTYPE_SD;
+			retries = -2;
 			break;
 		}
 	}
-	if (retries < 0) {
+	if (retries == -1) {
 		puts("no response\n");
 		return 1;
 	}
