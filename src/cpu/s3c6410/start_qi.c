@@ -27,6 +27,9 @@
 #include <qi.h>
 #include <neo_tla01.h>
 
+#define stringify2(s) stringify1(s)
+#define stringify1(s) #s
+
 extern void bootloader_second_phase(void);
 
 const struct board_api *boards[] = {
@@ -43,6 +46,7 @@ void start_qi(void)
 {
 	int flag = 0;
 	int board = 0;
+	unsigned int sd_sectors = 0;
 
 	/*
 	 * well, we can be running on this CPU two different ways.
@@ -59,7 +63,38 @@ void start_qi(void)
 	 * under control of JTAG.
 	 */
 
-	if (!is_jtag)
+
+	/* ask all the boards we support in turn if they recognize this
+	 * hardware we are running on, accept the first positive answer
+	 */
+
+	this_board = boards[board];
+	while (!flag && this_board)
+		/* check if it is the right board... */
+		if (this_board->is_this_board())
+			flag = 1;
+		else
+			this_board = boards[board++];
+
+	/* okay, do the critical port and serial init for our board */
+
+	this_board->port_init();
+
+	/* stick some hello messages on debug console */
+
+	puts("\n\n\nQi Bootloader "stringify2(QI_CPU)"  "
+				   stringify2(BUILD_HOST)" "
+				   stringify2(BUILD_VERSION)" "
+				   "\n");
+
+	puts(stringify2(BUILD_DATE) "  Copyright (C) 2008 Openmoko, Inc.\n");
+	puts("\n     Detected: ");
+
+	puts(this_board->name);
+	puts(", ");
+	puts((this_board->get_board_variant)()->name);
+
+	if (!is_jtag) {
 		/*
 		* We got the first 4KBytes of the bootloader pulled into the
 		* steppingstone SRAM for free.  Now we pull the whole bootloader
@@ -67,40 +102,25 @@ void start_qi(void)
 		*
 		* This code and the .S files are arranged by the linker script
 		* to expect to run from 0x0.  But the linker script has told
-		* everything else to expect to run from 0x33000000+.  That's
+		* everything else to expect to run from 0x53000000+.  That's
 		* why we are going to be able to copy this code and not have it
 		* crash when we run it from there.
 		*/
 
 		/* We randomly pull 32KBytes of bootloader */
-		/* FIXME  this ain't right for s3c6410 */
-#if 0
-		if (nand_read_ll((u8 *)TEXT_BASE, 0, 32 * 1024 / 512) < 0)
-			goto unhappy;
-#endif
 
-	/* ask all the boards we support in turn if they recognize this
-	 * hardware we are running on, accept the first positive answer
-	 */
-
-	this_board = boards[board];
-	while (!flag && this_board) {
-
-		/* check if it is the right board... */
-		if (this_board->is_this_board()) {
-			flag = 1;
-			continue;
-		}
-
-		this_board = boards[board++];
+		extern unsigned int s3c6410_mmc_init(int verbose);
+		unsigned long s3c6410_mmc_bread(int dev_num,
+				unsigned long start_blk, unsigned long blknum,
+								     void *dst);
+		sd_sectors = s3c6410_mmc_init(1);
+		s3c6410_mmc_bread(0, sd_sectors - 1026 - 16 - (256 * 2),
+						     256 * 2, (u8 *)0x53000000);
 	}
+
 
 	/*
 	 * jump to bootloader_second_phase() running from DRAM copy
 	 */
 	bootloader_second_phase();
-
-	while(1)
-		;
-
 }

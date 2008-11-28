@@ -30,10 +30,6 @@
 #include <setup.h>
 #include <ext2.h>
 
-#define stringify2(s) stringify1(s)
-#define stringify1(s) #s
-
-
 unsigned long partition_offset_blocks = 0;
 unsigned long partition_length_blocks = 0;
 
@@ -49,28 +45,8 @@ void bootloader_second_phase(void)
 {
 	void	(*the_kernel)(int zero, int arch, uint params);
 	int kernel = 0;
-	const struct board_variant * board_variant;
-
-	/* okay, do the critical port and serial init for our board */
-
-	this_board->port_init();
-
-	/* stick some hello messages on debug console */
-
-	puts("\n\n\nQi Bootloader "stringify2(QI_CPU)"  "
-				   stringify2(BUILD_HOST)" "
-				   stringify2(BUILD_VERSION)" "
-				   stringify2(BUILD_DATE)"\n");
-
-	puts("Copyright (C) 2008 Openmoko, Inc.\n");
-	puts("This is free software; see the source for copying conditions.\n"
-	     "There is NO warranty; not even for MERCHANTABILITY or "
-	     "FITNESS FOR A PARTICULAR PURPOSE.\n\n     Detected: ");
-
-	puts(this_board->name);
-	puts(", ");
-	board_variant = (this_board->get_board_variant)();
-	puts(board_variant->name);
+	const struct board_variant * board_variant =
+					      (this_board->get_board_variant)();
 
 	/* we try the possible kernels for this board in order */
 
@@ -79,7 +55,7 @@ void bootloader_second_phase(void)
 	while (this_kernel->name) {
 		const char *p;
 		struct tag *params = (struct tag *)this_board->linux_tag_placement;
-		void * kernel_dram = (void *)(TEXT_BASE - (8 * 1024 * 1024));
+		void * kernel_dram = (void *)this_board->linux_mem_start + 0x8000;
 		unsigned long crc;
 		image_header_t	*hdr;
 		u32 kernel_size;
@@ -150,7 +126,6 @@ void bootloader_second_phase(void)
 
 		switch (this_kernel->filesystem) {
 		case FS_EXT2:
-#if 0
 			if (!ext2fs_mount()) {
 				puts("Unable to mount ext2 filesystem\n");
 				this_kernel = &this_board->
@@ -168,7 +143,7 @@ void bootloader_second_phase(void)
 			}
 			ext2fs_read(kernel_dram, 4096);
 			break;
-#endif
+
 		case FS_FAT:
 			/* FIXME */
 		case FS_RAW:
@@ -206,11 +181,10 @@ void bootloader_second_phase(void)
 
 		switch (this_kernel->filesystem) {
 		case FS_EXT2:
-#if 0
 			/* This read API always restarts from beginning */
 			ext2fs_read(kernel_dram, kernel_size);
 			break;
-#endif
+
 		case FS_FAT:
 			/* FIXME */
 		case FS_RAW:

@@ -29,6 +29,10 @@
 #include <neo_gta02.h>
 #include <neo_gta03.h>
 
+#define stringify2(s) stringify1(s)
+#define stringify1(s) #s
+
+
 extern void bootloader_second_phase(void);
 
 const struct board_api *boards[] = {
@@ -93,6 +97,22 @@ void start_qi(void)
 
 		this_board = boards[board++];
 	}
+
+	this_board->port_init();
+
+	/* stick some hello messages on debug console */
+
+	puts("\n\n\nQi Bootloader "stringify2(QI_CPU)"  "
+				   stringify2(BUILD_HOST)" "
+				   stringify2(BUILD_VERSION)" "
+				   "\n");
+
+	puts(stringify2(BUILD_DATE) "  Copyright (C) 2008 Openmoko, Inc.\n");
+	puts("\n     Detected: ");
+
+	puts(this_board->name);
+	puts(", ");
+	puts((this_board->get_board_variant)()->name);
 
 	/*
 	 * jump to bootloader_second_phase() running from DRAM copy

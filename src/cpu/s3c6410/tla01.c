@@ -137,6 +137,7 @@ void port_init_tla01(void)
 	i2c_write_sync(&bb_s3c24xx, PCF50633_I2C_ADS, PCF50633_REG_DOWN1OUT,
 									  0x2b);
 #endif
+
 }
 
 /**
@@ -166,13 +167,28 @@ static void putc_tla01(char c)
 	serial_putc_s3c64xx(GTA03_DEBUG_UART, c);
 }
 
+int sd_card_init_tla01(void)
+{
+	extern int s3c6410_mmc_init(int verbose);
+
+	return s3c6410_mmc_init(1);
+}
+
+int sd_card_block_read_tla01(unsigned char * buf, unsigned long start512,
+							       int blocks512)
+{
+unsigned long s3c6410_mmc_bread(int dev_num, unsigned long blknr, unsigned long blkcnt,
+								     void *dst);
+
+	return s3c6410_mmc_bread(0, start512, blocks512, buf);
+}
 
 /*
  * our API for bootloader on this machine
  */
 const struct board_api board_api_tla01 = {
 	.name = "TLA01",
-	.linux_machine_id = 1866,
+	.linux_machine_id = 1304 /*1866*/,
 	.linux_mem_start = 0x50000000,
 	.linux_mem_size = (128 * 1024 * 1024),
 	.linux_tag_placement = 0x50000000 + 0x100,
@@ -182,10 +198,11 @@ const struct board_api board_api_tla01 = {
 	.putc = putc_tla01,
 	.kernel_source = {
 		[0] = {
-			.name = "SD Card",
-			.block_read = NULL, /* FIXME It's s3c6400 sd card*/
-			.offset_blocks512_if_no_partition = 0x80000 / 512,
-			.filesystem = FS_RAW,
+			.name = "SD Card rootfs",
+			.block_read = sd_card_block_read_tla01,
+			.filesystem = FS_EXT2,
+			.partition_index = 2,
+			.filepath = "boot/uImage.bin",
 			.commandline = "rootfstype=ext3 " \
 				       "root=/dev/mmcblk0p1 " \
 				       "console=ttySAC2,115200 " \
@@ -193,5 +210,17 @@ const struct board_api board_api_tla01 = {
 				       "init=/sbin/init "\
 				       "ro"
 		},
-	},
+		[1] = {
+			.name = "SD Card backup rootfs",
+			.block_read = sd_card_block_read_tla01,
+			.filesystem = FS_EXT2,
+			.partition_index = 3,
+			.filepath = "boot/uImage.bin",
+			.commandline = "rootfstype=ext3 " \
+				       "root=/dev/mmcblk0p1 " \
+				       "console=ttySAC2,115200 " \
+				       "loglevel=4 " \
+				       "init=/sbin/init "\
+				       "ro"
+		},	},
 };

@@ -29,35 +29,44 @@ SECTIONS
 {
 	. = 0x00000000;
 
+	__system_ram_start = 0x50000000;
+	__steppingstone = 0x0c000000;
+
 	/* this text section is magically pulled from the SD Card
 	 * and stored by the iRom at 0x0c000000, then it is jumped into
 	 * by the iRom.  So we arrange our early parts needed at 0 in the
 	 * output file, but set to run at 0x0c000000+
 	 */
 
-	.text   0x0c000000    : AT ( 0 )
+	.text
+		__steppingstone :
+		AT (0)
 	{
 	  src/cpu/s3c6410/start.o		(.text .rodata* .data)
 	  src/cpu/s3c6410/start_qi.o		(.text .rodata* .data)
 	  src/cpu/s3c6410/serial-s3c64xx.o	(.text .rodata* .data)
 	  src/cpu/s3c6410/tla01.o		(.text .rodata* .data)
-	  src/ctype.o				(.text .rodata* .data)
-	  src/phase2.o				(.text .rodata* .data)
+	  src/cpu/s3c6410/hs_mmc.o		(.text .rodata* .data)
 	  src/utils.o				(.text .rodata* .data)
+	  src/ctype.o				(.text .rodata* .data)
 	}
 
-/*	. = ALIGN(4);
-	.everything_else  ADDR (.text) + SIZEOF (.text) + 0x53000000 :
-		AT ( ADDR (.text) + SIZEOF (.text) ) { *(.text .rodata* .data) }
+	. = ALIGN(4);
+	.everything_else
+		__system_ram_start + 0x3000000 + SIZEOF(.text) :
+		AT (SIZEOF(.text))
+	{
+		*(.text .rodata* .data)
+	}
 
-*/
-	. = 0x53800000 ;
-/*	. = 0x0c001900 ; */
-	__bss_start = .;
-	.bss_6410 (NOLOAD) :
-    {
-        * (.bss)
-    }
+
+	__bss_start = __system_ram_start + 0x03800000;
+	.bss_6410
+		__bss_start (NOLOAD) :
+		AT (SIZEOF(.text) + SIZEOF(.everything_else))
+	{
+		* (.bss)
+	}
 
 	_end = .;
 }

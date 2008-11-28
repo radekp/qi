@@ -44,8 +44,6 @@ SRCS	= ${S_SRCS} ${C_SRCS}
 OBJS	= ${S_OBJS} ${C_OBJS}
 LIBS	= -L${COMPILER_LIB_PATH} -lgcc
 
-OBJS = src/cpu/s3c6410/start.o src/cpu/s3c6410/start_qi.o src/cpu/s3c6410/serial-s3c64xx.o src/ctype.o src/utils.o src/cpu/s3c6410/tla01.o src/phase2.o
-
 # GTA02 A5 and A6 U-Boot will eat these for DFU action
 UDFU_VID = 0x1d50
 UDFU_PID = 0x5119
