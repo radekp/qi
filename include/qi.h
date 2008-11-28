@@ -108,5 +108,7 @@ int nand_read_ll(unsigned char *buf, unsigned long start512, int blocks512);
 
 extern void memory_test(void * start, unsigned int length);
 
+void set_putc_func(void (*p)(char));
+
 #endif
 

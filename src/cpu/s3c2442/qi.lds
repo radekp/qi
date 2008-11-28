@@ -37,12 +37,16 @@ SECTIONS
 	. = ALIGN(4);
 	.text      :
 	{
-	  src/cpu/s3c2442/start.o		(.text .rodata* .data)
-	  src/cpu/s3c2442/lowlevel_init.o	(.text .rodata* .data)
-	  src/cpu/s3c2442/start_qi.o		(.text .rodata* .data)
-	  src/blink_led.o			(.text .rodata* .data)
-	  src/cpu/s3c2442/nand_read.o		(.text .rodata* .data)
-	  src/cpu/s3c2442/serial-s3c24xx.o	(.text .rodata* .data)
+	  src/cpu/s3c2442/start.o		(.text .rodata* .data .bss)
+	  src/cpu/s3c2442/lowlevel_init.o	(.text .rodata* .data .bss)
+	  src/cpu/s3c2442/start_qi.o		(.text .rodata* .data .bss)
+/*	  src/blink_led.o			(.text .rodata* .data .bss) */
+	  src/cpu/s3c2442/nand_read.o		(.text .rodata* .data .bss)
+	  src/cpu/s3c2442/serial-s3c24xx.o	(.text .rodata* .data .bss)
+	  src/memory-test.o			(.text .rodata* .data .bss)
+	  src/utils.o				(.text .rodata* .data .bss)
+	  src/ctype.o				(.text .rodata* .data .bss)
+	  *					(.steppingstone)
 	}
 
 	. = ALIGN(4);

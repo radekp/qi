@@ -23,9 +23,13 @@
 #include <qi.h>
 #include <string.h>
 
-static u8 malloc_pool[100 * 1024];
-void * malloc_pointer = &malloc_pool[0];
+static void (*putc_func)(char) = NULL;
 
+
+void set_putc_func(void (*p)(char))
+{
+	putc_func = p;
+}
 
 size_t strlen(const char *s)
 {
@@ -88,7 +92,7 @@ char *strchr(const char *s, int c)
 int puts(const char *string)
 {
 	while (*string)
-		this_board->putc(*string++);
+		(putc_func)(*string++);
 
 	return 1;
 }
@@ -97,9 +101,9 @@ int puts(const char *string)
 void printnybble(unsigned char n)
 {
 	if (n < 10)
-		this_board->putc('0' + n);
+		(putc_func)('0' + n);
 	else
-		this_board->putc('a' + n - 10);
+		(putc_func)('a' + n - 10);
 }
 
 void print8(unsigned char n)
@@ -122,13 +126,13 @@ void hexdump(unsigned char *start, int len)
 
 	while (len > 0) {
 		print32((int)start);
-		this_board->putc(':');
-		this_board->putc(' ');
+		(putc_func)(':');
+		(putc_func)(' ');
 		for (n = 0; n < 16; n++) {
 			print8(*start++);
-			this_board->putc(' ');
+			(putc_func)(' ');
 		}
-		this_board->putc('\n');
+		(putc_func)('\n');
 		len -= 16;
 	}
 }
@@ -152,7 +156,7 @@ void printdec(int n)
 	int div = 0;
 
 	if (n < 0) {
-		this_board->putc('-');
+		(putc_func)('-');
 		n = -n;
 	}
 
@@ -163,7 +167,7 @@ void printdec(int n)
 			n -= d[div];
 		}
 		if (r || flag || (d[div] == 1)) {
-			this_board->putc('0' + r);
+			(putc_func)('0' + r);
 			flag = 1;
 		}
 		div++;

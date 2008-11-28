@@ -42,13 +42,15 @@ SECTIONS
 		__steppingstone :
 		AT (0)
 	{
-	  src/cpu/s3c6410/start.o		(.text .rodata* .data)
-	  src/cpu/s3c6410/start_qi.o		(.text .rodata* .data)
-	  src/cpu/s3c6410/serial-s3c64xx.o	(.text .rodata* .data)
-	  src/cpu/s3c6410/gta03.o		(.text .rodata* .data)
-	  src/cpu/s3c6410/hs_mmc.o		(.text .rodata* .data)
-	  src/utils.o				(.text .rodata* .data)
-	  src/ctype.o				(.text .rodata* .data)
+	  src/cpu/s3c6410/start.o		(.text .rodata* .data .bss)
+	  src/cpu/s3c6410/start_qi.o		(.text .rodata* .data .bss)
+	  src/cpu/s3c6410/serial-s3c64xx.o	(.text .rodata* .data .bss)
+	  src/cpu/s3c6410/gta03.o		(.text .rodata* .data .bss)
+	  src/cpu/s3c6410/hs_mmc.o		(.text .rodata* .data .bss)
+	  src/utils.o				(.text .rodata* .data .bss)
+	  src/memory-test.o			(.text .rodata* .data .bss)
+	  src/ctype.o				(.text .rodata* .data .bss)
+	  *					(.steppingstone)
 	}
 
 	. = ALIGN(4);

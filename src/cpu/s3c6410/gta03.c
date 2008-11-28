@@ -166,7 +166,7 @@ int is_this_board_gta03(void)
 	return 1;
 }
 
-static void putc_gta03(char c)
+static  __attribute__ (( section (".steppingstone") )) void putc_gta03(char c)
 {
 	serial_putc_s3c64xx(GTA03_DEBUG_UART, c);
 }

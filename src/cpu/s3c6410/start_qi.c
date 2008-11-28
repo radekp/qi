@@ -79,6 +79,7 @@ void start_qi(void)
 	/* okay, do the critical port and serial init for our board */
 
 	this_board->port_init();
+	set_putc_func(this_board->putc);
 
 	/* stick some hello messages on debug console */
 
@@ -97,7 +98,7 @@ void start_qi(void)
 
 	if (!is_jtag) {
 		/*
-		* We got the first 4KBytes of the bootloader pulled into the
+		* We got the first 8KBytes of the bootloader pulled into the
 		* steppingstone SRAM for free.  Now we pull the whole bootloader
 		* image into SDRAM.
 		*

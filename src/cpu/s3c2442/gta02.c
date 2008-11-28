@@ -341,7 +341,7 @@ const struct board_variant const * get_board_variant_gta02(void)
 	return &board_variants[gta02_get_pcb_revision() & 1];
 }
 
-static void putc_gta02(char c)
+static __attribute__ (( section (".steppingstone") )) void putc_gta02(char c)
 {
 	serial_putc_s3c24xx(GTA02_DEBUG_UART, c);
 }

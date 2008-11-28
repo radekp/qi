@@ -98,6 +98,7 @@ void start_qi(void)
 	}
 
 	this_board->port_init();
+	set_putc_func(this_board->putc);
 
 	/* stick some hello messages on debug console */
 
