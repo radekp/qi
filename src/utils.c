@@ -102,6 +102,27 @@ void hexdump(unsigned char *start, int len)
 	}
 }
 
+void printdec(int n)
+{
+	int d = 1 * 1000 * 1000 * 1000;
+	int flag = 0;
+
+	if (n < 0) {
+		this_board->putc('-');
+		n = -n;
+	}
+
+	while (d) {
+		int r = n / d;
+		if (r || flag || (d == 1)) {
+			this_board->putc('0' + r);
+			flag = 1;
+		}
+		n -= r * d;
+		d = d / 10;
+	}
+}
+
 /* original copyright notice for this crc code  (it is from U-Boot) --> */
 /*
  * This file is derived from crc32.c from the zlib-1.1.3 distribution

@@ -82,6 +82,7 @@ int puts(const char *string);
 void printhex(unsigned char v);
 void print8(unsigned char u);
 void print32(unsigned int u);
+void printdec(int n);
 void hexdump(unsigned char *start, int len);
 unsigned int _ntohl(unsigned int n);
 unsigned long crc32(unsigned long crc, const unsigned char *buf,

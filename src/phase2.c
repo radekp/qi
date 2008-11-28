@@ -93,8 +93,9 @@ void bootloader_second_phase(void)
 
 			puts("        Found: ");
 			puts((const char *)hdr->ih_name);
-			puts("\n         Size: 0x");
-			print32(_ntohl(hdr->ih_size));
+			puts("\n         Size: ");
+			printdec(_ntohl(hdr->ih_size) >> 10);
+			puts(" KiB\n");
 
 			if (nand_read_ll(kernel_dram,
 				this_board->kernel_source[kernel].
@@ -107,7 +108,7 @@ void bootloader_second_phase(void)
 			}
 		}
 
-		puts("\n      Cmdline: ");
+		puts("      Cmdline: ");
 		puts(p);
 		puts("\n");
 
