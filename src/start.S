@@ -116,9 +116,9 @@ start_code:
 	mov	r1, #CLKDIVN_val
 	str	r1, [r0]
 
-	/* enable uart */
+	/* enable only CPU peripheral block clocks we actually use */
 	ldr	r0, =0x4c00000c		/* clkcon */
-	ldr	r1, =0x7fff0		/* all clocks on */
+	ldr	r1, =0x3d10		/* uart, pwm, gpio, nand clocks on */
 	str	r1, [r0]
 
 	/* gpio UART2 init, H port */
