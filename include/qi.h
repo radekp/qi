@@ -84,6 +84,7 @@ void hexdump(unsigned char *start, int len);
 unsigned int _ntohl(unsigned int n);
 unsigned long crc32(unsigned long crc, const unsigned char *buf,
 							      unsigned int len);
+int nand_read_ll(unsigned char *buf, unsigned long start_addr, int size);
 
 #endif
 

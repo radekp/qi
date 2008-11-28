@@ -23,6 +23,11 @@
 #include <qi.h>
 #include <string.h>
 
+int raise(int n)
+{
+	return 0;
+}
+
 size_t strlen(const char *s)
 {
 	size_t n = 0;

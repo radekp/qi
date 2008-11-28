@@ -1,6 +1,5 @@
 #include <qi.h>
 #include <neo_gta02.h>
-#include "nand_read.h"
 
 static const struct board_variant board_variants[] = {
 	[0] = {
