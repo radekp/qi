@@ -400,10 +400,10 @@ start_code:
 	/* set GPIO to enable UART */
 	@ GPIO setting for UART
 	ldr	r0, =ELFIN_GPIO_BASE
-	ldr	r1, =0x220022
-	str   	r1, [r0, #GPACON_OFFSET]
+	ldr	r1, =0x2222
+	str   	r1, [r0, #GPBCON_OFFSET]
 
-	ldr	r0, =ELFIN_UART_CONSOLE_BASE		@0x7F005000
+	ldr	r0, =ELFIN_UART_BASE + ELFIN_UART3_OFFSET	@0x7F005c00 uart 3
 	mov	r1, #0x0
 	str	r1, [r0, #UFCON_OFFSET]
 	str	r1, [r0, #UMCON_OFFSET]
@@ -442,13 +442,6 @@ clbss_l:
 	cmp	r0, r1
 	ble	clbss_l
 
-#if 0
-	ldr	r0, =ELFIN_UART_CONSOLE_BASE
-	ldr	r1, =0x55
-	push	{r1}
-	pop	{r1}
-	str	r1, [r0, #UTXH_OFFSET]		@'U'
-#endif
 	b	_steppingstone_done
 
 4:
