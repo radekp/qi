@@ -383,5 +383,10 @@ enum pcf50633_reg_mbcs3 {
 	PCF50633_MBCS3_VRES		= 0x80, /* 1: Vbat > Vth(RES) */
 };
 
+struct pcf50633_init {
+	u8 index;
+	u8 value;
+};
+
 #endif /* _PCF50633_H */
 

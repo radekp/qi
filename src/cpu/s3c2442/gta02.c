@@ -35,11 +35,6 @@
 #define PCF50633_I2C_ADS 0x73
 #define BOOST_TO_400MHZ 1
 
-struct pcf50633_init {
-	u8 index;
-	u8 value;
-};
-
 const struct pcf50633_init pcf50633_init[] = {
 
 	{ PCF50633_REG_OOCWAKE,		0xd3 }, /* wake from ONKEY,EXTON!,RTC,USB,ADP */
