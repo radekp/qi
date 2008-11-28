@@ -38,7 +38,7 @@ SECTIONS
 	.text      :
 	{
 	  src/cpu/s3c2442/start.o		(.text .rodata* .data)
-	  src/lowlevel_init.o			(.text .rodata* .data)
+	  src/cpu/s3c2442/lowlevel_init.o	(.text .rodata* .data)
 	  src/cpu/s3c2442/start_qi.o		(.text .rodata* .data)
 	  src/blink_led.o			(.text .rodata* .data)
 	  src/cpu/s3c2442/nand_read.o		(.text .rodata* .data)
