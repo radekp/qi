@@ -74,6 +74,8 @@ struct board_api {
 	unsigned long linux_tag_placement;
 	const char *commandline_board;
 	const char *commandline_board_debug;
+	const char *noboot;
+	const char *append;
 	const struct board_variant const * (*get_board_variant)(void);
 	int (*is_this_board)(void);
 	void (*early_port_init)(void);

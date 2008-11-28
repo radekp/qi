@@ -44,7 +44,7 @@ int raise(int n)
 
 int read_file(const char * filepath, u8 * destination, int size)
 {
-	unsigned int len = size;
+	int len = size;
 
 	switch (this_kernel->filesystem) {
 	case FS_EXT2:
@@ -54,12 +54,12 @@ int read_file(const char * filepath, u8 * destination, int size)
 		}
 		puts("    EXT2 open: ");
 		puts(filepath);
-		puts("\n");
 		len = ext2fs_open(filepath);
 		if (len < 0) {
-			puts("Open failed\n");
+			puts(" Open failed\n");
 			return -1;
 		}
+		puts(" OK\n");
 		ext2fs_read((char *)destination, size);
 		break;
 
@@ -87,6 +87,7 @@ void bootloader_second_phase(void)
 	const struct board_variant * board_variant =
 					      (this_board->get_board_variant)();
 	unsigned int initramfs_len = 0;
+	static char commandline_rootfs_append[512] = "";
 
 	/* we try the possible kernels for this board in order */
 
@@ -164,6 +165,21 @@ void bootloader_second_phase(void)
 		} else
 			partition_offset_blocks =
 				  this_kernel->offset_blocks512_if_no_partition;
+
+		/* does he want us to skip this? */
+
+		if (read_file(this_board->noboot, kernel_dram, 512) >= 0) {
+			puts("    (Skipping on finding ");
+			puts(this_board->noboot);
+			puts(")\n");
+			this_kernel = &this_board->kernel_source[kernel++];
+			continue;
+		}
+
+		/* is there a commandline append file? */
+
+		read_file(this_board->append, (u8 *)commandline_rootfs_append,
+									   512);
 
 		/* pull the kernel image */
 
@@ -268,6 +284,9 @@ void bootloader_second_phase(void)
 			if (this_kernel->commandline_append)
 				cmdline += strlen(strcpy(cmdline,
 					      this_kernel->commandline_append));
+			if (commandline_rootfs_append[0])
+				cmdline += strlen(strcpy(cmdline,
+					      commandline_rootfs_append));
 
 			params->hdr.tag = ATAG_CMDLINE;
 			params->hdr.size = (sizeof (struct tag_header) +

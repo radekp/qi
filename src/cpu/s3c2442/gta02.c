@@ -396,6 +396,8 @@ const struct board_api board_api_gta02 = {
 				      "ro",
 	.commandline_board_debug = " console=tty0 " \
 				   "loglevel=8",
+	.noboot = "boot/noboot-GTA02",
+	.append = "boot/append-GTA02",
 	/* these are the ways we could boot GTA02 in the order to try */
 	.kernel_source = {
 		[0] = {
@@ -405,7 +407,7 @@ const struct board_api board_api_gta02 = {
 			.partition_index = 1,
 			.filesystem = FS_EXT2,
 			.filepath = "boot/uImage-GTA02.bin",
-			.commandline_append = " root=/dev/mmcblk0p1",
+			.commandline_append = " root=/dev/mmcblk0p1 ",
 		},
 		[1] = {
 			.name = "SD Card EXT2 P2 Kernel",
@@ -414,7 +416,7 @@ const struct board_api board_api_gta02 = {
 			.partition_index = 2,
 			.filesystem = FS_EXT2,
 			.filepath = "boot/uImage-GTA02.bin",
-			.commandline_append = " root=/dev/mmcblk0p2",
+			.commandline_append = " root=/dev/mmcblk0p2 ",
 		},
 		[2] = {
 			.name = "SD Card EXT2 P3 Kernel",
@@ -423,7 +425,7 @@ const struct board_api board_api_gta02 = {
 			.partition_index = 3,
 			.filesystem = FS_EXT2,
 			.filepath = "boot/uImage-GTA02.bin",
-			.commandline_append = " root=/dev/mmcblk0p3",
+			.commandline_append = " root=/dev/mmcblk0p3 ",
 		},
 		[3] = {
 			.name = "NAND Kernel",
@@ -431,7 +433,7 @@ const struct board_api board_api_gta02 = {
 			.offset_blocks512_if_no_partition = 0x80000 / 512,
 			.filesystem = FS_RAW,
 			.commandline_append = " rootfstype=jffs2 " \
-					      "root=/dev/mtdblock6",
+					      "root=/dev/mtdblock6 ",
 		},
 	},
 };
