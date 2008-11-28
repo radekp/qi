@@ -66,6 +66,9 @@ int read_file(const char * filepath, u8 * destination, int size)
 	case FS_FAT:
 		/* FIXME */
 	case FS_RAW:
+		/* any filename-related request in raw filesystem will fail */
+		if (filepath)
+			return -1;
 		puts("     RAW open: +");
 		printdec(partition_offset_blocks);
 		puts(" 512-byte blocks\n");
