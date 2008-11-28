@@ -46,8 +46,36 @@ const struct pcf50633_init gta03_pcf50633_init[] = {
 
 static const struct board_variant board_variants[] = {
 	[0] = {
-		.name = "GTA03 EVT1",
+		.name = "GTA03 unknown",
+		.machine_revision = 0
+	},
+	[1] = {
+		.name = "GTA03 A1",
 		.machine_revision = 1
+	},
+	[2] = {
+		.name = "GTA03 A2",
+		.machine_revision = 2
+	},
+	[3] = {
+		.name = "GTA03 A3",
+		.machine_revision = 3
+	},
+	[4] = {
+		.name = "GTA03 A4",
+		.machine_revision = 4
+	},
+	[5] = {
+		.name = "GTA03 A5",
+		.machine_revision = 5
+	},
+	[6] = {
+		.name = "GTA03 A6",
+		.machine_revision = 6
+	},
+	[7] = {
+		.name = "GTA03 A7",
+		.machine_revision = 7
 	}
 };
 
