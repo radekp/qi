@@ -20,7 +20,7 @@
  * MA 02111-1307 USA
  */
 
-#include "kboot.h"
+#include <qi.h>
 #include <string.h>
 
 #define DEBUG_CONSOLE_UART UART2

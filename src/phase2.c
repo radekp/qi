@@ -21,16 +21,12 @@
  * MA 02111-1307 USA
  */
 
-#include "kboot.h"
+#include <qi.h>
 #include <neo_gta02.h>
 #include "blink_led.h"
 #include <string.h>
 #define __ARM__
 #include <image.h>
-#define u32 unsigned int
-#define u16 unsigned short
-#define u8 unsigned char
-typedef unsigned int uint32_t;
 
 #include <setup.h>
 #include "nand_read.h"

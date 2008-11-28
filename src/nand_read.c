@@ -18,8 +18,8 @@
 /* NOTE this stuff runs in steppingstone context! */
 
 
+#include <qi.h>
 #include "nand_read.h"
-#include "kboot.h"
 
 #define NAND_CMD_READ0 0
 #define NAND_CMD_READSTART 0x30

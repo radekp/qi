@@ -24,9 +24,9 @@
 /* NOTE this stuff runs in steppingstone context! */
 
 
+#include <qi.h>
 #include "blink_led.h"
 #include "nand_read.h"
-#include "kboot.h"
 #include <neo_gta02.h>
 
 #define stringify2(s) stringify1(s)

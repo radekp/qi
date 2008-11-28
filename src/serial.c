@@ -20,8 +20,8 @@
  * MA 02111-1307 USA
  */
 
+#include <qi.h>
 #include "blink_led.h"
-#include "kboot.h"
 
 void serial_init (const int uart)
 {

@@ -18,12 +18,17 @@
  * MA 02111-1307 USA
  */
 
-#ifndef __KBOOT_H__
-#define __KBOOT_H__
+#ifndef __QI_H__
+#define __QI_H__
 
 #include <stdarg.h>
-#include "serial.h"
-#include "ctype.h"
+#include <qi-serial.h>
+#include <qi-ctype.h>
+
+#define u32 unsigned int
+#define u16 unsigned short
+#define u8 unsigned char
+typedef unsigned int uint32_t;
 
 int printk(const char *fmt, ...);
 int vsprintf(char *buf, const char *fmt, va_list args);
