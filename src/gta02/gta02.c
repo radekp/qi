@@ -37,8 +37,10 @@ static const struct board_variant board_variants[] = {
 	}
 };
 
+
 void port_init_gta02(void)
 {
+
     //CAUTION:Follow the configuration order for setting the ports.
     // 1) setting value(GPnDAT)
     // 2) setting control register  (GPnCON)
