@@ -27,9 +27,14 @@
 #include <string.h>
 #define __ARM__
 #include <image.h>
-
 #include <setup.h>
 #include "nand_read.h"
+#include <ext2.h>
+
+unsigned long partition_offset_blocks = 0;
+unsigned long partition_length_blocks = 0;
+
+struct kernel_source const * this_kernel = 0;
 
 
 void bootloader_second_phase(void)
@@ -41,52 +46,57 @@ void bootloader_second_phase(void)
 
 	/* we try the possible kernels for this board in order */
 
-	while (this_board->kernel_source[kernel].name) {
-		const char * cmdline = this_board->kernel_source[kernel].commandline;
-		const char *p = cmdline;
+	this_kernel = &this_board->kernel_source[kernel++];
+
+	while (this_kernel->name) {
+		const char *p;
 		struct tag *params = (struct tag *)this_board->linux_tag_placement;
 		void * kernel_dram = (void *)(TEXT_BASE - (8 * 1024 * 1024));
 		unsigned long crc;
 		image_header_t	*hdr;
-		unsigned long partition_offset_blocks = 0;
-		unsigned long partition_length_blocks = 0;
+		u32 kernel_size;
+
+		partition_offset_blocks = 0;
+		partition_length_blocks = 0;
 
 		/* eat leading white space */
-		for (p = cmdline; *p == ' '; p++);
+		for (p = this_kernel->commandline; *p == ' '; p++);
 
-		puts("\nTrying kernel: ");
-		puts(this_board->kernel_source[kernel].name);
+		puts("\n\nTrying kernel: ");
+		puts(this_kernel->name);
 		puts("\n");
 
 		/* if this device needs initializing, try to init it */
-		if (this_board->kernel_source[kernel].block_init)
-			if ((this_board->kernel_source[kernel].block_init)()) {
+		if (this_kernel->block_init)
+			if ((this_kernel->block_init)()) {
 				puts("block device init failed\n");
-				kernel++;
+				this_kernel = &this_board->
+							kernel_source[kernel++];
 				continue;
 			}
 
 		/* if there's a partition table implied, parse it, otherwise
 		 * just use a fixed offset
 		 */
-		if (this_board->kernel_source[kernel].partition_index) {
+		if (this_kernel->partition_index) {
 			unsigned char *p = kernel_dram;
 
-			if (this_board->kernel_source[kernel].block_read(
-						       kernel_dram, 0, 4) < 0) {
+			if (this_kernel->block_read(kernel_dram, 0, 4) < 0) {
 				puts("Bad partition read\n");
-				kernel++;
+				this_kernel = &this_board->
+							kernel_source[kernel++];
 				continue;
 			}
 
 			if ((p[0x1fe] != 0x55) || (p[0x1ff] != 0xaa)) {
 				puts("partition signature missing\n");
-				kernel++;
+				this_kernel = &this_board->
+							kernel_source[kernel++];
 				continue;
 			}
 
-			p += 0x1be + 8 + (0x10 * (this_board->
-				    kernel_source[kernel].partition_index - 1));
+			p += 0x1be + 8 + (0x10 *
+					    (this_kernel->partition_index - 1));
 
 			partition_offset_blocks = (((u32)p[3]) << 24) |
 						  (((u32)p[2]) << 16) |
@@ -97,39 +107,89 @@ void bootloader_second_phase(void)
 						  (((u32)p[5]) << 8) |
 						  p[4];
 
-		} else
-			partition_offset_blocks = this_board->
-				   kernel_source[kernel].offset_if_no_partition;
+			puts("    Partition: ");
+			printdec(this_kernel->partition_index);
+			puts(" start +");
+			printdec(partition_offset_blocks);
+			puts(" 512-byte blocks, size ");
+			printdec(partition_length_blocks / 2048);
+			puts(" MiB\n");
 
-		if (this_board->kernel_source[kernel].block_read(
-				 kernel_dram, partition_offset_blocks, 8) < 0) {
-			puts ("Bad kernel header\n");
-			kernel++;
-			continue;
+		} else
+			partition_offset_blocks =
+				  this_kernel->offset_blocks512_if_no_partition;
+
+		switch (this_kernel->filesystem) {
+		case FS_EXT2:
+			if (!ext2fs_mount()) {
+				puts("Unable to mount ext2 filesystem\n");
+				this_kernel = &this_board->
+							kernel_source[kernel++];
+				continue;
+			}
+			puts("    EXT2 open: ");
+			puts(this_kernel->filepath);
+			puts("\n");
+			if (ext2fs_open(this_kernel->filepath) < 0) {
+				puts("Open failed\n");
+				this_kernel = &this_board->
+							kernel_source[kernel++];
+				continue;
+			}
+			ext2fs_read(kernel_dram, 4096);
+			break;
+		case FS_FAT:
+			/* FIXME */
+		case FS_RAW:
+			puts("     RAW open: +");
+			printdec(partition_offset_blocks);
+			puts(" 512-byte blocks\n");
+			if (this_kernel->block_read(kernel_dram,
+					      partition_offset_blocks, 8) < 0) {
+				puts ("Bad kernel header\n");
+				this_kernel = &this_board->
+							kernel_source[kernel++];
+				continue;
+			}
+			break;
 		}
 
 		hdr = (image_header_t *)kernel_dram;
 
-		if (_ntohl(hdr->ih_magic) != IH_MAGIC) {
+		if (__be32_to_cpu(hdr->ih_magic) != IH_MAGIC) {
 			puts("bad magic ");
 			print32(hdr->ih_magic);
-			kernel++;
+			puts("\n");
+			this_kernel = &this_board->kernel_source[kernel++];
 			continue;
 		}
 
-		puts("        Found: ");
+		puts("        Found: \"");
 		puts((const char *)hdr->ih_name);
-		puts("\n         Size: ");
-		printdec(_ntohl(hdr->ih_size) >> 10);
+		puts("\"\n         Size: ");
+		printdec(__be32_to_cpu(hdr->ih_size) >> 10);
 		puts(" KiB\n");
 
-		if ((this_board->kernel_source[kernel].block_read)(
-			kernel_dram, partition_offset_blocks,
-			((_ntohl(hdr->ih_size) + sizeof(image_header_t) +
-					       2048) & ~(2048 - 1)) >> 9) < 0) {
-			puts ("Bad kernel read\n");
-			kernel++;
-			continue;
+		kernel_size = ((__be32_to_cpu(hdr->ih_size) +
+				  sizeof(image_header_t) + 2048) & ~(2048 - 1));
+
+		switch (this_kernel->filesystem) {
+		case FS_EXT2:
+			/* This read API always restarts from beginning */
+			ext2fs_read(kernel_dram, kernel_size);
+			break;
+		case FS_FAT:
+			/* FIXME */
+		case FS_RAW:
+			if ((this_kernel->block_read)(
+				kernel_dram, partition_offset_blocks,
+						kernel_size >> 9) < 0) {
+				puts ("Bad kernel read\n");
+				this_kernel = &this_board->
+							kernel_source[kernel++];
+				continue;
+			}
+			break;
 		}
 
 		puts("      Cmdline: ");
@@ -142,14 +202,14 @@ void bootloader_second_phase(void)
 		 * even though it costs us some time
 		 */
 		crc = crc32(0, kernel_dram + sizeof(image_header_t),
-							_ntohl(hdr->ih_size));
-		if (crc != _ntohl(hdr->ih_dcrc)) {
+						   __be32_to_cpu(hdr->ih_size));
+		if (crc != __be32_to_cpu(hdr->ih_dcrc)) {
 			puts("\nKernel CRC ERROR: read 0x");
 			print32(crc);
 			puts(" vs hdr CRC 0x");
-			print32(_ntohl(hdr->ih_dcrc));
+			print32(__be32_to_cpu(hdr->ih_dcrc));
 			puts("\n");
-			kernel++;
+			this_kernel = &this_board->kernel_source[kernel++];
 			continue;
 		}
 

@@ -316,6 +316,7 @@ static int mmc_cmd(int opcode, int arg, int flags,
 		return 0;
 
 	if (error) {
+#if 0
 		puts("cmd 0x");
 		print8(opcode);
 		puts(", arg 0x");
@@ -323,7 +324,6 @@ static int mmc_cmd(int opcode, int arg, int flags,
 		puts(", flags 0x");
 		print32(flags);
 		puts("\n");
-#if 1
 		puts("Error after cmd: 0x");
 		print32(error);
 		puts("\n");
@@ -366,7 +366,7 @@ static int mmc_cmd(int opcode, int arg, int flags,
 		error = -5;
 	if (error) {
 //		printf("cmd 0x%x, arg 0x%x flags 0x%x\n", opcode, arg, flags);
-#if 1
+#if 0
 		puts("Error after resp: 0x");
 		print32(status);
 		puts("\n");
@@ -530,43 +530,42 @@ static void print_sd_cid(const struct sd_cid *cid)
 	puts("    Card Type: ");
 	switch (card_type) {
 	case CARDTYPE_NONE:
-		puts("(None)\n");
+		puts("(None) / ");
 		break;
 	case CARDTYPE_MMC:
-		puts("MMC\n");
+		puts("MMC / ");
 		break;
 	case CARDTYPE_SD:
-		puts("SD\n");
+		puts("SD / ");
 		break;
 	case CARDTYPE_SD20:
-		puts("SD 2.0\n");
+		puts("SD 2.0 / ");
 		break;
 	case CARDTYPE_SDHC:
-		puts("SD 2.0 SDHC\n");
+		puts("SD 2.0 SDHC / ");
 		break;
 	}
 
-	puts(" Manufacturer: 0x");
+	puts("Mfr: 0x");
 	print8(cid->mid);
 	puts(", OEM \"");
 	this_board->putc(cid->oid_0);
 	this_board->putc(cid->oid_1);
-	puts("\"\n");
+	puts("\" / ");
 
-	puts(" Product name: \"");
 	this_board->putc(cid->pnm_0);
 	this_board->putc(cid->pnm_1);
 	this_board->putc(cid->pnm_2);
 	this_board->putc(cid->pnm_3);
 	this_board->putc(cid->pnm_4);
-	puts("\", revision ");
+	puts("\", rev ");
 	printdec(cid->prv >> 4);
 	puts(".");
 	printdec(cid->prv & 15);
-	puts("\nSerial number: ");
+	puts(" / s/n: ");
 	printdec(cid->psn_0 << 24 | cid->psn_1 << 16 | cid->psn_2 << 8 |
 	    cid->psn_3);
-	puts("\n   Manf. date: ");
+	puts(" / date: ");
 	printdec(cid->mdt_1 & 15);
 	puts("/");
 	printdec(2000 + ((cid->mdt_0 & 15) << 4)+((cid->mdt_1 & 0xf0) >> 4));

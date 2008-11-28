@@ -310,11 +310,12 @@ const struct board_api board_api_gta02 = {
 	/* these are the ways we could boot GTA02 in order to try */
 	.kernel_source = {
 		[0] = {
-			.name = "SD Card FAT Kernel",
+			.name = "SD Card EXT2 Kernel",
 			.block_init = sd_card_init_gta02,
 			.block_read = sd_card_block_read_gta02,
 			.partition_index = 1,
 			.filesystem = FS_EXT2,
+			.filepath = "boot/uImage.bin",
 			.commandline = "mtdparts=physmap-flash:-(nor);" \
 					"neo1973-nand:" \
 					 "0x00040000(qi)," \
@@ -333,7 +334,7 @@ const struct board_api board_api_gta02 = {
 		[1] = {
 			.name = "NAND Kernel",
 			.block_read = nand_read_ll,
-			.offset_if_no_partition = 0x80000 / 512,
+			.offset_blocks512_if_no_partition = 0x80000 / 512,
 			.filesystem = FS_RAW,
 			.commandline = "mtdparts=physmap-flash:-(nor);" \
 					"neo1973-nand:" \

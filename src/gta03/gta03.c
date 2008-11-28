@@ -234,7 +234,7 @@ const struct board_api board_api_gta03 = {
 		[0] = {
 			.name = "NAND Kernel",
 			.block_read = nand_read_ll,
-			.offset_if_no_partition = 0x80000 / 512,
+			.offset_blocks512_if_no_partition = 0x80000 / 512,
 			.filesystem = FS_RAW,
 			.commandline = 	"neo1973-nand:" \
 					 "0x00040000(qi)," \

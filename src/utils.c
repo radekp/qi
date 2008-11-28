@@ -23,6 +23,9 @@
 #include <qi.h>
 #include <string.h>
 
+static u8 malloc_pool[100 * 1024];
+void * malloc_pointer = &malloc_pool[0];
+
 int raise(int n)
 {
 	return 0;
@@ -49,15 +52,39 @@ char *strcpy(char *dest, const char *src)
 	return dest_orig;
 }
 
-unsigned int _ntohl(unsigned int n) {
-	return ((n & 0xff) << 24) | ((n & 0xff00) << 8) |
-			       ((n & 0xff0000) >> 8) | ((n & 0xff000000) >> 24);
+char *strncpy(char *dest, const char *src, size_t n)
+{
+	char * dest_orig = dest;
+
+	while (*src && n--)
+		*dest++ = *src++;
+
+	return dest_orig;
 }
 
-unsigned int _letocpu(unsigned int n) {
-	return n;
+
+int strcmp(const char *s1, const char *s2)
+{
+	while (1) {
+		if (*s1 != *s2)
+			return *s1 - *s2;
+		if (!*s1)
+			return 0;
+		s1++;
+		s2++;
+	}
 }
 
+char *strchr(const char *s, int c)
+{
+	while ((*s) && (*s != c))
+		s++;
+
+	if (*s == c)
+		return (char *)s;
+
+	return NULL;
+}
 
 int puts(const char *string)
 {
@@ -213,4 +240,48 @@ unsigned long crc32(unsigned long crc, const unsigned char *buf,
 		} while (--len);
 
 	return crc ^ 0xffffffffL;
+}
+
+void *memcpy(void *dest, const void *src, size_t n)
+{
+	u8 const * ps = src;
+	u8 * pd = dest;
+
+	while (n--)
+		*pd++ = *ps++;
+
+	return dest;
+}
+
+void *memset(void *s, int c, size_t n)
+{
+	u8 * p = s;
+
+	while (n--)
+		*p++ = c;
+
+	return s;
+}
+
+/* improbably simple malloc and free for small and non-intense allocation
+ * just moves the allocation ptr forward each time and ignores free
+ */
+
+void *malloc(size_t size)
+{
+	void *p = malloc_pointer;
+
+	malloc_pointer += size;
+
+	if (((u8 *)malloc_pointer - &malloc_pool[0]) > sizeof(malloc_pool)) {
+		puts("Ran out of malloc pool\n");
+		while (1)
+			;
+	}
+
+	return p;
+}
+
+void free(void *ptr)
+{
 }

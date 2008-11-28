@@ -23,11 +23,15 @@
 
 #include <stdarg.h>
 #include <qi-ctype.h>
+#include <asm/byteorder.h>
+
 
 #define u32 unsigned int
 #define u16 unsigned short
 #define u8 unsigned char
 typedef unsigned int uint32_t;
+typedef unsigned short uint16_t;
+typedef unsigned char uint8_t;
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
@@ -41,11 +45,12 @@ enum filesystem {
 
 struct kernel_source {
 	const char *name; /* NULL name means invalid */
+	const char *filepath;
 	int (*block_init)(void);
 	int (*block_read)(unsigned char * buf, unsigned long start512,
 							       int blocks512);
 	int partition_index; /* -1 means no partition table */
-	int offset_if_no_partition; /* used if partition_index is -1 */
+	int offset_blocks512_if_no_partition; /* used if partition_index is -1 */
 	enum filesystem filesystem;
 	const char * commandline;
 };
@@ -75,6 +80,7 @@ struct board_api {
 /* this is the board we are running on */
 
 extern struct board_api const * this_board;
+extern struct kernel_source const * this_kernel;
 
 int printk(const char *fmt, ...);
 int vsprintf(char *buf, const char *fmt, va_list args);
@@ -84,8 +90,7 @@ void print8(unsigned char u);
 void print32(unsigned int u);
 void printdec(int n);
 void hexdump(unsigned char *start, int len);
-unsigned int _ntohl(unsigned int n);
-unsigned int _letocpu(unsigned int n);
+
 unsigned long crc32(unsigned long crc, const unsigned char *buf,
 							      unsigned int len);
 int nand_read_ll(unsigned char *buf, unsigned long start512, int blocks512);

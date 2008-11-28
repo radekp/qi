@@ -33,8 +33,6 @@
 #ifndef __IMAGE_H__
 #define __IMAGE_H__
 
-#include <arpa/inet.h>
-
 /*
  * Operating System Codes
  */
@@ -204,8 +202,8 @@ typedef struct bootm_headers {
  */
 #define CHUNKSZ (64 * 1024)
 
-#define uimage_to_cpu(x)		ntohl(x)
-#define cpu_to_uimage(x)		htonl(x)
+#define uimage_to_cpu(x)		__be32_to_cpu(x)
+#define cpu_to_uimage(x)		__cpu_to_be32(x)
 
 const char *genimg_get_os_name (uint8_t os);
 const char *genimg_get_arch_name (uint8_t arch);

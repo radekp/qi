@@ -98,7 +98,6 @@ void start_qi(void)
 	puts(", ");
 	board_variant = (this_board->get_board_variant)();
 	puts(board_variant->name);
-	puts("\n");
 
 	/*
 	 * jump to bootloader_second_phase() running from DRAM copy
