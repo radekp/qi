@@ -184,13 +184,25 @@ start_code:
 	bic	r0, r0, #0x00002300	@ clear bits 13, 9:8 (--V- --RS)
 	bic	r0, r0, #0x00000087	@ clear bits 7, 2:0 (B--- -CAM)
 	orr	r0, r0, #0x00000002	@ set bit 2 (A) Align
-	orr	r0, r0, #0x00001000	@ set bit 12 (I) I-Cache
+	orr	r0, r0, #0x00005000	@ Enable I and D-Cache
 	mcr	p15, 0, r0, c1, c0, 0
 
 	/* Peri port setup */
 	ldr	r0, =0x70000000
 	orr	r0, r0, #0x13
     	mcr	p15,0,r0,c15,c2,4       @ 256M(0x70000000-0x7fffffff)
+
+	/* LCD Controller enable */
+
+	ldr	r0, =0x7410800c		@ MIFPCON[3] = 0
+	mov	r1, #0
+	str	r1, [r0]
+
+	ldr	r0, =0x7f0081a0		@ SPCON[1:0] = 01
+	mov	r1, =0xbfc11501
+	str	r1, [r0]
+
+	/* SDRAM */
 
 	ldr	r0, =ELFIN_MEM_SYS_CFG			@Memory sussystem address 0x7e00f120
 	mov	r1, #0xd				@ Xm0CSn2 = NFCON CS0, Xm0CSn3 = NFCON CS1
