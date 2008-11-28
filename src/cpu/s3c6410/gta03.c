@@ -5,17 +5,13 @@
 //#include <i2c-bitbang-s3c24xx.h>
 #include <pcf50633.h>
 
-#define GTA03_DEBUG_UART 0
+#define GTA03_DEBUG_UART 3
 
 #define PCF50633_I2C_ADS 0x73
 
 
 static const struct board_variant board_variants[] = {
 	[0] = {
-		.name = "SMDK",
-		.machine_revision = 0,
-	},
-	[1] = {
 		.name = "GTA03 EVT1",
 		.machine_revision = 1
 	}
@@ -192,7 +188,7 @@ unsigned long s3c6410_mmc_bread(int dev_num, unsigned long blknr, unsigned long 
  */
 const struct board_api board_api_gta03 = {
 	.name = "GTA03",
-	.linux_machine_id = 1626 /*1866*/,
+	.linux_machine_id = 1866,
 	.linux_mem_start = 0x50000000,
 	.linux_mem_size = (128 * 1024 * 1024),
 	.linux_tag_placement = 0x50000000 + 0x100,
@@ -208,8 +204,9 @@ const struct board_api board_api_gta03 = {
 			.partition_index = 2,
 			.filepath = "boot/uImage.bin",
 			.initramfs_filepath = "boot/initramfs.gz",
-			.commandline = "console=ttySAC0,115200 " \
-				       "loglevel=8 init=/bin/sh root=/dev/ram ramdisk_size=6000000"
+			.commandline = "console=ttySAC3,115200 " \
+				       "loglevel=8 init=/bin/sh " \
+				       "root=/dev/ram ramdisk_size=6000000"
 		},
 		[1] = {
 			.name = "SD Card backup rootfs",
@@ -218,7 +215,7 @@ const struct board_api board_api_gta03 = {
 			.partition_index = 3,
 			.filepath = "boot/uImage.bin",
 			.initramfs_filepath = "boot/initramfs.gz",
-			.commandline = "console=ttySAC0,115200 " \
+			.commandline = "console=ttySAC3,115200 " \
 				       "loglevel=8 init=/bin/sh "
 		},	},
 };

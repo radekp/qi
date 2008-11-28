@@ -1,6 +1,6 @@
 /*
  * (C) Copyright 2007 OpenMoko, Inc.
- * Author: xiangfu liu <xiangfu@openmoko.org>
+ * Author: Andy Green <andy@openmoko.com>
  *
  * Configuation settings for the FIC Neo GTA02 Linux GSM phone
  *
@@ -28,20 +28,11 @@
  */
 void serial_putc_s3c64xx(const int uart, const char c)
 {
-	switch(uart)
-	{
-	case 0:
-		while (!( UTRSTAT0_REG & 0x2 ))
-			;
-		UTXH0_REG = c;
-		break;
-	case 1:
-		while (!( UTRSTAT1_REG & 0x2))
-			;
-		UTXH1_REG = c;
-		break;
+	if (uart >= 4)
+		return;
 
-	default:
-		break;
-	}
+	while (!(__REG(0x7F005000 + UTRSTAT_OFFSET + (uart << 10)) & 0x2))
+		;
+
+	__REG(0x7F005000 + UTXH_OFFSET + (uart << 10)) = c;
 }

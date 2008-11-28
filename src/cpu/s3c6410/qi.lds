@@ -46,6 +46,7 @@ SECTIONS
 	  src/cpu/s3c6410/start_qi.o		(.text .rodata* .data .bss)
 	  src/cpu/s3c6410/serial-s3c64xx.o	(.text .rodata* .data .bss)
 	  src/cpu/s3c6410/gta03.o		(.text .rodata* .data .bss)
+	  src/cpu/s3c6410/smdk6410.o		(.text .rodata* .data .bss)
 	  src/cpu/s3c6410/hs_mmc.o		(.text .rodata* .data .bss)
 	  src/utils.o				(.text .rodata* .data .bss)
 	  src/memory-test.o			(.text .rodata* .data .bss)
