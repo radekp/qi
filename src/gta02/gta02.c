@@ -46,7 +46,6 @@ const struct pcf50633_init pcf50633_init[] = {
 	{ PCF50633_REG_OOCTIM1,		0xaa },	/* debounce 14ms everything */
 	{ PCF50633_REG_OOCTIM2,		0x4a },
 	{ PCF50633_REG_OOCMODE,		0x55 },
-	{ PCF50633_REG_OOCSHDWN,	0x04 },  /* defeat 8s death from lowsys on A5 */
 	{ PCF50633_REG_OOCCTL,		0x47 },
 
 	{ PCF50633_REG_SVMCTL,		0x08 },	/* 3.10V SYS voltage thresh. */
@@ -72,9 +71,10 @@ const struct pcf50633_init pcf50633_init[] = {
 	{ PCF50633_REG_MBCC6,		0x00 }, /* cutoff current 1/32 * Ichg */
 	{ PCF50633_REG_MBCC7,		0x00 },	/* 1.6A max bat curr, USB 100mA */
 	{ PCF50633_REG_MBCC8,		0x00 },
-	{ PCF50633_REG_MBCC1,		0xe7 }, /* chgena */
+	{ PCF50633_REG_MBCC1,		0xff }, /* chgena */
 
 	{ PCF50633_REG_BBCCTL,		0x19 },	/* 3V, 200uA, on */
+	{ PCF50633_REG_OOCSHDWN,	0x04 },  /* defeat 8s death from lowsys on A5 */
 
 };
 

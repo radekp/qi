@@ -49,8 +49,8 @@ UDFU_PID = 0x5119
 UDFU_REV = 0x350
 
 TARGET	= image/start_qi_all
-IMAGE = $(IMAGE_DIR)/qi
-UDFU_IMAGE = $(IMAGE_DIR)/qi.udfu
+IMAGE = $(IMAGE_DIR)/qi-$(BUILD_VERSION)
+UDFU_IMAGE = $(IMAGE_DIR)/qi-$(BUILD_VERSION).udfu
 
 MKUDFU = $(TOOLS)/mkudfu
 
@@ -75,5 +75,5 @@ ${UDFU_IMAGE}:${OBJS} ${MKUDFU}
 	@$(OBJDUMP) -d ${TARGET} >${IMAGE}.dis
 
 clean:
-	@rm -f src/*.o  src/*~ include/*~ ${IMAGE}* ${TARGET} ${UDFU_IMAGE}
+	@rm -f src/*.o  src/*~ include/*~ ${IMAGE_DIR}/* ${TARGET} ${UDFU_IMAGE}
 	@make clean -C $(TOOLS)
