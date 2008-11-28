@@ -22,7 +22,6 @@
 #define __QI_H__
 
 #include <stdarg.h>
-#include <qi-serial.h>
 #include <qi-ctype.h>
 
 #define u32 unsigned int
@@ -62,7 +61,6 @@ struct board_variant {
 
 struct board_api {
 	const char * name;
-	int debug_serial_port;
 	int linux_machine_id;
 	unsigned long linux_mem_start;
 	unsigned long linux_mem_size;
@@ -70,6 +68,7 @@ struct board_api {
 	const struct board_variant const * (*get_board_variant)(void);
 	int (*is_this_board)(void);
 	void (*port_init)(void);
+	void (*putc)(char);
 	struct kernel_source kernel_source[8];
 };
 

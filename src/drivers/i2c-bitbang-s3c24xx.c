@@ -23,6 +23,7 @@
 
 #include <qi.h>
 #include <i2c-bitbang.h>
+#include <ports-s3c24xx.h>
 
 static char i2c_read_sda_s3c24xx(void)
 {

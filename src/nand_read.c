@@ -71,13 +71,6 @@ static int is_bad_block(unsigned long i)
 	NFCMD = NAND_CMD_READSTART;
 	nand_wait();
 	data = (NFDATA & 0xff);
-#ifdef DEBUG
-	serial_putc(2, '$');
-	serial_putc(2, '0');
-	serial_putc(2, 'x');
-	print32((unsigned int)data);
-	serial_putc(2, ' ');
-#endif
 
 	if (data != 0xff)
 		return 1;
@@ -138,20 +131,11 @@ int nand_read_ll(unsigned char *buf, unsigned long start_addr, int size)
 		if ((i & (NAND_BLOCK_SIZE - 1)) == 0) {
 			if (is_bad_block(i) ||
 					is_bad_block(i + NAND_PAGE_SIZE)) {
-				serial_putc(2, '!');
-				serial_putc(2, '0');
-				serial_putc(2, 'x');
-				print32((unsigned int)i);
-				serial_putc(2, ' ');
-
 				i += NAND_BLOCK_SIZE;
 				size += NAND_BLOCK_SIZE;
-				if (bad_count++ == 4) {
-					serial_putc(2, '+');
-					serial_putc(2, '\n');
+				if (bad_count++ == 4)
 					return -1;
-				}
-				serial_putc(2, '\n');
+
 				continue;
 			}
 		}

@@ -21,10 +21,11 @@
  */
 
 #include <qi.h>
-#include "blink_led.h"
+#include <serial-s3c24xx.h>
 
-void serial_init (const int uart, const int ubrdiv_val)
+void serial_init_115200_s3c24xx(const int uart, const int pclk_MHz)
 {
+	int div = (((54 * pclk_MHz) + (pclk_MHz / 2)) / 100) -1;
 	switch(uart)
 	{
 	case UART0:
@@ -32,20 +33,20 @@ void serial_init (const int uart, const int ubrdiv_val)
 		rUCON0 = 0x245;
 		rUFCON0 = 0x0;
 		rUMCON0 = 0x0;
-		rUBRDIV0 = ubrdiv_val;
+		rUBRDIV0 = div;
 		break;
 	case UART1:
 		rULCON1 = 0x3;
 		rUCON1 = 0x245;
 		rUFCON1 = 0x0;
 		rUMCON1 = 0x0;
-		rUBRDIV1 = ubrdiv_val;
+		rUBRDIV1 = div;
 		break;
 	case UART2:
 		rULCON2 = 0x3;
 		rUCON2 = 0x245;
 		rUFCON2 = 0x1;
-		rUBRDIV2 = ubrdiv_val;
+		rUBRDIV2 = div;
 		break;
 	default:
 		break;
@@ -54,7 +55,7 @@ void serial_init (const int uart, const int ubrdiv_val)
 /*
  * Output a single byte to the serial port.
  */
-void serial_putc (const int uart, const char c)
+void serial_putc_s3c24xx(const int uart, const char c)
 {
 	switch(uart)
 	{

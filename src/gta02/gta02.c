@@ -25,7 +25,11 @@
 
 #include <qi.h>
 #include <neo_gta02.h>
+#include <serial-s3c24xx.h>
+#include <ports-s3c24xx.h>
 #include <i2c-bitbang-s3c24xx.h>
+
+#define GTA02_DEBUG_UART 2
 
 #define PCF50633_I2C_ADS 0x73
 
@@ -180,11 +184,11 @@ void port_init_gta02(void)
 		"nop\n"\
 		"nop\n"\
 		"nop\n"\
- );
+	);
 	/* configure MPLL */
 	*MPLLCON = ((42 << 12) + (1 << 4) + 0);
 
-	serial_init(UART2, (((54 * 50) + 50) / 100) -1);
+	serial_init_115200_s3c24xx(GTA02_DEBUG_UART, 50 /* 50MHz PCLK */);
 }
 
 /**
@@ -254,13 +258,17 @@ const struct board_variant const * get_board_variant_gta02(void)
 	return &board_variants[gta02_get_pcb_revision()];
 }
 
+static void putc_gta02(char c)
+{
+	serial_putc_s3c24xx(GTA02_DEBUG_UART, c);
+}
+
 /*
  * our API for bootloader on this machine
  */
 
 const struct board_api board_api_gta02 = {
 	.name = "Freerunner / GTA02",
-	.debug_serial_port = 2,
 	.linux_machine_id = 1304,
 	.linux_mem_start = 0x30000000,
 	.linux_mem_size = (128 * 1024 * 1024),
@@ -268,6 +276,7 @@ const struct board_api board_api_gta02 = {
 	.get_board_variant = get_board_variant_gta02,
 	.is_this_board = is_this_board_gta02,
 	.port_init = port_init_gta02,
+	.putc = putc_gta02,
 	/* these are the ways we could boot GTA02 in order to try */
 	.kernel_source = {
 		[0] = {

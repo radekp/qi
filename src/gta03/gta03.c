@@ -1,5 +1,13 @@
 #include <qi.h>
 #include <neo_gta03.h>
+#include <serial-s3c24xx.h>
+#include <ports-s3c24xx.h>
+#include <i2c-bitbang-s3c24xx.h>
+
+#define GTA03_DEBUG_UART 2
+
+#define PCF50633_I2C_ADS 0x73
+
 
 static const struct board_variant board_variants[] = {
 	[0] = {
@@ -108,7 +116,7 @@ void port_init_gta03(void)
 	rGPJCON = 0x02AAAAAA;
 	rGPJUP = 0x1FFFF;
 
-	serial_init(UART2, 0x11);
+	serial_init_115200_s3c24xx(GTA03_DEBUG_UART, 33 /*MHz PCLK */);
 }
 
 /**
@@ -161,12 +169,18 @@ int is_this_board_gta03(void)
 	/* FIXME: find something gta03 specific */
 	return 1;
 }
+
+static void putc_gta03(char c)
+{
+	serial_putc_s3c24xx(GTA03_DEBUG_UART, c);
+}
+
+
 /*
  * our API for bootloader on this machine
  */
 const struct board_api board_api_gta03 = {
 	.name = "GTA03",
-	.debug_serial_port = 2,
 	.linux_machine_id = 1808,
 	.linux_mem_start = 0x30000000,
 	.linux_mem_size = (128 * 1024 * 1024),
@@ -174,6 +188,7 @@ const struct board_api board_api_gta03 = {
 	.get_board_variant = get_board_variant_gta03,
 	.is_this_board = is_this_board_gta03,
 	.port_init = port_init_gta03,
+	.putc = putc_gta03,
 	/* these are the ways we could boot GTA03 in order to try */
 	.kernel_source = {
 		[0] = {

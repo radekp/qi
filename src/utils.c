@@ -57,7 +57,7 @@ unsigned int _ntohl(unsigned int n) {
 int puts(const char *string)
 {
 	while (*string)
-		serial_putc(this_board->debug_serial_port, *string++);
+		this_board->putc(*string++);
 
 	return 1;
 }
@@ -66,9 +66,9 @@ int puts(const char *string)
 void printnybble(unsigned char n)
 {
 	if (n < 10)
-		serial_putc(this_board->debug_serial_port, '0' + n);
+		this_board->putc('0' + n);
 	else
-		serial_putc(this_board->debug_serial_port, 'a' + n - 10);
+		this_board->putc('a' + n - 10);
 }
 
 void printhex(unsigned char n)
@@ -91,13 +91,13 @@ void hexdump(unsigned char *start, int len)
 
 	while (len > 0) {
 		print32((int)start);
-		serial_putc(this_board->debug_serial_port, ':');
-		serial_putc(this_board->debug_serial_port, ' ');
+		this_board->putc(':');
+		this_board->putc(' ');
 		for (n = 0; n < 16; n++) {
 			printhex(*start++);
-			serial_putc(this_board->debug_serial_port, ' ');
+			this_board->putc(' ');
 		}
-		serial_putc(this_board->debug_serial_port, '\n');
+		this_board->putc('\n');
 		len -= 16;
 	}
 }

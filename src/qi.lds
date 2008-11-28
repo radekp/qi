@@ -37,12 +37,12 @@ SECTIONS
 	. = ALIGN(4);
 	.text      :
 	{
-	  src/start.o		(.text .rodata* .data)
-	  src/lowlevel_init.o	(.text .rodata* .data)
-	  src/start_qi.o	(.text .rodata* .data)
-	  src/blink_led.o	(.text .rodata* .data)
-	  src/nand_read.o	(.text .rodata* .data)
-	  src/serial.o		(.text .rodata* .data)
+	  src/start.o			(.text .rodata* .data)
+	  src/lowlevel_init.o		(.text .rodata* .data)
+	  src/start_qi.o		(.text .rodata* .data)
+	  src/blink_led.o		(.text .rodata* .data)
+	  src/nand_read.o		(.text .rodata* .data)
+	  src/drivers/serial-s3c24xx.o	(.text .rodata* .data)
 	}
 
 	. = ALIGN(4);
