@@ -405,6 +405,28 @@ const struct board_api board_api_gta02 = {
 				       "ro"
 		},
 		[1] = {
+			.name = "SD Card EXT2 Kernel",
+			.block_init = sd_card_init_gta02,
+			.block_read = sd_card_block_read_gta02,
+			.partition_index = 2,
+			.filesystem = FS_EXT2,
+			.filepath = "boot/uImage.bin",
+			.commandline = "mtdparts=physmap-flash:-(nor);" \
+					"neo1973-nand:" \
+					 "0x00040000(qi)," \
+					 "0x00040000(cmdline)," \
+					 "0x00800000(backupkernel)," \
+					 "0x000a0000(extra)," \
+					 "0x00040000(identity)," \
+					 "0x0f6a0000(backuprootfs) " \
+				       "rootfstype=ext3 " \
+				       "root=/dev/mmcblk0p2 " \
+				       "console=ttySAC2,115200 " \
+				       "loglevel=4 " \
+				       "init=/sbin/init "\
+				       "ro"
+		},
+		[2] = {
 			.name = "NAND Kernel",
 			.block_read = nand_read_ll,
 			.offset_blocks512_if_no_partition = 0x80000 / 512,
