@@ -66,7 +66,7 @@ const struct board_api board_api_gta03 = {
 			.filepath = "boot/uImage-GTA03.bin",
 			.commandline = "console=ttySAC3,115200 " \
 				       "loglevel=8 init=/bin/sh " \
-				       "root=/dev/mmcblk0p2 rootfstype=ext3"
+				       "root=/dev/mmcblk0p2"
 		},
 		[1] = {
 			.name = "SD Card backup rootfs",
@@ -76,7 +76,7 @@ const struct board_api board_api_gta03 = {
 			.filepath = "boot/uImage-GTA03.bin",
 			.commandline = "console=ttySAC3,115200 " \
 				       "loglevel=8 init=/bin/sh " \
-				       "root=/dev/mmcblk0p3 rootfstype=ext3"
+				       "root=/dev/mmcblk0p3"
 		},
 	},
 };

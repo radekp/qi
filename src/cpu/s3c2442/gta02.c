@@ -400,10 +400,9 @@ const struct board_api board_api_gta02 = {
 					 "0x000a0000(extra)," \
 					 "0x00040000(identity)," \
 					 "0x0f6a0000(backuprootfs) " \
-				       "rootfstype=ext3 " \
 				       "root=/dev/mmcblk0p1 " \
 				       "console=ttySAC2,115200 " \
-				       "loglevel=4 " \
+				       "loglevel=8 console=tty0 " \
 				       "init=/sbin/init "\
 				       "ro"
 		},
@@ -422,10 +421,9 @@ const struct board_api board_api_gta02 = {
 					 "0x000a0000(extra)," \
 					 "0x00040000(identity)," \
 					 "0x0f6a0000(backuprootfs) " \
-				       "rootfstype=ext3 " \
 				       "root=/dev/mmcblk0p2 " \
 				       "console=ttySAC2,115200 " \
-				       "loglevel=4 " \
+				       "loglevel=8 console=tty0 " \
 				       "init=/sbin/init "\
 				       "ro"
 		},
@@ -444,10 +442,9 @@ const struct board_api board_api_gta02 = {
 					 "0x000a0000(extra)," \
 					 "0x00040000(identity)," \
 					 "0x0f6a0000(backuprootfs) " \
-				       "rootfstype=ext3 " \
 				       "root=/dev/mmcblk0p3 " \
 				       "console=ttySAC2,115200 " \
-				       "loglevel=4 " \
+				       "loglevel=8 console=tty0 " \
 				       "init=/sbin/init "\
 				       "ro"
 		},
@@ -467,7 +464,7 @@ const struct board_api board_api_gta02 = {
 				       "rootfstype=jffs2 " \
 				       "root=/dev/mtdblock6 " \
 				       "console=ttySAC2,115200 " \
-				       "loglevel=8 " \
+				       "loglevel=8 console=tty0 " \
 				       "init=/sbin/init "\
 				       "ro"
 		},

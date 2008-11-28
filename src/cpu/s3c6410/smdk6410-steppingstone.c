@@ -54,7 +54,7 @@ const struct board_api board_api_smdk6410 = {
 			.filepath = "boot/uImage.bin",
 			.commandline = "console=ttySAC0,115200 " \
 				       "loglevel=3 init=/bin/sh " \
-				       "root=/dev/mmcblk0p2 rootfstype=ext3"
+				       "root=/dev/mmcblk0p2"
 		},
 		[1] = {
 			.name = "SD Card backup rootfs",
@@ -64,7 +64,7 @@ const struct board_api board_api_smdk6410 = {
 			.filepath = "boot/uImage.bin",
 			.commandline = "console=ttySAC0,115200 " \
 				       "loglevel=8 init=/bin/sh " \
-				       "root=/dev/mmcblk0p3 rootfstype=ext3"
+				       "root=/dev/mmcblk0p3"
 		},	},
 };
 

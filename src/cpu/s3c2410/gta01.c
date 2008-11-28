@@ -240,7 +240,6 @@ const struct board_api board_api_gta01 = {
 					 "0x00200000(kernel)," \
 					 "0x000a0000(splash)," \
 					 "0x03d1c000(rootfs) " \
-				       "rootfstype=ext3 " \
 				       "root=/dev/mmcblk0p2 " \
 				       "console=ttySAC0,115200 " \
 				       "loglevel=4 " \
@@ -261,7 +260,6 @@ const struct board_api board_api_gta01 = {
 					 "0x00200000(kernel)," \
 					 "0x000a0000(splash)," \
 					 "0x03d1c000(rootfs) " \
-				       "rootfstype=ext3 " \
 				       "root=/dev/mmcblk0p2 " \
 				       "console=ttySAC0,115200 " \
 				       "loglevel=4 " \
@@ -269,6 +267,26 @@ const struct board_api board_api_gta01 = {
 				       "ro"
 		},
 		[2] = {
+			.name = "SD Card EXT2 Kernel p3",
+			.block_init = sd_card_init_gta01,
+			.block_read = sd_card_block_read_gta01,
+			.partition_index = 3,
+			.filesystem = FS_EXT2,
+			.filepath = "boot/uImage-GTA01.bin",
+			.commandline = "mtdparts=" \
+					"neo1973-nand:" \
+					 "0x00040000(qi)," \
+					 "0x00004000(u-boot_env)," \
+					 "0x00200000(kernel)," \
+					 "0x000a0000(splash)," \
+					 "0x03d1c000(rootfs) " \
+				       "root=/dev/mmcblk0p2 " \
+				       "console=ttySAC0,115200 " \
+				       "loglevel=4 " \
+				       "init=/sbin/init "\
+				       "ro"
+		},
+		[3] = {
 			.name = "NAND Kernel",
 			.block_read = nand_read_ll,
 			.offset_blocks512_if_no_partition = 0x44000 / 512,
