@@ -324,7 +324,7 @@ const struct board_api board_api_gta02 = {
 					 "0x000a0000(extra)," \
 					 "0x00040000(identity)," \
 					 "0x0f6a0000(backuprootfs) " \
-				       "rootfstype=ext2 " \
+				       "rootfstype=ext3 " \
 				       "root=/dev/mmcblk0p1 " \
 				       "console=ttySAC2,115200 " \
 				       "loglevel=4 " \
