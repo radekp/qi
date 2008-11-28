@@ -504,7 +504,6 @@ unsigned int s3c6410_mmc_init (int verbose)
 	resp = issue_command(SD_SEND_IF_COND, 0x000001aa,
 		0, MMC_CMD_BCR | MMC_RSP_R7);
 	if (resp && ((s3c_hsmmc_readl(HM_RSPREG0) & 0xff) == 0xaa)) {
-		puts("SD 2.0\n");
 		card_type = CARDTYPE_SD20; /* 2.0 SD, may not be SDHC */
 		hcs = 0x40000000;
 	}

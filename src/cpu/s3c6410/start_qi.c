@@ -93,6 +93,7 @@ void start_qi(void)
 	puts(this_board->name);
 	puts(", ");
 	puts((this_board->get_board_variant)()->name);
+	puts("\n");
 
 	if (!is_jtag) {
 		/*
