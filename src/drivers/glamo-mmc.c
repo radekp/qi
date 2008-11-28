@@ -64,15 +64,6 @@ int mmc_read(unsigned long src, u8 *dst, int size);
         })
 
 
-
-int q;
-
-void udelay(int n)
-{
-	while (n--)
-		q+=n * q;
-}
-
 static void
 glamo_reg_write(u16 val, u16 reg)
 {
