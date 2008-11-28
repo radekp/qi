@@ -646,5 +646,5 @@ unsigned long s3c6410_mmc_bread(int dev_num, unsigned long start_blk, unsigned l
 
 	HS_DMA_END = 0;
 
-	return 0;
+	return blknum;
 }
