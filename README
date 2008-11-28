@@ -1,5 +1,97 @@
-Backlight turns on right away, but screen remains blank until kernel load,
-and kernel does NOT output gobs of text to the screen.
-Will ALWAYS boot from uSD if first partition is ext2 and contains
-/boot/uImage.bin, otherwise boots from NAND.
-No splash screen.
+Qi
+==
+
+Qi (named by Alan Cox on Openmoko kernel list) is a minimal bootloader that
+"breathes life" into Linux.  Its goal is to stay close to the minimum needed
+to "load" and then "boot" Linux -- no boot menus, additional peripheral init
+or private states.
+
+
+What's wrong with U-Boot, they keep telling people to not reinvent the wheel?
+=============================================================================
+
+U-Boot is gradually becoming a simplified knockoff of Linux.  After using it a
+while, it became clear we were cutting and pasting drivers into U-Boot from
+Linux, cutting them down and not having a plan to maintain the U-Boot versions
+as the Linux ones were changed.
+
+We decided that we would use full Linux for things that Linux is good at and
+only have the bootloader do the device init that is absolutely required before
+Linux can be pulled into memory and started.  In practice since we had a working
+U-Boot implementation it meant cutting that right down to the bone (start.S
+mainly for s3c2442) and then building it up from scratch optimized to just do
+load and boot.
+
+
+Samsung - specific boot sequence
+================================
+
+Right now Qi supports Samsung "steppingstone" scheme devices, but in fact it's
+the same in processors like iMX31 that there is a small area of SRAM that is
+prepped with NAND content via ROM on the device.  There's nothing that stops Qi
+use on processors without steppingstone, although the ATAG stuff assumes we deal
+with ARM based processor.
+
+
+Per-CPU Qi
+==========
+
+Qi has a concept of a single bootloader binary created per CPU type.  The
+different devices that use that CPU are all supported in the same binary.  At
+runtime after the common init is done, Qi asks each supported device code in
+turn if it recognizes the device as being handled by it, the first one to reply
+that it knows the device gets to control the rest of the process.
+
+Consequently, there is NO build-time configuration file as found on U-Boot
+except a make env var that sets the CPU type being built, eg:
+
+  make CPU=s3c6410
+
+
+Booting Heuristics
+==================
+
+Qi has one or more ways to fetch a kernel depending on the device it finds it is
+running on, for example on GTA02 it can use NAND and SD card devices.  It goes
+through these device-specific storage devices in order and tries to boot the
+first viable kernel it finds, usually /boot/uImage.bin.
+
+The kernel commandline used is associated with the storage device, this allows
+the correct root= line to be arrived at without any work.  The inability to set
+the Qi kernel commandline externally is deliberate, two otherwise identical
+devices differing by the kernel commandline or other "environment" is not good.
+A whole class of bugs and support issues around private bootloader state are
+therefore avoided.
+
+If no kernel image can be found, Qi falls back to doing a memory test.
+
+
+Initrd support
+==============
+
+Initrd or initramfs in separate file is supported to be loaded at given
+memory address in addition to kernel image.  The ATAGs are issued accordingly.
+
+
+Functional Differences from U-Boot on GTA02
+===========================================
+
+ - Backlight is not enabled until Linux starts after a few seconds
+
+ - kernel loglevel is set to NOT output gobs of text to the screen
+
+ - On GTA02 will ALWAYS boot from uSD if first partition is ext2 and contains
+    /boot/uImage.bin, otherwise boots from NAND
+
+ - On GTA03 will ALWAYS boot from uSD second partition if /boot/uImage.bin is
+    present otherwise try the third / backup partition
+
+ - No startup splash screen
+
+ - Way faster
+
+ - There is no concept of "staying in the bootloader".  The bootloader exits to
+    Linux as fast as possible, that's all it does.
+
+ - USB is not started until Linux starts around 5 seconds after boot, there is
+    no DFU.
