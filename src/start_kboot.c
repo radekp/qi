@@ -157,9 +157,14 @@ void start_kboot(void)
 	port_init();
 	serial_init(UART2);
 
-	puts("Openmoko KBOOT "stringify2(BUILD_HOST)" "
+	puts("Qi Bootloader  "stringify2(BUILD_HOST)" "
 			      stringify2(BUILD_VERSION)" "
-			      stringify2(BUILD_DATE)"\n");
+			      stringify2(BUILD_DATE));
+	puts("Copyright (C) 2008 Openmoko, Inc.");
+	puts("This is free software; see the source for copying conditions.\n"
+	     "There is NO warranty; not even for MERCHANTABILITY or\n"
+	     "FITNESS FOR A PARTICULAR PURPOSE.\n");
+
 	/*
 	 * We got the first 4KBytes of the bootloader pulled into the
 	 * steppingstone SRAM for free.  Now we pull the whole bootloader
