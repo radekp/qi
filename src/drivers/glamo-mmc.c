@@ -105,14 +105,13 @@ unsigned char CRC7(u8 * pu8, int cnt)
 unsigned long mmc_bread(int dev_num, unsigned long blknr, unsigned long blkcnt,
 								      void *dst)
 {
-	unsigned long src = blknr * MMC_BLOCK_SIZE;
 	int ret;
 
 	if (!blkcnt)
 		return 0;
 
 /*	printf("mmc_bread(%d, %ld, %ld, %p)\n", dev_num, blknr, blkcnt, dst); */
-	ret = mmc_read(src, dst, blkcnt * MMC_BLOCK_SIZE);
+	ret = mmc_read(blknr, dst, blkcnt);
 	if (ret)
 		return ret;
 
@@ -433,12 +432,6 @@ int mmc_read(unsigned long src, u8 *dst, int size)
 	u8 response[16];
 	int size_original = size;
 
-	if ((!size) || (size & (MMC_BLOCK_SIZE - 1))) {
-		puts("Bad size 0x");
-		print32(size);
-		return 0;
-	}
-
 	if (((int)dst) & 1) {
 		puts("Bad align on dst\n");
 		return 0;
@@ -454,13 +447,13 @@ int mmc_read(unsigned long src, u8 *dst, int size)
 		switch (card_type) {
 		case CARDTYPE_SDHC: /* block addressing */
 			resp = mmc_cmd(MMC_READ_SINGLE_BLOCK,
-				       src >> MMC_BLOCK_SIZE_BITS,
+				       src,
 				       MMC_CMD_ADTC | MMC_RSP_R1 |
 				       MMC_DATA_READ, MMC_BLOCK_SIZE, 1, 0,
 				       (u16 *)&response[0]);
 			break;
 		default: /* byte addressing */
-			resp = mmc_cmd(MMC_READ_SINGLE_BLOCK, src,
+			resp = mmc_cmd(MMC_READ_SINGLE_BLOCK, src * MMC_BLOCK_SIZE,
 				MMC_CMD_ADTC | MMC_RSP_R1 | MMC_DATA_READ,
 				MMC_BLOCK_SIZE, 1, 0,
 				(u16 *)&response[0]);
@@ -477,12 +470,11 @@ int mmc_read(unsigned long src, u8 *dst, int size)
 
 		do_pio_read((u16 *)dst, MMC_BLOCK_SIZE >> 1);
 
-		if (size >= MMC_BLOCK_SIZE)
-			size -= MMC_BLOCK_SIZE;
-		else
-			size = 0;
+		if (size)
+			size--;
+
 		dst += MMC_BLOCK_SIZE;
-		src += MMC_BLOCK_SIZE;
+		src++;
 	}
 	return size_original;
 }
