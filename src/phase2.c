@@ -178,6 +178,7 @@ void bootloader_second_phase(void)
 
 		/* is there a commandline append file? */
 
+		commandline_rootfs_append[0] = '\0';
 		read_file(this_board->append, (u8 *)commandline_rootfs_append,
 									   512);
 

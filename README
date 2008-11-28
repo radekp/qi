@@ -54,11 +54,14 @@ Booting Heuristics
 Qi has one or more ways to fetch a kernel depending on the device it finds it is
 running on, for example on GTA02 it can use NAND and SD card devices.  It goes
 through these device-specific storage devices in order and tries to boot the
-first viable kernel it finds, usually /boot/uImage-device>.bin for example
+first viable kernel it finds, usually /boot/<uImage-device>.bin for example
 /boot/uImage-GTA02.bin.
 
 You can disable a rootfs for consideration for boot if you add a file
-/boot/noboot-<device>, eg, /boot/noboot-GTA02.
+/boot/noboot-<device>, eg, /boot/noboot-GTA02.  This differs from renaming or
+deleting the kernel image because updating the kernel package would give you a
+working kernel again and allow boot, whereas the noboot indication will remain
+until you remove it.
 
 The kernel commandline used is associated with the storage device and partition,
 this allows the correct root= line to be arrived at without any work.
