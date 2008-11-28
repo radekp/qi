@@ -1,1 +1,5 @@
-
+Backlight turns on right away, but screen remains blank until kernel load,
+and kernel does NOT output gobs of text to the screen.
+Will ALWAYS boot from uSD if first partition is ext2 and contains
+/boot/uImage.bin, otherwise boots from NAND.
+No splash screen.

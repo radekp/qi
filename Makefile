@@ -49,7 +49,7 @@ UDFU_VID = 0x1d50
 UDFU_PID = 0x5119
 UDFU_REV = 0x350
 
-TARGET	= image/start_qi_all-$(CPU)
+TARGET	= $(IMAGE_DIR)/start_qi_all-$(CPU)
 IMAGE = $(IMAGE_DIR)/qi-$(CPU)-$(BUILD_VERSION)
 UDFU_IMAGE = $(IMAGE_DIR)/qi-$(CPU)-$(BUILD_VERSION).udfu
 
@@ -77,5 +77,6 @@ ${UDFU_IMAGE}:${OBJS} ${MKUDFU}
 	@$(OBJDUMP) -d ${TARGET} >${IMAGE}.dis
 
 clean:
-	@rm -f src/*.o  cpu/*/*.o cpu/*/*~ src/*~ src/drivers/*.o src/drivers/*~ include/*~ ${IMAGE_DIR}/* ${TARGET} ${UDFU_IMAGE}
+	@rm -f src/*.o  cpu/*/*.o cpu/*/*~ src/*~ src/drivers/*.o src/drivers/*~ \
+		include/*~ ${IMAGE_DIR}/* ${TARGET} ${UDFU_IMAGE}
 	@make clean -C $(TOOLS)
