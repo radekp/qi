@@ -379,14 +379,15 @@ static void check_dma_int (void)
 		if (s3c_hsmmc_readw(HM_NORINTSTS) & 0x0002) {
 			HS_DMA_END = 1;
 			s3c_hsmmc_writew(s3c_hsmmc_readw(HM_NORINTSTS) | 0x0002, HM_NORINTSTS);
-			break;
+			return;
 		}
 		if (s3c_hsmmc_readw(HM_NORINTSTS) & 0x8000) {
 			puts("error found: ");
 			print32(s3c_hsmmc_readw(HM_ERRINTSTS));
-			break;
+			return;
 		}
 	}
+
 	puts("check_dma_int: timeout\n");
 }
 
