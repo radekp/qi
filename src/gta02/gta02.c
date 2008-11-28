@@ -29,6 +29,7 @@
 #include <ports-s3c24xx.h>
 #include <i2c-bitbang-s3c24xx.h>
 #include <pcf50633.h>
+#include <glamo-init.h>
 
 #define GTA02_DEBUG_UART 2
 
@@ -197,6 +198,12 @@ void port_init_gta02(void)
 	/* configure MPLL */
 	*MPLLCON = ((42 << 12) + (1 << 4) + 0);
 
+	/* we're going to use Glamo for SD Card access, so we need to init the
+	 * evil beast
+	 */
+	glamo_core_init();
+
+	/* get debug UART working at 115kbps */
 	serial_init_115200_s3c24xx(GTA02_DEBUG_UART, 50 /* 50MHz PCLK */);
 
 }
