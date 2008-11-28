@@ -203,12 +203,9 @@ const struct board_api board_api_tla01 = {
 			.filesystem = FS_EXT2,
 			.partition_index = 2,
 			.filepath = "boot/uImage.bin",
-			.commandline = "rootfstype=ext3 " \
-				       "root=/dev/mmcblk0p1 " \
-				       "console=ttySAC2,115200 " \
-				       "loglevel=8 " \
-				       "init=/sbin/init "\
-				       "ro"
+			.initramfs_filepath = "boot/initramfs.gz",
+			.commandline = "console=ttySAC0,115200 " \
+				       "loglevel=8 init=/bin/sh root=/dev/ram ramdisk_size=6000000"
 		},
 		[1] = {
 			.name = "SD Card backup rootfs",
@@ -216,11 +213,8 @@ const struct board_api board_api_tla01 = {
 			.filesystem = FS_EXT2,
 			.partition_index = 3,
 			.filepath = "boot/uImage.bin",
-			.commandline = "rootfstype=ext3 " \
-				       "root=/dev/mmcblk0p1 " \
-				       "console=ttySAC2,115200 " \
-				       "loglevel=8 " \
-				       "init=/sbin/init "\
-				       "ro"
+			.initramfs_filepath = "boot/initramfs.gz",
+			.commandline = "console=ttySAC0,115200 " \
+				       "loglevel=8 init=/bin/sh "
 		},	},
 };
