@@ -74,35 +74,15 @@ struct movi_offset_t {
 extern void hsmmc_set_gpio(void);
 extern void hsmmc_reset (void);
 extern int hsmmc_init (void);
-extern int movi_init(void);
-extern void movi_set_capacity(void);
-extern int movi_set_ofs(uint last);
-extern void movi_write (uint addr, uint start_blk, uint blknum);
-extern void movi_read (uint addr, uint start_blk, uint blknum);
-extern void movi_write_env(ulong addr);
-extern void movi_read_env(ulong addr);
-
-#if defined(CONFIG_S3C2450)
-extern ulong virt_to_phy_smdk2450(ulong addr);
-#elif defined(CONFIG_S3C6400)
-extern ulong virt_to_phy_smdk6400(ulong addr);
-#elif defined(CONFIG_S3C6410)
-extern ulong virt_to_phy_smdk6410(ulong addr);
-#elif defined(CONFIG_S3C6430)
-extern ulong virt_to_phy_smdk6430(ulong addr);
-#elif defined(CONFIG_S3C2416)
-extern ulong virt_to_phy_smdk2416(ulong addr);
-#endif
 
 extern void test_hsmmc (uint width, uint test, uint start_blk, uint blknum);
 
-
-//#include <asm/hardware.h>
 
 typedef enum {
 	S3C64XX_UART0,
 	S3C64XX_UART1,
 	S3C64XX_UART2,
+	S3C64XX_UART3,
 } S3C64XX_UARTS_NR;
 
 #define __REG(x) (*((volatile unsigned int *)(x)))
@@ -1132,7 +1112,7 @@ typedef enum {
 #define ELFIN_UART0_OFFSET	0x0000
 #define ELFIN_UART1_OFFSET	0x0400
 #define ELFIN_UART2_OFFSET	0x0800
-
+#define ELFIN_UART3_OFFSET	0x0c00
 
 #define ULCON_OFFSET		0x00
 #define UCON_OFFSET		0x04
