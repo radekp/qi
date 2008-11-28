@@ -46,7 +46,7 @@ const struct pcf50633_init pcf50633_init[] = {
 	{ PCF50633_REG_OOCTIM1,		0xaa },	/* debounce 14ms everything */
 	{ PCF50633_REG_OOCTIM2,		0x4a },
 	{ PCF50633_REG_OOCMODE,		0x55 },
-	{ PCF50633_REG_OOCSHDWN,	0x04 }, /* defeat 8s death from lowsys on A5 */
+	{ PCF50633_REG_OOCSHDWN,	0x04 },  /* defeat 8s death from lowsys on A5 */
 	{ PCF50633_REG_OOCCTL,		0x47 },
 
 	{ PCF50633_REG_SVMCTL,		0x08 },	/* 3.10V SYS voltage thresh. */
@@ -58,7 +58,13 @@ const struct pcf50633_init pcf50633_init[] = {
 	{ PCF50633_REG_DOWN1ENA,	0x02 }, /* enabled if GPIO1 = HIGH */
 	{ PCF50633_REG_HCLDOOUT,	21 },	/* 3.0V (21 * 0.1V + 0.9V) */
 	{ PCF50633_REG_HCLDOENA,	0x01 }, /* ON by default*/
-	{ PCF50633_REG_MBCC1,		0xe6 },
+
+	{ PCF50633_REG_INT1M,		0x00 },
+	{ PCF50633_REG_INT2M,		0x00 },
+	{ PCF50633_REG_INT3M,		0x00 },
+	{ PCF50633_REG_INT4M,		0x00 },
+	{ PCF50633_REG_INT5M,		0x00 },
+
 	{ PCF50633_REG_MBCC2,		0x28 },	/* Vbatconid=2.7V, Vmax=4.20V */
 	{ PCF50633_REG_MBCC3,		0x19 },	/* 25/255 == 98mA pre-charge */
 	{ PCF50633_REG_MBCC4,		0xff }, /* 255/255 == 1A adapter fast */
@@ -66,6 +72,7 @@ const struct pcf50633_init pcf50633_init[] = {
 	{ PCF50633_REG_MBCC6,		0x00 }, /* cutoff current 1/32 * Ichg */
 	{ PCF50633_REG_MBCC7,		0x00 },	/* 1.6A max bat curr, USB 100mA */
 	{ PCF50633_REG_MBCC8,		0x00 },
+	{ PCF50633_REG_MBCC1,		0xe7 }, /* chgena */
 
 	{ PCF50633_REG_BBCCTL,		0x19 },	/* 3V, 200uA, on */
 
