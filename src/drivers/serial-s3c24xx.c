@@ -25,7 +25,7 @@
 
 void serial_init_115200_s3c24xx(const int uart, const int pclk_MHz)
 {
-	int div = (((54 * pclk_MHz) + (pclk_MHz / 2)) / 100) -1;
+	int div = (((54 * pclk_MHz) + 26) / 100) -1;
 	switch(uart)
 	{
 	case UART0:
