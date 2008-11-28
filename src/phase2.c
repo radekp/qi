@@ -81,7 +81,8 @@ void bootloader_second_phase(void)
 		if (this_kernel->partition_index) {
 			unsigned char *p = kernel_dram;
 
-			if (this_kernel->block_read(kernel_dram, 0, 4) < 0) {
+			if ((int)this_kernel->block_read(kernel_dram, 0, 4)
+									  < 0) {
 				puts("Bad partition read\n");
 				this_kernel = &this_board->
 							kernel_source[kernel++];

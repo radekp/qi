@@ -106,12 +106,16 @@ unsigned long mmc_bread(int dev_num, unsigned long blknr, unsigned long blkcnt,
 								      void *dst)
 {
 	unsigned long src = blknr * MMC_BLOCK_SIZE;
+	int ret;
 
 	if (!blkcnt)
 		return 0;
 
 /*	printf("mmc_bread(%d, %ld, %ld, %p)\n", dev_num, blknr, blkcnt, dst); */
-	mmc_read(src, dst, blkcnt * MMC_BLOCK_SIZE);
+	ret = mmc_read(src, dst, blkcnt * MMC_BLOCK_SIZE);
+	if (ret)
+		return ret;
+
 	return blkcnt;
 }
 
@@ -443,6 +447,8 @@ int mmc_read(unsigned long src, u8 *dst, int size)
 	resp = mmc_cmd(MMC_SET_BLOCKLEN, MMC_BLOCK_SIZE,
 		       MMC_CMD_AC | MMC_RSP_R1, 0, 0, 0,
 		       (u16 *)&response[0]);
+	if (resp)
+		return resp;
 
 	while (size) {
 		switch (card_type) {
@@ -460,6 +466,15 @@ int mmc_read(unsigned long src, u8 *dst, int size)
 				(u16 *)&response[0]);
 			break;
 		}
+
+		if (resp)
+			return resp;
+
+		/* final speed 16MHz */
+		glamo_reg_write((glamo_reg_read(GLAMO_REG_CLOCK_GEN8) &
+					     0xff00) | 2, GLAMO_REG_CLOCK_GEN8);
+
+
 		do_pio_read((u16 *)dst, MMC_BLOCK_SIZE >> 1);
 
 		if (size >= MMC_BLOCK_SIZE)
@@ -824,9 +839,9 @@ int mmc_init(int verbose)
 	}
 #endif
 
-	/* crank the clock to the final speed, 16MHz */
+	/* set the clock to slow until first bulk completes (for slow SDHC)  */
 
-	glamo_reg_write((glamo_reg_read(GLAMO_REG_CLOCK_GEN8) & 0xff00) | 2,
+	glamo_reg_write((glamo_reg_read(GLAMO_REG_CLOCK_GEN8) & 0xff00) | 32,
 			 GLAMO_REG_CLOCK_GEN8);
 
 	return rc;

@@ -453,9 +453,18 @@ static int ext2fs_iterate_dir(ext2fs_node_t dir, char *name, ext2fs_node_t * fno
 	if (!diro->inode_read) {
 		status = ext2fs_read_inode(diro->data, diro->ino,
 					    &diro->inode);
-		if (status == 0)
+		if (status == 0) {
+			printdec(diro->ino);
+			puts("failed to read inode\n");
 			return(0);
+		}
+	} else {
+		puts("fail\n");
 	}
+	printdec(fpos);
+	puts(" ");
+	printdec(diro->inode.size);
+	puts("\n");
 	/* Search the file.  */
 	while (fpos < __le32_to_cpu(diro->inode.size)) {
 		struct ext2_dirent dirent;
@@ -463,8 +472,10 @@ static int ext2fs_iterate_dir(ext2fs_node_t dir, char *name, ext2fs_node_t * fno
 		status = ext2fs_read_file(diro, fpos,
 					   sizeof(struct ext2_dirent),
 					  (char *) &dirent);
-		if (status < 1)
+		if (status < 1) {
+			puts("ext2fs_read_file ret < 1\n");
 			return 0;
+		}
 
 		if (dirent.namelen != 0) {
 			char filename[256];
@@ -474,12 +485,16 @@ static int ext2fs_iterate_dir(ext2fs_node_t dir, char *name, ext2fs_node_t * fno
 			status = ext2fs_read_file(diro,
 						   fpos + sizeof(struct ext2_dirent),
 						   dirent.namelen, filename);
-			if (status < 1)
+			if (status < 1) {
+				puts("ext2fs_read_file fail 2\n");
 				return(0);
+			}
 
 			fdiro = malloc(sizeof(struct ext2fs_node));
-			if (!fdiro)
+			if (!fdiro) {
+				puts("malloc fail\n");
 				return(0);
+			}
 
 
 			fdiro->data = diro->data;
@@ -505,6 +520,7 @@ static int ext2fs_iterate_dir(ext2fs_node_t dir, char *name, ext2fs_node_t * fno
 							    __le32_to_cpu(dirent.inode),
 							    &fdiro->inode);
 				if (status == 0) {
+					puts("inner ext2fs_read_inode fail\n");
 					free(fdiro);
 					return(0);
 				}
@@ -540,6 +556,7 @@ static int ext2fs_iterate_dir(ext2fs_node_t dir, char *name, ext2fs_node_t * fno
 							    __le32_to_cpu(dirent.inode),
 							    &fdiro->inode);
 					if (status == 0) {
+						puts("ext2fs_read_inode 3 fail\n");
 						free(fdiro);
 						return(0);
 					}
@@ -720,7 +737,7 @@ int ext2fs_find_file
 
 	symlinknest = 0;
 	if (!path)
-		return(0);
+		return 0;
 
 	status = ext2fs_find_file1(path, rootnode, foundnode, &foundtype);
 	if (status == 0)
@@ -760,29 +777,35 @@ int ext2fs_open(const char *filename) {
 	ext2fs_node_t fdiro = NULL;
 	int status;
 	int len;
+	int ret = -1;
 
 	if (ext2fs_root == NULL)
-		return -1;
+		goto fail;
 
 	ext2fs_file = NULL;
 	status = ext2fs_find_file(filename, &ext2fs_root->diropen, &fdiro,
 				   FILETYPE_REG);
-	if (status == 0)
+	if (status == 0) {
+		ret = -2;
 		goto fail;
+	}
 
 	if (!fdiro->inode_read) {
 		status = ext2fs_read_inode(fdiro->data, fdiro->ino,
 					    &fdiro->inode);
-		if (status == 0)
+		if (status == 0) {
+			ret = -3;
 			goto fail;
+		}
 	}
 	len = __le32_to_cpu(fdiro->inode.size);
 	ext2fs_file = fdiro;
+
 	return(len);
 
 fail:
 	ext2fs_free_node(fdiro, &ext2fs_root->diropen);
-	return -1;
+	return ret;
 }
 
 
