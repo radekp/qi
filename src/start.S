@@ -24,6 +24,9 @@
 
 .globl _start
 _start:	b       start_code
+/* if we are injected by JTAG, the script sets _istag content to nonzero */
+_is_jtag:
+	.word	0
 
 _TEXT_BASE:
 	.word	TEXT_BASE

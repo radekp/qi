@@ -47,21 +47,39 @@ void start_qi(void)
 	int n = 0;
 	int board = 0;
 	const struct board_variant * board_variant;
+	const u32 * p_is_jtag = (const u32 *)4;
+
 	/*
-	 * We got the first 4KBytes of the bootloader pulled into the
-	 * steppingstone SRAM for free.  Now we pull the whole bootloader
-	 * image into SDRAM.
+	 * well, we can be running on this CPU two different ways.
 	 *
-	 * This code and the .S files are arranged by the linker script to
-	 * expect to run from 0x0.  But the linker script has told everything
-	 * else to expect to run from 0x33000000+.  That's why we are going to
-	 * be able to copy this code and not have it crash when we run it from
-	 * there.
+	 * 1) We were copied into steppingstone and TEXT_BASE already
+	 *    by JTAG.  We don't have to do anything else.  JTAG script
+	 *    then sets data at address 0x4 to 0xffffffff as a signal we
+	 *    are running by JTAG.
+	 *
+	 * 2) We only got our first 4K into steppingstone, we need to copy
+	 *    the rest of ourselves into TEXT_BASE.
+	 *
+	 * So we do the copy out of NAND only if we see we did not come up
+	 * under control of JTAG.
 	 */
 
-	/* We randomly pull 24KBytes of bootloader */
-	if (nand_read_ll((unsigned char *)TEXT_BASE, 0, 24 * 1024 / 512) < 0)
-		goto unhappy;
+	if (!*p_is_jtag)
+		/*
+		* We got the first 4KBytes of the bootloader pulled into the
+		* steppingstone SRAM for free.  Now we pull the whole bootloader
+		* image into SDRAM.
+		*
+		* This code and the .S files are arranged by the linker script
+		* to expect to run from 0x0.  But the linker script has told
+		* everything else to expect to run from 0x33000000+.  That's
+		* why we are going to be able to copy this code and not have it
+		* crash when we run it from there.
+		*/
+
+		/* We randomly pull 32KBytes of bootloader */
+		if (nand_read_ll((u8 *)TEXT_BASE, 0, 32 * 1024 / 512) < 0)
+			goto unhappy;
 
 	/* ask all the boards we support in turn if they recognize this
 	 * hardware we are running on, accept the first positive answer
@@ -69,7 +87,7 @@ void start_qi(void)
 
 	this_board = boards[board];
 	while (!n) {
-		if (board >= ARRAY_SIZE(boards))
+		if (board > ARRAY_SIZE(boards))
 			/* can't put diagnostic on serial... too early */
 			goto unhappy;
 
