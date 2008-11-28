@@ -59,6 +59,9 @@ char *strncpy(char *dest, const char *src, size_t n)
 	while (*src && n--)
 		*dest++ = *src++;
 
+	if (n)
+		*dest = '\0';
+
 	return dest_orig;
 }
 
