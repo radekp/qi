@@ -1,3 +1,4 @@
+#if 0
 /*
  * u-boot S3C2410 MMC/SD card driver
  * (C) Copyright 2006 by OpenMoko, Inc.
@@ -536,3 +537,4 @@ mmc2info(ulong addr)
 }
 
 #endif	/* defined(CONFIG_MMC) && defined(CONFIG_MMC_S3C) */
+#endif

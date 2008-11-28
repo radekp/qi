@@ -22,6 +22,10 @@
 
 #ifndef __CONFIG_H
 #define __CONFIG_H
+#ifndef __ASM_MODE__
+#include <qi.h>
+extern const struct board_api board_api_gta02;
+#endif
 
 #define TEXT_BASE 0x33000000
 

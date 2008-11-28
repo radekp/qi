@@ -23,55 +23,54 @@
 #include <qi.h>
 #include "blink_led.h"
 
-void serial_init (const int uart)
+void serial_init (const int uart, const int ubrdiv_val)
 {
-    int ubrdiv_val = 0x11;
-  switch(uart)
-    {
-    case UART0:
-      rULCON0 = 0x3;
-      rUCON0 = 0x245;
-      rUFCON0 = 0x0;
-      rUMCON0 = 0x0;
-      rUBRDIV0 = ubrdiv_val;
-      break;
-    case UART1:
-      rULCON1 = 0x3;
-      rUCON1 = 0x245;
-      rUFCON1 = 0x0;
-      rUMCON1 = 0x0;
-      rUBRDIV1 = ubrdiv_val;
-      break;
-    case UART2:
-      rULCON2 = 0x3;
-      rUCON2 = 0x245;
-      rUFCON2 = 0x1;
-      rUBRDIV2 = ubrdiv_val;
-      break;
-    default:
-      break;
-    }
+	switch(uart)
+	{
+	case UART0:
+		rULCON0 = 0x3;
+		rUCON0 = 0x245;
+		rUFCON0 = 0x0;
+		rUMCON0 = 0x0;
+		rUBRDIV0 = ubrdiv_val;
+		break;
+	case UART1:
+		rULCON1 = 0x3;
+		rUCON1 = 0x245;
+		rUFCON1 = 0x0;
+		rUMCON1 = 0x0;
+		rUBRDIV1 = ubrdiv_val;
+		break;
+	case UART2:
+		rULCON2 = 0x3;
+		rUCON2 = 0x245;
+		rUFCON2 = 0x1;
+		rUBRDIV2 = ubrdiv_val;
+		break;
+	default:
+		break;
+	}
 }
 /*
  * Output a single byte to the serial port.
  */
-void serial_putc (const int uart,const char c)
+void serial_putc (const int uart, const char c)
 {
-  switch(uart)
-    {
-    case UART0:
-      while ( !( rUTRSTAT0 & 0x2 ) );
-      WrUTXH0(c);
-      break;
-    case UART1:
-      while ( !( rUTRSTAT1 & 0x2 ) );
-      WrUTXH1(c);
-      break;
-    case UART2:
-      while ( !( rUTRSTAT2 & 0x2 ) );
-      WrUTXH2(c);
-      break;
-    default:
-      break;
-    }
+	switch(uart)
+	{
+	case UART0:
+		while ( !( rUTRSTAT0 & 0x2 ) );
+		WrUTXH0(c);
+		break;
+	case UART1:
+		while ( !( rUTRSTAT1 & 0x2 ) );
+		WrUTXH1(c);
+		break;
+	case UART2:
+		while ( !( rUTRSTAT2 & 0x2 ) );
+		WrUTXH2(c);
+		break;
+	default:
+		break;
+	}
 }

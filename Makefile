@@ -22,10 +22,10 @@ BUILD_BRANCH := $(shell git branch | grep ^\* | cut -d' ' -f2)
 BUILD_HEAD := $(shell git show --pretty=oneline | head -n1 | cut -d' ' -f1 | cut -b1-16)
 BUILD_VERSION := ${BUILD_BRANCH}_${BUILD_HEAD}
 
-LDS	= src/kboot-stage1.lds
+LDS	= src/qi.lds
 INCLUDE	= include
 IMAGE_DIR	= image
-CFLAGS	= -Wall -Werror -I $(INCLUDE) -g -c -O2 -fno-strict-aliasing \
+CFLAGS	= -Wall -Werror -I $(INCLUDE) -g -c -Os -fno-strict-aliasing -mlong-calls \
 	  -fno-common -ffixed-r8 -msoft-float -fno-builtin -ffreestanding \
 	  -march=armv4t -mno-thumb-interwork -Wstrict-prototypes \
 	  -DBUILD_HOST="${BUILD_HOST}" -DBUILD_VERSION="${BUILD_VERSION}" \
@@ -34,7 +34,7 @@ LDFLAGS =
 #START	= start.o lowlevel_init.o
 S_SRCS	= src/start.S src/lowlevel_init.S
 S_OBJS	= $(patsubst %.S,%.o, $(S_SRCS))
-C_SRCS	= $(wildcard src/*.c)
+C_SRCS	= $(wildcard src/*.c) $(wildcard src/gt*/*.c)
 C_OBJS	= $(patsubst %.c,%.o, $(C_SRCS))
 
 #SRCS	:= $(START: .o=.S) $(COBJS: .o=.c)
@@ -47,9 +47,9 @@ UDFU_VID = 0x1d50
 UDFU_PID = 0x5119
 UDFU_REV = 0x350
 
-TARGET	= src/start_kboot_all
-IMAGE = $(IMAGE_DIR)/kboot
-UDFU_IMAGE = $(IMAGE_DIR)/kboot.udfu
+TARGET	= image/start_qi_all
+IMAGE = $(IMAGE_DIR)/qi
+UDFU_IMAGE = $(IMAGE_DIR)/qi.udfu
 
 %.o: %.S
 	@$(CC) $(CFLAGS) -o $@ $<
@@ -62,11 +62,11 @@ all:${UDFU_IMAGE}
 ${OBJS}:${SRCS}
 
 ${UDFU_IMAGE}:${OBJS}
-	$(LD) ${LDFLAGS} -T$(LDS) -g $(OBJS) -o ${TARGET} ${LIBS}
-	$(OBJCOPY) -O binary -S ${TARGET} ${IMAGE}
-	$(OBJDUMP) -D ${TARGET} >${IMAGE}.dis
-	$(MKUDFU) -v ${UDFU_VID} -p ${UDFU_PID} -r ${UDFU_REV} \
+	@$(LD) ${LDFLAGS} -T$(LDS) -g $(OBJS) -o ${TARGET} ${LIBS}
+	@$(OBJCOPY) -O binary -S ${TARGET} ${IMAGE}
+	@$(MKUDFU) -v ${UDFU_VID} -p ${UDFU_PID} -r ${UDFU_REV} \
 						-d ${IMAGE} ${UDFU_IMAGE}
+	@$(OBJDUMP) -d ${TARGET} >${IMAGE}.dis
 
 blink_led:src/led_on.S
 	$(CC) $(CFLAGS) led_on.o led_on.S
@@ -74,4 +74,4 @@ blink_led:src/led_on.S
 	$(OBJCOPY) -O binary -S led_on_temp.o $(IMAGE)/led_on 
 
 clean:
-	rm -f src/*.o  src/*~ include/*~ ${IMAGE}* ${TARGET} ${UDFU_IMAGE}
+	@rm -f src/*.o  src/*~ include/*~ ${IMAGE}* ${TARGET} ${UDFU_IMAGE}

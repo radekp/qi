@@ -30,6 +30,51 @@
 #define u8 unsigned char
 typedef unsigned int uint32_t;
 
+enum filesystem {
+	FS_RAW,
+	FS_FAT,
+	FS_EXT2
+};
+
+/* describes a source for getting kernel image */
+
+struct kernel_source {
+	const char *name; /* NULL name means invalid */
+	int (*block_init)(void);
+	int (*block_read)(unsigned char * buf, unsigned long byte_start,
+							       int count_bytes);
+	int partition_index; /* -1 means no partition table */
+	int offset_if_no_partition; /* used if partition_index is -1 */
+	enum filesystem filesystem;
+	const char * commandline;
+};
+
+/* describes a board variant, eg, PCB revision */
+
+struct board_variant {
+	const char * name;
+	int machine_revision; /* passed in revision tag to linux */
+};
+
+/* describes a "board", ie, a device like GTA02 including revisions */
+
+struct board_api {
+	const char * name;
+	int debug_serial_port;
+	int linux_machine_id;
+	unsigned long linux_mem_start;
+	unsigned long linux_mem_size;
+	unsigned long linux_tag_placement;
+	const struct board_variant const * (*get_board_variant)(void);
+	int (*is_this_board)(void);
+	void (*port_init)(void);
+	struct kernel_source kernel_source[8];
+};
+
+/* this is the board we are running on */
+
+extern struct board_api const * this_board;
+
 int printk(const char *fmt, ...);
 int vsprintf(char *buf, const char *fmt, va_list args);
 int puts(const char *string);
@@ -37,6 +82,8 @@ void printhex(unsigned char v);
 void print32(unsigned int u);
 void hexdump(unsigned char *start, int len);
 unsigned int _ntohl(unsigned int n);
+unsigned long crc32(unsigned long crc, const unsigned char *buf,
+							      unsigned int len);
 
 #endif
 

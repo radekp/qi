@@ -37,24 +37,19 @@ SECTIONS
 	. = ALIGN(4);
 	.text      :
 	{
-	  src/start.o	(.text .rodata* .data)
-	  src/lowlevel_init.o(.text .rodata* .data)
-	  src/start_kboot.o	(.text .rodata* .data)
-	  src/serial.o	(.text .rodata* .data)
+	  src/start.o		(.text .rodata* .data)
+	  src/lowlevel_init.o	(.text .rodata* .data)
+	  src/start_qi.o	(.text .rodata* .data)
 	  src/blink_led.o	(.text .rodata* .data)
-	  * (.rodata* .data)
+	  src/nand_read.o	(.text .rodata* .data)
+	  src/serial.o		(.text .rodata* .data)
 	}
 
 	. = ALIGN(4);
-	.everything_else : { *(.text) }
+	.everything_else  ADDR (.text) + SIZEOF (.text) + 0x33000000 :
+		AT ( ADDR (.text) + SIZEOF (.text) ) { *(.text .rodata* .data) }
 
-	. = ALIGN(4);
-	.got : 
-    { 
-        *(.got) 
-    }
-
-	. = 0x32000000 ;
+	. = 0x33800000 ;
 	__bss_start = .;
 	.bss (NOLOAD) : 
     { 

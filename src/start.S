@@ -18,6 +18,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307 USA
  */
+
+#define __ASM_MODE__
 #include <neo_gta02.h>
 
 .globl _start
@@ -119,10 +121,38 @@ start_code:
 	ldr	r1, =0x7fff0		/* all clocks on */
 	str	r1, [r0]
 
-	/* gpio UART0 init */
+	/* gpio UART2 init, H port */
 	ldr	r0, =0x56000070
-	ldr	r1, =0x2afaaa
+	ldr	r1, =0x001AAAAA
 	str	r1, [r0]
+
+	/* enable KEEPACT(GPJ8) to make sure PMU keeps us alive */
+	ldr	r0, =0x56000000	/* GPJ base */
+	ldr	r1, [r0, #0xd0]	/* GPJCON */
+	orr	r1, r1, #(1 << 16)
+	str	r1, [r0, #0xd0]
+
+	ldr	r1, [r0, #0xd4]	/* GPJDAT */
+	orr	r1, r1, #(1 << 8)
+	str	r1, [r0, #0xd4]
+
+
+	/* init uart2 */
+	ldr	r0, =0x50008000
+	mov	r1, #0x03
+	str	r1, [r0]
+	ldr	r1, =0x245
+	str	r1, [r0, #0x04]
+	mov	r1, #0x00
+	str	r1, [r0, #0x08]
+	mov	r1, #0x00
+	str	r1, [r0, #0x0c] 
+	mov	r1, #0x11
+	str	r1, [r0, #0x28]
+
+	ldr	r0, =0x50008000
+	ldr	r1, =0x54
+	str	r1, [r0, #0x20]
 
 	bl	cpu_init_crit
 
@@ -140,11 +170,12 @@ start_code:
 
 								/* >> CFG_VIDEO_LOGO_MAX_SIZE */
 #define CFG_GBL_DATA_SIZE		128			/* size in bytes reserved for initial data */
+
 stack_setup:
 	ldr	r0, _TEXT_BASE		/* upper 128 KiB: relocated uboot   */
 	sub	r0, r0, #CFG_GBL_DATA_SIZE 	/* bdinfo                        */
 	sub	sp, r0, #12		/* leave 3 words for abort-stack    */
-
+#if 0
 clear_bss:
 	ldr	r0, _bss_start		/* find start of bss segment        */
 	ldr	r1, _bss_end		/* stop here                        */
@@ -155,13 +186,14 @@ clbss_l:
 	add	r0, r0, #4
 	cmp	r0, r1
 	ble	clbss_l
+#endif
 
 /* we are going to jump into the C part of the init now */
-
+spin:
 	ldr	pc, _start_armboot
 
 _start_armboot:	
-	.word 	start_kboot
+	.word 	start_qi
 
 /*
  *************************************************************************
@@ -175,6 +207,7 @@ _start_armboot:
  */
 
 cpu_init_crit:
+
 	/*
 	 * flush v4 I/D caches
 	 */

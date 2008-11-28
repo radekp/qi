@@ -1,40 +1,19 @@
-/*
- * (C) Copyright 2007 OpenMoko, Inc.
- * Author: xiangfu liu <xiangfu@openmoko.org>
- *         Andy Green <andy@openmoko.com>
- *
- * Configuation settings for the OPENMOKO Neo GTA02 Linux GSM phone
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of
- * the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
- * MA 02111-1307 USA
- */
-
-/* NOTE this stuff runs in steppingstone context! */
-
-
 #include <qi.h>
-#include "blink_led.h"
-#include "nand_read.h"
 #include <neo_gta02.h>
+#include "nand_read.h"
 
-#define stringify2(s) stringify1(s)
-#define stringify1(s) #s
+static const struct board_variant board_variants[] = {
+	[0] = {
+		.name = "A5 PCB",
+		.machine_revision = 0x350,
+	},
+	[1] = {
+		.name = "A6 PCB",
+		.machine_revision = 0x360,
+	}
+};
 
-extern void bootloader_second_phase(void);
-
-void port_init(void)
+void port_init_gta02(void)
 {
     //CAUTION:Follow the configuration order for setting the ports.
     // 1) setting value(GPnDAT)
@@ -121,7 +100,7 @@ void port_init(void)
 	/*
 	 * === PORT H GROUP
 	 *     Ports  :  GPH10    GPH9  GPH8 GPH7  GPH6  GPH5 GPH4 GPH3 GPH2 GPH1  GPH0
-	 *     Signal : CLKOUT1 CLKOUT0 UCLK nCTS1 nRTS1 RXD1 TXD1 RXD0 TXD0 nRTS0 nCTS0
+	 *     Signal : CLKOUT1 CLKOUT0 UCLK RXD2 TXD2 RXD1 TXD1 RXD0 TXD0 nRTS0 nCTS0
 	 *     Binary :   10   ,  10     10 , 11    11  , 10   10 , 10   10 , 10    10
 	 */
 	/* pulldown on GPH08: UEXTCLK, just floats!
@@ -145,42 +124,113 @@ void port_init(void)
 	 */
 
 	rGPJDAT |= (1 << 5);	/* Set GPJ5 to high 3D RST */
+
+	serial_init(UART2, 0x11);
 }
 
+/**
+ * returns PCB revision information in b9,b8 and b2,b1,b0
+ * Pre-GTA02 A6 returns 0x000
+ *     GTA02 A6 returns 0x001
+ */
 
-
-void start_kboot(void)
+int gta02_get_pcb_revision(void)
 {
-	void (*phase2)(void) = (void (*)(void))((int)bootloader_second_phase +
-								     TEXT_BASE);
+	int n;
+	u32 u;
 
-	port_init();
-	serial_init(UART2);
+	/* make C13 and C15 pulled-down inputs */
+	rGPCCON &= ~0xcc000000;
+	rGPCUP  &= ~((1 << 13) | (1 << 15));
+	/* D0, D3 and D4 pulled-down inputs */
+	rGPDCON &= ~0x000003c3;
+	rGPDUP  &= ~((1 << 0) | (1 << 3) | (1 << 4));
 
-	puts("Qi Bootloader  "stringify2(BUILD_HOST)" "
-			      stringify2(BUILD_VERSION)" "
-			      stringify2(BUILD_DATE));
-	puts("Copyright (C) 2008 Openmoko, Inc.");
-	puts("This is free software; see the source for copying conditions.\n"
-	     "There is NO warranty; not even for MERCHANTABILITY or\n"
-	     "FITNESS FOR A PARTICULAR PURPOSE.\n");
+	/* delay after changing pulldowns */
+	u = rGPCDAT;
+	u = rGPDDAT;
+
+	/* read the version info */
+	u = rGPCDAT;
+	n =  (u >> (13 - 0)) & 0x001;
+	n |= (u >> (15 - 1)) & 0x002;
+	u = rGPDDAT;
+	n |= (u << (0 + 2))  & 0x004;
+
+	n |= (u << (8 - 3))  & 0x100;
+	n |= (u << (9 - 4))  & 0x200;
 
 	/*
-	 * We got the first 4KBytes of the bootloader pulled into the
-	 * steppingstone SRAM for free.  Now we pull the whole bootloader
-	 * image into SDRAM.
-	 *
-	 * So this doesn't trash position-dependent code, we took care in the
-	 * linker script to arrange all rodata* segment content to be in the
-	 * first 4K region.
+	 * when not being interrogated, all of the revision GPIO
+	 * are set to output HIGH without pulldown so no current flows
+	 * if they are NC or pulled up.
 	 */
+	/* make C13 and C15 high ouputs with no pulldowns */
+	rGPCCON |= 0x44000000;
+	rGPCUP  |= (1 << 13) | (1 << 15);
+	rGPCDAT |= (1 << 13) | (1 << 15);
+	/* D0, D3 and D4 high ouputs with no pulldowns */
+	rGPDCON |= 0x00000141;
+	rGPDUP  |= (1 << 0) | (1 << 3) | (1 << 4);
+	rGPDDAT |= (1 << 0) | (1 << 3) | (1 << 4);
 
-	/* We randomly pull 24KBytes of bootloader */
-	if (nand_read_ll((unsigned char *)TEXT_BASE, 0, 24 * 1024) < 0)
-		while(1)
-			blink_led();
-	/*
-	 * jump to bootloader_second_phase() running from DRAM copy
-	 */
-	(phase2)();
+	return n;
 }
+
+
+
+/* return nonzero if we believe we run on GTA02 */
+
+int is_this_board_gta02(void)
+{
+	/* look for GTA02 NOR */
+
+	*(volatile unsigned short *)(0x18000000) = 0x98;
+
+	return !!(*(volatile unsigned short *)(0x18000000) == 0x0020);
+}
+
+const struct board_variant const * get_board_variant_gta02(void)
+{
+	return &board_variants[gta02_get_pcb_revision()];
+}
+
+/*
+ * our API for bootloader on this machine
+ */
+
+const struct board_api board_api_gta02 = {
+	.name = "Freerunner / GTA02",
+	.debug_serial_port = 2,
+	.linux_machine_id = 1304,
+	.linux_mem_start = 0x30000000,
+	.linux_mem_size = (128 * 1024 * 1024),
+	.linux_tag_placement = 0x30000000 + 0x100,
+	.get_board_variant = get_board_variant_gta02,
+	.is_this_board = is_this_board_gta02,
+	.port_init = port_init_gta02,
+	/* these are the ways we could boot GTA02 in order to try */
+	.kernel_source = {
+		[0] = {
+			.name = "NAND Kernel",
+			.block_read = nand_read_ll,
+			.partition_index = -1,
+			.offset_if_no_partition = 0x80000,
+			.filesystem = FS_RAW,
+			.commandline = "mtdparts=physmap-flash:-(nor);" \
+					"neo1973-nand:" \
+					 "0x00040000(qi)," \
+					 "0x00040000(cmdline)," \
+					 "0x00800000(backupkernel)," \
+					 "0x000a0000(extra)," \
+					 "0x00040000(identity)," \
+					 "0x0f6a0000(backuprootfs) " \
+				       "rootfstype=jffs2 " \
+				       "root=/dev/mtdblock6 " \
+				       "console=ttySAC2,115200 " \
+				       "loglevel=4 " \
+				       "init=/sbin/init "\
+				       "ro"
+		},
+	},
+};

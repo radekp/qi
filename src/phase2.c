@@ -31,111 +31,156 @@
 #include <setup.h>
 #include "nand_read.h"
 
-#include <device_configuration.h>
-
-#define C1_DC           (1<<2)          /* dcache off/on */
-#define C1_IC           (1<<12)         /* icache off/on */
 
 void bootloader_second_phase(void)
 {
-	image_header_t	*hdr;
-        unsigned long i = 0;
 	void	(*the_kernel)(int zero, int arch, uint params);
-	struct tag * params_base = (struct tag *)CFG_LINUX_ATAG_ADDRESS;
-	struct tag *params = params_base;
-	const char * cmdline = CFG_LINUX_CMDLINE;
-	const char *p = cmdline;
-	void * kernel_nand = (void *)(TEXT_BASE - CFG_LINUX_BIGGEST_KERNEL);
+	int kernel = 0;
+	const struct board_variant * board_variant =
+					      (this_board->get_board_variant)();
 
-	puts("Checking kernel... ");
+	/* we try the possible kernels for this board in order */
 
-	if (nand_read_ll(kernel_nand, CFG_NAND_OFFSET_FOR_KERNEL_PARTITION,
-								    4096) < 0) {
-		puts ("Kernel header read failed\n");
-		goto unhappy;
-	}
+	while (this_board->kernel_source[kernel].name) {
+		const char * cmdline = this_board->kernel_source[kernel].commandline;
+		const char *p = cmdline;
+		struct tag *params = (struct tag *)this_board->linux_tag_placement;
+		void * kernel_dram = (void *)(TEXT_BASE - (8 * 1024 * 1024));
+		unsigned long crc;
+		image_header_t	*hdr;
 
-	hdr = (image_header_t *)kernel_nand;
+		/* eat leading white space */
+		for (p = cmdline; *p == ' '; p++);
 
-	if (_ntohl(hdr->ih_magic) != IH_MAGIC) {
-		puts("Unknown image magic ");
-		print32(hdr->ih_magic);
-		goto unhappy;
-	}
+		puts("\nTrying kernel: ");
+		puts(this_board->kernel_source[kernel].name);
+		puts("\n");
 
-	puts((const char *)hdr->ih_name);
+		/* if this device needs initializing, try to init it */
+		if (this_board->kernel_source[kernel].block_init)
+			if ((this_board->kernel_source[kernel].block_init)()) {
+				puts("block device init failed\n");
+				kernel++;
+				continue;
+			}
 
-	puts("Fetching kernel...");
+		/* if there's a partition table implied, parse it, otherwise
+		 * just use a fixed offset
+		 */
+		if (this_board->kernel_source[kernel].partition_index != -1) {
 
-	if (nand_read_ll(kernel_nand, CFG_NAND_OFFSET_FOR_KERNEL_PARTITION,
-		((32 * 1024) + (_ntohl(hdr->ih_size) + sizeof(hdr) + 2048)) &
+			puts("partitions not supported yet\n");
+			kernel++;
+			continue;
+
+		} else {
+			if (this_board->kernel_source[kernel].block_read(
+				kernel_dram, this_board->kernel_source[kernel].
+					    offset_if_no_partition, 4096) < 0) {
+				puts ("Bad kernel header\n");
+				kernel++;
+				continue;
+			}
+
+			hdr = (image_header_t *)kernel_dram;
+
+			if (_ntohl(hdr->ih_magic) != IH_MAGIC) {
+				puts("bad magic ");
+				print32(hdr->ih_magic);
+				kernel++;
+				continue;
+			}
+
+			puts("        Found: ");
+			puts((const char *)hdr->ih_name);
+			puts("\n         Size: 0x");
+			print32(_ntohl(hdr->ih_size));
+
+			if (nand_read_ll(kernel_dram,
+				this_board->kernel_source[kernel].
+				offset_if_no_partition, (_ntohl(hdr->ih_size) +
+						sizeof(image_header_t) + 2048) &
 							     ~(2048 - 1)) < 0) {
-		puts ("Kernel body read failed\n");
-		goto unhappy;
+				puts ("Bad kernel read\n");
+				kernel++;
+				continue;
+			}
+		}
+
+		puts("\n      Cmdline: ");
+		puts(p);
+		puts("\n");
+
+		/*
+		 * It's good for now to know that our kernel is intact from
+		 * the storage before we jump into it and maybe crash silently
+		 * even though it costs us some time
+		 */
+		crc = crc32(0, kernel_dram + sizeof(image_header_t),
+							_ntohl(hdr->ih_size));
+		if (crc != _ntohl(hdr->ih_dcrc)) {
+			puts("\nKernel CRC ERROR: read 0x");
+			print32(crc);
+			puts(" vs hdr CRC 0x");
+			print32(_ntohl(hdr->ih_dcrc));
+			puts("\n");
+			kernel++;
+			continue;
+		}
+
+		the_kernel = (void (*)(int, int, uint))
+					(((char *)hdr) + sizeof(image_header_t));
+
+		/* first tag */
+		params->hdr.tag = ATAG_CORE;
+		params->hdr.size = tag_size (tag_core);
+		params->u.core.flags = 0;
+		params->u.core.pagesize = 0;
+		params->u.core.rootdev = 0;
+		params = tag_next(params);
+
+		/* revision tag */
+		params->hdr.tag = ATAG_REVISION;
+		params->hdr.size = tag_size (tag_revision);
+		params->u.revision.rev = board_variant->machine_revision;
+		params = tag_next(params);
+
+		/* memory tags */
+		params->hdr.tag = ATAG_MEM;
+		params->hdr.size = tag_size (tag_mem32);
+		params->u.mem.start = this_board->linux_mem_start;
+		params->u.mem.size = this_board->linux_mem_size;
+		params = tag_next(params);
+
+		/* kernel commandline */
+
+		if (*p) {
+			params->hdr.tag = ATAG_CMDLINE;
+			params->hdr.size = (sizeof (struct tag_header) +
+						       strlen (p) + 1 + 4) >> 2;
+			strcpy (params->u.cmdline.cmdline, p);
+			params = tag_next (params);
+		}
+
+		/* needs to always be the last tag */
+		params->hdr.tag = ATAG_NONE;
+		params->hdr.size = 0;
+
+		puts ("Starting --->\n\n");
+
+		/*
+		* ooh that's it, we're gonna try boot this image!
+		* never mind the cache, Linux will take care of it
+		*/
+		the_kernel(0, this_board->linux_machine_id,
+						this_board->linux_tag_placement);
+
+		/* we won't come back here no matter what */
 	}
 
-	puts(" Done");
+	/* none of the kernels worked out */
 
-	the_kernel = (void (*)(int, int, uint))
-				       (((char *)hdr) + sizeof(image_header_t));
-
-	/* first tag */
-	params->hdr.tag = ATAG_CORE;
-	params->hdr.size = tag_size (tag_core);
-	params->u.core.flags = 0;
-	params->u.core.pagesize = 0;
-	params->u.core.rootdev = 0;
-	params = tag_next (params);
-
-	/* revision tag */
-	params->hdr.tag = ATAG_REVISION;
-	params->hdr.size = tag_size (tag_revision);
-	params->u.revision.rev = CFG_MACHINE_REVISION;
-	params = tag_next (params);
-
-	/* memory tags */
-	params->hdr.tag = ATAG_MEM;
-	params->hdr.size = tag_size (tag_mem32);
-	params->u.mem.start = CFG_MEMORY_REGION_START;
-	params->u.mem.size = CFG_MEMORY_REGION_SIZE;
-	params = tag_next (params);
-
-	/* kernel commandline */
-	/* eat leading white space */
-	for (p = cmdline; *p == ' '; p++);
-
-	if (*p) {
-		params->hdr.tag = ATAG_CMDLINE;
-		params->hdr.size =
-			 (sizeof (struct tag_header) + strlen (p) + 1 + 4) >> 2;
-		strcpy (params->u.cmdline.cmdline, p);
-		params = tag_next (params);
-	}
-
-	/* needs to always be the last tag */
-	params->hdr.tag = ATAG_NONE;
-	params->hdr.size = 0;
-
-	puts ("Running Linux --->\n\n");
-
-	/* trash the cache */
-
-        /* turn off I/D-cache */
-        asm ("mrc p15, 0, %0, c1, c0, 0":"=r" (i));
-        i &= ~(C1_DC | C1_IC);
-        asm ("mcr p15, 0, %0, c1, c0, 0": :"r" (i));
-
-        /* flush I/D-cache */
-        i = 0;
-        asm ("mcr p15, 0, %0, c7, c7, 0": :"r" (i));
-
-	/* ooh that's it, we're gonna try boot this image! */
-
-	the_kernel(0, CFG_LINUX_MACHINE_ID, (unsigned int)params_base);
-
-	/* that didn't quite pan out */
-
-unhappy:
+	puts("No usable kernel image found, we've had it  :-(\n");
 	while (1)
 		blue_on(1);
 }

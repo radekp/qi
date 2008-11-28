@@ -26,6 +26,7 @@
  * #include <config.h>
  * #include <version.h>
  */
+#define __ASM_MODE__
 #include <neo_gta02.h>
 
 /*
@@ -125,10 +126,8 @@
 
 .globl lowlevel_init
 lowlevel_init:
-	/* memory control configuration */
-	/* make r0 relative the current location so that it */
-	/* reads SMRDATA out of FLASH rather than memory ! */
-	adr	r0, SMRDATA
+
+	ldr	r0, =SMRDATA
 	ldr	r1, =BWSCON	/* Bus Width Status Controller */
 	add     r2, r0, #13*4
 0:
@@ -142,21 +141,11 @@ lowlevel_init:
 	orr	r1, r1, #0xc0000000
 	mcr	p15, 0, r1, c1, c0, 0
 
-	/* enable KEEPACT(GPJ8) to make sure PMU keeps us alive */
-	ldr	r0, =0x56000000	/* GPJ base */
-	ldr	r1, [r0, #0xd0]	/* GPJCON */
-	orr	r1, r1, #(1 << 16)
-	str	r1, [r0, #0xd0]
-
-	ldr	r1, [r0, #0xd4]	/* GPJDAT */
-	orr	r1, r1, #(1 << 8)
-	str	r1, [r0, #0xd4]
 	/* everything is fine now */
 	mov	pc, lr
 
 	.ltorg
 /* the literal pools origin */
-
 SMRDATA:
     .word (0+(B1_BWSCON<<4)+(B2_BWSCON<<8)+(B3_BWSCON<<12)+(B4_BWSCON<<16)+(B5_BWSCON<<20)+(B6_BWSCON<<24)+(B7_BWSCON<<28))
     .word ((B0_Tacs<<13)+(B0_Tcos<<11)+(B0_Tacc<<8)+(B0_Tcoh<<6)+(B0_Tah<<4)+(B0_Tacp<<2)+(B0_PMC))

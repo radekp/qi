@@ -1,7 +1,0 @@
-#!/bin/bash
-../dfu-util/src/dfu-util -a 1 -d 0x1d50:0x5119 -D image/kboot.udfu
-if [ $? -eq 1 ] ; then
-../dfu-util/src/dfu-util -a 1 -d 0x1d50:0x5120 -D image/kboot.udfu
-../dfu-util/src/dfu-util -a 1 -d 0x1d50:0x5119 -D image/kboot.udfu
-fi
-

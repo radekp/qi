@@ -89,8 +89,10 @@ static int nand_read_page_ll(unsigned char *buf, unsigned long addr)
 {
 	unsigned short *ptr16 = (unsigned short *)buf;
 	unsigned int i, page_num;
+#if 0
 	unsigned char ecc[64];
 	unsigned short *p16 = (unsigned short *)ecc;
+#endif
 
 	nand_clear_RnB();
 
@@ -108,11 +110,11 @@ static int nand_read_page_ll(unsigned char *buf, unsigned long addr)
 
 	for (i = 0; i < NAND_PAGE_SIZE/2; i++)
 		*ptr16++ = NFDATA16;
-
+#if 0
 	for (i = 0; i < 64 / 2; i++) {
 		*p16++ = NFDATA16;
 	}
-
+#endif
 	return NAND_PAGE_SIZE;
 }
 
