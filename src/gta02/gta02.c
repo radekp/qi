@@ -92,9 +92,11 @@ static const struct board_variant board_variants[] = {
 
 void port_init_gta02(void)
 {
+#if 0
 	unsigned int * MPLLCON = (unsigned int *)0x4c000004;
 	unsigned int * UPLLCON = (unsigned int *)0x4c000008;
 	unsigned int * CLKDIVN = (unsigned int *)0x4c000014;
+#endif
 	int n;
 
 	//CAUTION:Follow the configuration order for setting the ports.
@@ -224,7 +226,7 @@ void port_init_gta02(void)
 		i2c_write_sync(&bb_s3c24xx, PCF50633_I2C_ADS,
 			       pcf50633_init[n].index, pcf50633_init[n].value);
 
-
+#if 0
 	/* change CPU clocking to 400MHz 1:4:8 */
 
 	/* clock divide 1:4:8 - do it first */
@@ -246,6 +248,9 @@ void port_init_gta02(void)
 
 	/* get debug UART working at 115kbps */
 	serial_init_115200_s3c24xx(GTA02_DEBUG_UART, 50 /* 50MHz PCLK */);
+#else
+	serial_init_115200_s3c24xx(GTA02_DEBUG_UART, 33 /* 33MHz PCLK */);
+#endif
 
 	/* we're going to use Glamo for SD Card access, so we need to init the
 	 * evil beast
