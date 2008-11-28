@@ -297,7 +297,20 @@ void bootloader_second_phase(void)
 
 	/* none of the kernels worked out */
 
-	puts("No usable kernel image found, we've had it  :-(\n");
-	while (1)
-		;
+	puts("\nNo usable kernel image found\n");
+
+	/*
+	 * sit there doing a memory test in this case.
+	 *
+	 * This phase 2 code will get destroyed but it's OK, we won't be
+	 * coming back and the whole memory test and dependency functions are
+	 * in phase 1 / steppingstone, so we can test entire memory range.
+	 *
+	 * It means we just boot with SD Card with kernel(s) renamed or removed
+	 * to provoke memory test.
+	 */
+
+	memory_test((void *)this_board->linux_mem_start,
+						    this_board->linux_mem_size);
+
 }
