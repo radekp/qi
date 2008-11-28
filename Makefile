@@ -68,10 +68,5 @@ ${UDFU_IMAGE}:${OBJS}
 						-d ${IMAGE} ${UDFU_IMAGE}
 	@$(OBJDUMP) -d ${TARGET} >${IMAGE}.dis
 
-blink_led:src/led_on.S
-	$(CC) $(CFLAGS) led_on.o led_on.S
-	$(LD) -g led_on.o -o led_on_temp.o
-	$(OBJCOPY) -O binary -S led_on_temp.o $(IMAGE)/led_on 
-
 clean:
 	@rm -f src/*.o  src/*~ include/*~ ${IMAGE}* ${TARGET} ${UDFU_IMAGE}
