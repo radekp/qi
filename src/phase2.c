@@ -28,8 +28,11 @@
 #define __ARM__
 #include <image.h>
 #include <setup.h>
-#include "nand_read.h"
 #include <ext2.h>
+
+#define stringify2(s) stringify1(s)
+#define stringify1(s) #s
+
 
 unsigned long partition_offset_blocks = 0;
 unsigned long partition_length_blocks = 0;
@@ -43,6 +46,26 @@ void bootloader_second_phase(void)
 	int kernel = 0;
 	const struct board_variant * board_variant =
 					      (this_board->get_board_variant)();
+
+	/* okay, do the critical port and serial init for our board */
+
+	this_board->port_init();
+
+	/* stick some hello messages on debug console */
+
+	puts("\n\n\nQi Bootloader  "stringify2(BUILD_HOST)" "
+				    stringify2(BUILD_VERSION)" "
+				    stringify2(BUILD_DATE)"\n");
+
+	puts("Copyright (C) 2008 Openmoko, Inc.\n");
+	puts("This is free software; see the source for copying conditions.\n"
+	     "There is NO warranty; not even for MERCHANTABILITY or "
+	     "FITNESS FOR A PARTICULAR PURPOSE.\n\n     Detected: ");
+
+	puts(this_board->name);
+	puts(", ");
+	board_variant = (this_board->get_board_variant)();
+	puts(board_variant->name);
 
 	/* we try the possible kernels for this board in order */
 

@@ -220,7 +220,7 @@ static void putc_gta03(char c)
  * our API for bootloader on this machine
  */
 const struct board_api board_api_gta03 = {
-	.name = "GTA03",
+	.name = "GTA03-2442",
 	.linux_machine_id = 1866,
 	.linux_mem_start = 0x30000000,
 	.linux_mem_size = (128 * 1024 * 1024),

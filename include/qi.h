@@ -78,6 +78,13 @@ struct board_api {
 	struct kernel_source kernel_source[8];
 };
 
+/* these are the boards we support for a given CPU */
+
+struct cpu_supported_boards {
+	const u32 cpu_id;
+	const struct board_api **boards;
+};
+
 /* this is the board we are running on */
 
 extern struct board_api const * this_board;

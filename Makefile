@@ -22,7 +22,7 @@ BUILD_BRANCH := $(shell git branch | grep ^\* | cut -d' ' -f2)
 BUILD_HEAD := $(shell git show --pretty=oneline | head -n1 | cut -d' ' -f1 | cut -b1-16)
 BUILD_VERSION := ${BUILD_BRANCH}_${BUILD_HEAD}
 
-LDS	= src/qi.lds
+LDS	= src/cpu/$(CPU)/qi.lds
 INCLUDE	= include
 IMAGE_DIR	= image
 TOOLS	= tools
@@ -33,10 +33,11 @@ CFLAGS	= -Wall -Werror -I $(INCLUDE) -g -c -Os -fno-strict-aliasing -mlong-calls
 	  -DBUILD_DATE="${BUILD_DATE}"
 LDFLAGS = 
 
-S_SRCS	= src/start.S src/lowlevel_init.S
+S_SRCS	= src/cpu/$(CPU)/start.S src/lowlevel_init.S
 S_OBJS	= $(patsubst %.S,%.o, $(S_SRCS))
-C_SRCS	= $(wildcard src/*.c) $(wildcard src/gt*/*.c) \
-	  $(wildcard src/drivers/*.c)  $(wildcard src/fs/*.c)
+C_SRCS	= $(wildcard src/*.c) \
+	  $(wildcard src/drivers/*.c)  $(wildcard src/fs/*.c) \
+	  $(wildcard src/cpu/$(CPU)/*.c)
 C_OBJS	= $(patsubst %.c,%.o, $(C_SRCS))
 
 SRCS	= ${S_SRCS} ${C_SRCS}
@@ -48,9 +49,9 @@ UDFU_VID = 0x1d50
 UDFU_PID = 0x5119
 UDFU_REV = 0x350
 
-TARGET	= image/start_qi_all
-IMAGE = $(IMAGE_DIR)/qi-$(BUILD_VERSION)
-UDFU_IMAGE = $(IMAGE_DIR)/qi-$(BUILD_VERSION).udfu
+TARGET	= image/start_qi_all-$(CPU)
+IMAGE = $(IMAGE_DIR)/qi-$(CPU)-$(BUILD_VERSION)
+UDFU_IMAGE = $(IMAGE_DIR)/qi-$(CPU)-$(BUILD_VERSION).udfu
 
 MKUDFU = $(TOOLS)/mkudfu
 

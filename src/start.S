@@ -27,10 +27,12 @@
 #define S3C2410_MISCCR_nEN_SCLKE    (1 << 19)
 
 
-.globl _start
+
+.globl _start, processor_id, is_jtag
+
 _start:	b       start_code
 /* if we are injected by JTAG, the script sets _istag content to nonzero */
-_is_jtag:
+is_jtag:
 	.word	0
 
 /* it's at a fixed address (+0x8) so we can breakpoint it in the JTAG script
@@ -46,6 +48,11 @@ _start_armboot:
 
 _TEXT_BASE:
 	.word	TEXT_BASE
+
+processor_id:
+	.word	0
+	.word	0x41129200 /* s3c2442 ID */
+	.word	0x410fb760 /* s3c6410 ID */
 
 /*
  * These are defined in the board-specific linker script.
@@ -66,7 +73,29 @@ start_code:
 	bic	r0,r0,#0x1f
 	orr	r0,r0,#0xd3
 	msr	cpsr,r0
-	
+
+	/*
+	 * detect processor we are running on
+	 * s3c2442: 0x4112920x
+	 * s3c6410: 0x410fb76x
+	 */
+	MRC	p15, 0 ,r0, c0, c0, 0
+	ldr	r1, =processor_id
+	str	r0, [r1]
+	ldr	r2, [r1, #4]
+
+	and	r0, #0xfffffff0
+	cmp	r0, r2
+	beq	startup_2442
+
+	/* 6410 startup */
+startup_6410:
+
+	mov	r0, #0
+	str	r0, [r1]
+
+	/* 2442 startup */
+startup_2442:
 # define pWTCON		0x53000000
 
 	ldr     r0, =pWTCON
