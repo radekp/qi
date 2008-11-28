@@ -50,16 +50,40 @@ if [ ! -z "`grep $1 /proc/mounts`" ] ; then
   exit 2
 fi
 
-SECTORS=`dmesg | grep $1 | grep "512-byte hardware" | tail -n 1 | cut -d' ' -f4`
+# set CUT_COLUMN for each OS
+case "$(lsb_release --short --description)" in
+  Ubuntu\ 7*)
+    CUT_COLUMN=5
+    ;;
+  Ubuntu\ 8.04*)
+    CUT_COLUMN=5
+    ;;
+  *)
+    CUT_COLUMN=4
+    ;;
+esac
+
+DMESG_LINE=$(dmesg | grep "$1" | grep "512-byte hardware" | tail -n 1)
+SECTORS=$(echo "${DMESG_LINE}" | cut -d' ' -f"${CUT_COLUMN}")
+
+if ! echo "${SECTORS}" | grep '^[[:digit:]]\+$'
+then
+  echo "problem finding size for /dev/$1 check CUT_COLUMN value for your os"
+  echo "CUT_COLUMN=${CUT_COLUMN}  -->  ${SECTORS}"
+  echo "dmesg line was:"
+  echo "${DMESG_LINE}"
+  exit 3
+fi
 
 if [ $SECTORS -le 0 ] ; then
   echo "problem finding size for /dev/$1"
   exit 3
 fi
 
+echo "$1 is $SECTORS 512-byte blocks"
+
 if [ -z "$4" ] ; then
 
-  echo "$1 is $SECTORS 512-byte blocks"
 
   FATSECTORS=$(( $SECTORS - $EXT3_TOTAL_SECTORS + $REARSECTORS ))
   FATMB=$(( $FATSECTORS / 2048 - 16 ))

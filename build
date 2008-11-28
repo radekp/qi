@@ -2,7 +2,8 @@
 
 make clean && \
 make CPU=s3c6410 && \
-make CPU=s3c2442
+make CPU=s3c2442 && \
+make CPU=s3c2410
 
 # as root then...
 #
