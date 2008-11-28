@@ -369,15 +369,15 @@ void port_init_gta03(void)
 	/* ---------------------------- Port I ---------------------------- */
 
 	__REG(GPICON) =
-		(2 << 0)  | /* GPI0  - LCD_VD0 */
-		(2 << 2)  | /* GPI1  - LCD_VD1 */
+		(0 << 0)  | /* GPI0  - INPUT   version b0 */
+		(0 << 2)  | /* GPI1  - INPUT   version b1 */
 		(2 << 4)  | /* GPI2  - LCD_VD2 */
 		(2 << 6)  | /* GPI3  - LCD_VD3 */
 		(2 << 8)  | /* GPI4  - LCD_VD4 */
 		(2 << 10) | /* GPI5  - LCD_VD5 */
 		(2 << 12) | /* GPI6  - LCD_VD6 */
 		(2 << 14) | /* GPI7  - LCD_VD7 */
-		(2 << 16) | /* GPI8  - LCD_VD8 */
+		(0 << 16) | /* GPI8  - INPUT   version b2 */
 		(2 << 18) | /* GPI9  - LCD_VD9 */
 		(2 << 20) | /* GPI10 - LCD_VD10 */
 		(2 << 22) | /* GPI11 - LCD_VD11 */
@@ -777,15 +777,14 @@ void port_init_gta03(void)
 
 }
 
-/**
- * returns PCB revision information in b0, d8, d9
- * GTA03 EVB returns 0x000
- * GTA03 returns 0x001
- */
-
 int gta03_get_pcb_revision(void)
 {
-	return 0; /* always SMDK right now */
+	u32 v = __REG(GPIDAT);
+
+	return (v & (1 << 8)) >> (8 - 2) |
+	       (v & (1 << 1)) >> 0 |
+	       (v & (1 << 0)) >> 0
+	;
 }
 
 const struct board_variant const * get_board_variant_gta03(void)
