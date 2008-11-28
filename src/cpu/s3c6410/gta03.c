@@ -1,25 +1,29 @@
 #include <qi.h>
 #include <neo_gta03.h>
-#include <serial-s3c24xx.h>
-#include <ports-s3c24xx.h>
-#include <i2c-bitbang-s3c24xx.h>
+#include <serial-s3c64xx.h>
+//#include <ports-s3c24xx.h>
+//#include <i2c-bitbang-s3c24xx.h>
 #include <pcf50633.h>
-#include <s3c24xx-mci.h>
 
-#define GTA03_DEBUG_UART 2
+#define GTA03_DEBUG_UART 0
 
 #define PCF50633_I2C_ADS 0x73
 
 
 static const struct board_variant board_variants[] = {
 	[0] = {
-		.name = "EVB PCB",
-		.machine_revision = 0x010,
+		.name = "SMDK",
+		.machine_revision = 0,
 	},
+	[1] = {
+		.name = "GTA03 EVT1",
+		.machine_revision = 1
+	}
 };
 
 void port_init_gta03(void)
 {
+#if 0
 	unsigned int * MPLLCON = (unsigned int *)0x4c000004;
 	unsigned int * UPLLCON = (unsigned int *)0x4c000008;
 	unsigned int * CLKDIVN = (unsigned int *)0x4c000014;
@@ -136,28 +140,8 @@ void port_init_gta03(void)
 	/* push DOWN1 (CPU Core rail) to 1.7V, allowing 533MHz */
 	i2c_write_sync(&bb_s3c24xx, PCF50633_I2C_ADS, PCF50633_REG_DOWN1OUT,
 									  0x2b);
+#endif
 
-	/* change CPU clocking to 533MHz 1:4:8 */
-
-	/* clock divide 1:4:8 - do it first */
-	*CLKDIVN = 5;
-	/* configure UPLL */
-	*UPLLCON = ((88 << 12) + (4 << 4) + 2);
-	/* Magic delay: Page 7-19, seven nops between UPLL and MPLL */
-	asm __volatile__ (
-		"nop\n"\
-		"nop\n"\
-		"nop\n"\
-		"nop\n"\
-		"nop\n"\
-		"nop\n"\
-		"nop\n"\
-	);
-	/* configure MPLL */
-	*MPLLCON = ((169 << 12) + (2 << 4) + 1);
-
-
-	serial_init_115200_s3c24xx(GTA03_DEBUG_UART, 66 /*MHz PCLK */);
 }
 
 /**
@@ -168,36 +152,7 @@ void port_init_gta03(void)
 
 int gta03_get_pcb_revision(void)
 {
-	int n;
-	u32 u;
-
-	/* make B0 inputs */
-	rGPBCON &= ~0x00000003;
-	/* D8 and D9 inputs */
-	rGPDCON &= ~0x000f0000;
-
-	/* delay after changing pulldowns */
-	u = rGPBDAT;
-	u = rGPDDAT;
-
-	/* read the version info */
-	u = rGPBDAT;
-	n = (u >> (0 - 0))& 0x001;
-	u = rGPDDAT;
-	n |= (u >> (8 -1))  & 0x002;
-	n |= (u >> (9 - 2))  & 0x004;
-
-	/*
-	 * when not being interrogated, all of the revision GPIO
-	 * are set to output
-	 */
-	/* make B0 high ouput */
-	rGPBCON |= 0x00000001;
-	/* D8 and D9 high ouputs */
-	rGPDCON |= 0x00050000;
-
-	return n;
-
+	return 0; /* always SMDK right now */
 }
 
 const struct board_variant const * get_board_variant_gta03(void)
@@ -213,77 +168,58 @@ int is_this_board_gta03(void)
 
 static void putc_gta03(char c)
 {
-	serial_putc_s3c24xx(GTA03_DEBUG_UART, c);
+	serial_putc_s3c64xx(GTA03_DEBUG_UART, c);
 }
 
 int sd_card_init_gta03(void)
 {
-	return s3c24xx_mmc_init(1);
+	extern int s3c6410_mmc_init(int verbose);
+
+	return s3c6410_mmc_init(1);
 }
 
 int sd_card_block_read_gta03(unsigned char * buf, unsigned long start512,
 							       int blocks512)
 {
-	return s3c24xx_mmc_bread(0, start512, blocks512, buf);
+unsigned long s3c6410_mmc_bread(int dev_num, unsigned long blknr, unsigned long blkcnt,
+								     void *dst);
+
+	return s3c6410_mmc_bread(0, start512, blocks512, buf);
 }
-
-
 
 /*
  * our API for bootloader on this machine
  */
 const struct board_api board_api_gta03 = {
-	.name = "GTA03-2442",
-	.linux_machine_id = 1866,
-	.linux_mem_start = 0x30000000,
+	.name = "GTA03",
+	.linux_machine_id = 1626 /*1866*/,
+	.linux_mem_start = 0x50000000,
 	.linux_mem_size = (128 * 1024 * 1024),
-	.linux_tag_placement = 0x30000000 + 0x100,
+	.linux_tag_placement = 0x50000000 + 0x100,
 	.get_board_variant = get_board_variant_gta03,
 	.is_this_board = is_this_board_gta03,
 	.port_init = port_init_gta03,
 	.putc = putc_gta03,
-	/* these are the ways we could boot GTA03 in order to try */
 	.kernel_source = {
 		[0] = {
-			.name = "SD Card EXT2 Kernel",
-			.block_init = sd_card_init_gta03,
+			.name = "SD Card rootfs",
 			.block_read = sd_card_block_read_gta03,
-			.partition_index = 1,
 			.filesystem = FS_EXT2,
+			.partition_index = 2,
 			.filepath = "boot/uImage.bin",
-			.commandline = "mtdparts=physmap-flash:-(nor);" \
-					"neo1973-nand:" \
-					 "0x00040000(qi)," \
-					 "0x00040000(cmdline)," \
-					 "0x00800000(backupkernel)," \
-					 "0x000a0000(extra)," \
-					 "0x00040000(identity)," \
-					 "0x0f6a0000(backuprootfs) " \
-				       "rootfstype=ext2 " \
-				       "root=/dev/mmcblk0p1 " \
-				       "console=ttySAC2,115200 " \
-				       "loglevel=4 " \
-				       "init=/sbin/init "\
-				       "ro"
+			.initramfs_filepath = "boot/initramfs.gz",
+			.commandline = "console=ttySAC0,115200 " \
+				       "loglevel=8 init=/bin/sh root=/dev/ram ramdisk_size=6000000"
 		},
 		[1] = {
-			.name = "NAND Kernel",
-			.block_read = nand_read_ll,
-			.offset_blocks512_if_no_partition = 0x80000 / 512,
-			.filesystem = FS_RAW,
-			.commandline = 	"mtdparts=neo1973-nand:" \
-					 "0x00040000(qi)," \
-					 "0x00040000(cmdline)," \
-					 "0x00800000(backupkernel)," \
-					 "0x000a0000(extra)," \
-					 "0x00040000(identity)," \
-					 "0x0f6a0000(backuprootfs) " \
-				       "rootfstype=jffs2 " \
-				       "root=/dev/mtdblock6 " \
-				       "console=ttySAC2,115200 " \
-				       "loglevel=4 " \
-				       "init=/sbin/init "\
-				       "ro"
-		},
-	},
+			.name = "SD Card backup rootfs",
+			.block_read = sd_card_block_read_gta03,
+			.filesystem = FS_EXT2,
+			.partition_index = 3,
+			.filepath = "boot/uImage.bin",
+			.initramfs_filepath = "boot/initramfs.gz",
+			.commandline = "console=ttySAC0,115200 " \
+				       "loglevel=8 init=/bin/sh "
+		},	},
 };
+

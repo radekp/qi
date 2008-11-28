@@ -45,7 +45,7 @@ SECTIONS
 	  src/cpu/s3c6410/start.o		(.text .rodata* .data)
 	  src/cpu/s3c6410/start_qi.o		(.text .rodata* .data)
 	  src/cpu/s3c6410/serial-s3c64xx.o	(.text .rodata* .data)
-	  src/cpu/s3c6410/tla01.o		(.text .rodata* .data)
+	  src/cpu/s3c6410/gta03.o		(.text .rodata* .data)
 	  src/cpu/s3c6410/hs_mmc.o		(.text .rodata* .data)
 	  src/utils.o				(.text .rodata* .data)
 	  src/ctype.o				(.text .rodata* .data)

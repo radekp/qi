@@ -1,8 +1,8 @@
 /*
- * (C) Copyright 2008 OpenMoko, Inc.
- * Author: Matt Hsu <matt_hsu@openmoko.org>
+ * (C) Copyright 2007 OpenMoko, Inc.
+ * Author: xiangfu liu <xiangfu@openmoko.org>
  *
- * Configuation settings for the Openmoko GTA03 Linux GSM phone
+ * Configuation settings for the FIC Neo GTA02 Linux GSM phone
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -20,13 +20,9 @@
  * MA 02111-1307 USA
  */
 
-#ifndef __CONFIG_GTA03_H
-#define __CONFIG_GTA03_H
 #ifndef __ASM_MODE__
 #include <qi.h>
 extern const struct board_api board_api_gta03;
 #endif
 
-#define TEXT_BASE 0x33000000
-
-#endif	/* __CONFIG_GTA03_H */
+#define TEXT_BASE_GTA03 0x53000000

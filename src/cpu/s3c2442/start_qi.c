@@ -37,7 +37,6 @@ extern void bootloader_second_phase(void);
 
 const struct board_api *boards[] = {
 			&board_api_gta02,
-			&board_api_gta03,
 			NULL /* always last */
 };
 

@@ -25,7 +25,7 @@
 
 
 #include <qi.h>
-#include <neo_tla01.h>
+#include <neo_gta03.h>
 
 #define stringify2(s) stringify1(s)
 #define stringify1(s) #s
@@ -33,7 +33,7 @@
 extern void bootloader_second_phase(void);
 
 const struct board_api *boards[] = {
-			&board_api_tla01,
+			&board_api_gta03,
 			NULL /* always last */
 };
 
