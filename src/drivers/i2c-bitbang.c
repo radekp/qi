@@ -53,14 +53,17 @@ int i2c_next_state(struct i2c_bitbang * bb)
 	case IBS_INIT:
 		bb->index = 0;
 		bb->index_read = 0;
-		/* fall thru */
+		(bb->set)(1, 1);
+		bb->state = IBS_START1;
+		break;
+
 	case IBS_START1:
 		(bb->set)(1, 0);
-		(bb->set)(0, 0); /* start */
 		bb->state = IBS_START2;
 		break;
 
 	case IBS_START2:
+		(bb->set)(0, 0); /* start */
 		bb->count = 8;
 		bb->state = IBS_ADS_TX_S;
 		break;
@@ -137,25 +140,34 @@ int i2c_next_state(struct i2c_bitbang * bb)
 	case IBS_DATA_RX_L:
 		bb->data[bb->index_read] <<= 1;
 		bb->data[bb->index_read] |= !!(bb->read_sda)();
-		(bb->set)(0, 1);
 		bb->count--;
 		if (bb->count) {
+			(bb->set)(0, 1);
 			bb->state = IBS_DATA_RX_S;
 			break;
 		}
 
 		/* slave has released SDA now, bang down ACK */
-		(bb->set)(0, 0);
+		if (bb->data[bb->index + 1] != IBCONTROL_DO_READ)
+			(bb->set)(0, 1);
+		else
+			(bb->set)(0, 0);
 		bb->state = IBS_DATA_RX_ACK_H;
 		break;
 
 	case IBS_DATA_RX_ACK_H:
-		(bb->set)(1, 0);
+		if (bb->data[bb->index + 1] != IBCONTROL_DO_READ)
+			(bb->set)(1, 1); /* NAK */
+		else
+			(bb->set)(1, 0); /* ACK */
 		bb->state = IBS_DATA_RX_ACK_L;
 		break;
 
 	case IBS_DATA_RX_ACK_L:
-		(bb->set)(0, 1);
+		if (bb->data[bb->index + 1] != IBCONTROL_DO_READ)
+			(bb->set)(0, 1); /* NAK */
+		else
+			(bb->set)(0, 0); /* ACK */
 		bb->index_read++;
 		bb->index++;
 		switch (bb->data[bb->index]) {
@@ -214,6 +226,11 @@ static int i2c_complete_synchronously(struct i2c_bitbang * bb)
 		(bb->spin)();
 	}
 
+	if (ret < 0) {
+		puts("i2c transaction failed ");
+		printdec(ret);
+		puts("\n");
+	}
 	return ret;
 }
 
