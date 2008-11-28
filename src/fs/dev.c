@@ -96,6 +96,11 @@ int ext2fs_devread(int sector, int filesystem_block_log2, int byte_offset, int b
 	if (this_kernel->block_read(buf, partition_offset_blocks + sector,
 			  block_len / SECTOR_SIZE) < 0) {
 		puts(" ** ext2fs_devread() read error - block\n");
+		printdec(partition_offset_blocks + sector);
+		puts(" ");
+		print32(block_len);
+		puts(" ");
+		print32(sector);
 		return 0;
 	}
 	block_len = byte_len & ~(SECTOR_SIZE - 1);
@@ -108,6 +113,11 @@ int ext2fs_devread(int sector, int filesystem_block_log2, int byte_offset, int b
 		if (this_kernel->block_read(sec_buf,
 				partition_offset_blocks + sector, 1) != 1) {
 			puts(" ** ext2fs_devread() read error - last part\n");
+			printdec(partition_offset_blocks + sector);
+			puts(" ");
+			print32(block_len);
+			puts(" ");
+			print32(sector);
 			return 0;
 		}
 		memcpy (buf, sec_buf, byte_len);
