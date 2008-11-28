@@ -54,16 +54,28 @@ Booting Heuristics
 Qi has one or more ways to fetch a kernel depending on the device it finds it is
 running on, for example on GTA02 it can use NAND and SD card devices.  It goes
 through these device-specific storage devices in order and tries to boot the
-first viable kernel it finds, usually /boot/uImage.bin.
+first viable kernel it finds, usually /boot/uImage-device>.bin for example
+/boot/uImage-GTA02.bin.
 
-The kernel commandline used is associated with the storage device, this allows
-the correct root= line to be arrived at without any work.  The inability to set
-the Qi kernel commandline externally is deliberate, two otherwise identical
-devices differing by the kernel commandline or other "environment" is not good.
-A whole class of bugs and support issues around private bootloader state are
-therefore avoided.
+You can disable a rootfs for consideration for boot if you add a file
+/boot/noboot-<device>, eg, /boot/noboot-GTA02.
+
+The kernel commandline used is associated with the storage device and partition,
+this allows the correct root= line to be arrived at without any work.
 
 If no kernel image can be found, Qi falls back to doing a memory test.
+
+
+Appending to commandline
+========================
+
+You can append to the Qi commandline by creating a file /boot/append-<device>,
+eg, /boot/append-GTA02 containing the additional kernel commandline you want.
+
+This means you can affect the boot per-rootfs, but that if you reimage the
+rootfs you at the same time define what is appeneded.  Because these files are
+looked for with the <device> name in them, options can be selected depending on
+the device the rootfs is run on.
 
 
 Initrd support
@@ -76,22 +88,24 @@ memory address in addition to kernel image.  The ATAGs are issued accordingly.
 Functional Differences from U-Boot on GTA02
 ===========================================
 
- - Backlight is not enabled until Linux starts after a few seconds
-
- - kernel loglevel is set to NOT output gobs of text to the screen
-
- - On GTA02 will ALWAYS boot from uSD if first partition is ext2 and contains
-    /boot/uImage.bin, otherwise boots from NAND
-
- - On GTA03 will ALWAYS boot from uSD second partition if /boot/uImage.bin is
-    present otherwise try the third / backup partition
+ - Backlight and USB is not enabled until Linux starts after a few seconds
 
  - No startup splash screen
+
+ - by default there is no boot spew on the LCM
+
+ - On GTAxx boots from first uSD ext2 / 3 partition containing
+    /boot/uImage-<devicename>.bin present, eg, /boot/uImage-GTA02.bin, it checks
+    first three partitions in turn
+
+ - On GTA01 and 02 if nothing is workable on the SD Card, or it is not present,
+    Qi will try to boot from NAND
+
+ - You can disable a partition for boot by creating /boot/noboot-<devicename>,
+    eg, /boot/noboot-GTA02, it will skip it and check the next partition
 
  - Way faster
 
  - There is no concept of "staying in the bootloader".  The bootloader exits to
     Linux as fast as possible, that's all it does.
 
- - USB is not started until Linux starts around 5 seconds after boot, there is
-    no DFU.
