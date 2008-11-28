@@ -2,7 +2,7 @@
  * (C) Copyright 2007 OpenMoko, Inc.
  * Author: Andy Green <andy@openmoko.com>
  *
- * s3c24xx-specific i2c used by, eg, GTA02
+ * s3c6410-specific i2c
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -23,46 +23,47 @@
 
 #include <qi.h>
 #include <i2c-bitbang.h>
-#include <ports-s3c24xx.h>
+#include <s3c6410.h>
 
-static char i2c_read_sda_s3c24xx(void)
+static char i2c_read_sda_s3c6410(void)
 {
-	return (rGPEDAT & 0x8000) != 0;
+	return !!(__REG(GPBDAT) & (1 << 6));
 }
 
-static void i2c_set_s3c24xx(char clock, char data)
+static void i2c_set_s3c6410(char clock, char data)
 {
 	if (clock) /* SCL <- input */
-		rGPECON = (rGPECON & ~0x30000000);
+		__REG(GPBCON) = (__REG(GPBCON) & ~(3 << (5 * 4)));
 	else { /* SCL <- output 0 */
-		rGPEDAT = (rGPEDAT & ~0x4000);
-		rGPECON = (rGPECON & ~0x30000000) | 0x10000000;
+		__REG(GPBDAT) = (__REG(GPBDAT) & ~(1 << 5));
+		__REG(GPBCON) = (__REG(GPBCON) & ~(3 << (5 * 4))) | (1 << (5 * 4));
 	}
 	if (data) /* SDA <- input */
-		rGPECON = (rGPECON & ~0xc0000000);
+		__REG(GPBCON) = (__REG(GPBCON) & ~(3 << (6 * 4)));
 	else { /* SDA <- output 0 */
-		rGPEDAT = (rGPEDAT & ~0x8000);
-		rGPECON = (rGPECON & ~0xc0000000) | 0x40000000;
+		__REG(GPBDAT) = (__REG(GPBDAT) & ~(1 << 6));
+		__REG(GPBCON) = (__REG(GPBCON) & ~(3 << (6 * 4))) | (1 << (6 * 4));
 	}
 }
 
-static void i2c_close_s3c24xx(void)
+static void i2c_close_s3c6410(void)
 {
 	/* set back to hardware I2C ready for Linux */
-	rGPECON = (rGPECON & ~0xf0000000) | 0xa0000000;
+	__REG(GPBCON) = (__REG(GPBCON) & ~(3 << (5 * 4))) | (2 << (5 * 4));
+	__REG(GPBCON) = (__REG(GPBCON) & ~(3 << (6 * 4))) | (2 << (6 * 4));
 }
 
-static void i2c_spin_s3c24xx(void)
+static void i2c_spin_s3c6410(void)
 {
 	int n;
 
 	for (n = 0; n < 1000; n++)
-		rGPJDAT |= (1 << 5);
+		__REG(GPBDAT) = __REG(GPBDAT);
 }
 
-struct i2c_bitbang bb_s3c24xx = {
-	.read_sda = i2c_read_sda_s3c24xx,
-	.set = i2c_set_s3c24xx,
-	.spin = i2c_spin_s3c24xx,
-	.close = i2c_close_s3c24xx,
+struct i2c_bitbang bb_s3c6410 = {
+	.read_sda = i2c_read_sda_s3c6410,
+	.set = i2c_set_s3c6410,
+	.spin = i2c_spin_s3c6410,
+	.close = i2c_close_s3c6410,
 };
