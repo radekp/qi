@@ -263,6 +263,15 @@ int sd_card_init_gta02(void)
 	return mmc_init(1);
 }
 
+int sd_card_block_read_gta02(unsigned char * buf, unsigned long start512,
+							       int blocks512)
+{
+unsigned long mmc_bread(int dev_num, unsigned long blknr, unsigned long blkcnt,
+								     void *dst);
+
+	return mmc_bread(0, start512, blocks512, buf);
+}
+
 /* return nonzero if we believe we run on GTA02 */
 
 int is_this_board_gta02(void)
@@ -303,9 +312,9 @@ const struct board_api board_api_gta02 = {
 		[0] = {
 			.name = "SD Card FAT Kernel",
 			.block_init = sd_card_init_gta02,
-			.block_read = nand_read_ll,
-			.partition_index = 0,
-			.filesystem = FS_FAT,
+			.block_read = sd_card_block_read_gta02,
+			.partition_index = 1,
+			.filesystem = FS_EXT2,
 			.commandline = "mtdparts=physmap-flash:-(nor);" \
 					"neo1973-nand:" \
 					 "0x00040000(qi)," \
@@ -314,18 +323,17 @@ const struct board_api board_api_gta02 = {
 					 "0x000a0000(extra)," \
 					 "0x00040000(identity)," \
 					 "0x0f6a0000(backuprootfs) " \
-				       "rootfstype=jffs2 " \
-				       "root=/dev/mtdblock6 " \
+				       "rootfstype=ext2 " \
+				       "root=/dev/mmcblk0p1 " \
 				       "console=ttySAC2,115200 " \
-				       "loglevel=8 " \
+				       "loglevel=4 " \
 				       "init=/sbin/init "\
 				       "ro"
 		},
 		[1] = {
 			.name = "NAND Kernel",
 			.block_read = nand_read_ll,
-			.partition_index = -1,
-			.offset_if_no_partition = 0x80000,
+			.offset_if_no_partition = 0x80000 / 512,
 			.filesystem = FS_RAW,
 			.commandline = "mtdparts=physmap-flash:-(nor);" \
 					"neo1973-nand:" \

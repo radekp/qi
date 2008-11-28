@@ -60,7 +60,7 @@ void start_qi(void)
 	 */
 
 	/* We randomly pull 24KBytes of bootloader */
-	if (nand_read_ll((unsigned char *)TEXT_BASE, 0, 24 * 1024) < 0)
+	if (nand_read_ll((unsigned char *)TEXT_BASE, 0, 24 * 1024 / 512) < 0)
 		goto unhappy;
 
 	/* ask all the boards we support in turn if they recognize this

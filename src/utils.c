@@ -54,6 +54,11 @@ unsigned int _ntohl(unsigned int n) {
 			       ((n & 0xff0000) >> 8) | ((n & 0xff000000) >> 24);
 }
 
+unsigned int _letocpu(unsigned int n) {
+	return n;
+}
+
+
 int puts(const char *string)
 {
 	while (*string)

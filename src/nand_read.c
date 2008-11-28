@@ -17,6 +17,7 @@
 
 /* NOTE this stuff runs in steppingstone context! */
 
+/* the API refers to 512-byte blocks */
 
 #include <qi.h>
 #include "nand_read.h"
@@ -55,13 +56,13 @@ static inline void nand_wait(void)
 #define	NAND_BLOCK_MASK		(NAND_PAGE_SIZE - 1)
 #define NAND_BLOCK_SIZE		(NAND_PAGE_SIZE * 64)
 
-static int is_bad_block(unsigned long i)
+static int is_bad_block(unsigned long block_index)
 {
 	unsigned char data;
 	unsigned long page_num;
 
 	nand_clear_RnB();
-	page_num = i >> 11; /* addr / 2048 */
+	page_num = block_index >> 2; /* addr / 2048 */
 	NFCMD = NAND_CMD_READ0;
 	NFADDR = BAD_BLOCK_OFFSET & 0xff;
 	NFADDR = (BAD_BLOCK_OFFSET >> 8) & 0xff;
@@ -78,7 +79,7 @@ static int is_bad_block(unsigned long i)
 	return 0;
 }
 
-static int nand_read_page_ll(unsigned char *buf, unsigned long addr)
+static int nand_read_page_ll(unsigned char *buf, unsigned long block512)
 {
 	unsigned short *ptr16 = (unsigned short *)buf;
 	unsigned int i, page_num;
@@ -91,7 +92,7 @@ static int nand_read_page_ll(unsigned char *buf, unsigned long addr)
 
 	NFCMD = NAND_CMD_READ0;
 
-	page_num = addr >> 11; /* addr / 2048 */
+	page_num = block512 >> 2; /* 512 block -> 2048 block */
 	/* Write Address */
 	NFADDR = 0;
 	NFADDR = 0;
@@ -108,17 +109,18 @@ static int nand_read_page_ll(unsigned char *buf, unsigned long addr)
 		*p16++ = NFDATA16;
 	}
 #endif
-	return NAND_PAGE_SIZE;
+	return 4;
 }
 
 /* low level nand read function */
-int nand_read_ll(unsigned char *buf, unsigned long start_addr, int size)
+int nand_read_ll(unsigned char *buf, unsigned long start_block512,
+								  int blocks512)
 {
 	int i, j;
 	int bad_count = 0;
 
-	if ((start_addr & NAND_BLOCK_MASK) || (size & NAND_BLOCK_MASK))
-		return -1;	/* invalid alignment */
+	if (start_block512 & 3) /* inside 2048-byte block */
+		return -1;
 
 	/* chip Enable */
 	nand_select();
@@ -127,22 +129,20 @@ int nand_read_ll(unsigned char *buf, unsigned long start_addr, int size)
 	for (i = 0; i < 10; i++)
 		;
 
-	for (i = start_addr; i < (start_addr + size);) {
-		if ((i & (NAND_BLOCK_SIZE - 1)) == 0) {
-			if (is_bad_block(i) ||
-					is_bad_block(i + NAND_PAGE_SIZE)) {
-				i += NAND_BLOCK_SIZE;
-				size += NAND_BLOCK_SIZE;
-				if (bad_count++ == 4)
-					return -1;
-
-				continue;
-			}
+	while (blocks512 > 0) {
+		if (is_bad_block(start_block512) ||
+				is_bad_block(start_block512 + 4)) {
+			start_block512 += 4;
+			blocks512 += 4;
+			if (bad_count++ == 4)
+				return -1;
+			continue;
 		}
 
-		j = nand_read_page_ll(buf, i);
-		i += j;
-		buf += j;
+		j = nand_read_page_ll(buf, start_block512);
+		start_block512 += j;
+		buf += j << 9;
+		blocks512 -= j;
 	}
 
 	/* chip Disable */

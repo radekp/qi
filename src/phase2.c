@@ -48,6 +48,8 @@ void bootloader_second_phase(void)
 		void * kernel_dram = (void *)(TEXT_BASE - (8 * 1024 * 1024));
 		unsigned long crc;
 		image_header_t	*hdr;
+		unsigned long partition_offset_blocks = 0;
+		unsigned long partition_length_blocks = 0;
 
 		/* eat leading white space */
 		for (p = cmdline; *p == ' '; p++);
@@ -67,45 +69,67 @@ void bootloader_second_phase(void)
 		/* if there's a partition table implied, parse it, otherwise
 		 * just use a fixed offset
 		 */
-		if (this_board->kernel_source[kernel].partition_index != -1) {
+		if (this_board->kernel_source[kernel].partition_index) {
+			unsigned char *p = kernel_dram;
 
-			puts("partitions not supported yet\n");
+			if (this_board->kernel_source[kernel].block_read(
+						       kernel_dram, 0, 4) < 0) {
+				puts("Bad partition read\n");
+				kernel++;
+				continue;
+			}
+
+			if ((p[0x1fe] != 0x55) || (p[0x1ff] != 0xaa)) {
+				puts("partition signature missing\n");
+				kernel++;
+				continue;
+			}
+
+			p += 0x1be + 8 + (0x10 * (this_board->
+				    kernel_source[kernel].partition_index - 1));
+
+			partition_offset_blocks = (((u32)p[3]) << 24) |
+						  (((u32)p[2]) << 16) |
+						  (((u32)p[1]) << 8) |
+						  p[0];
+			partition_length_blocks = (((u32)p[7]) << 24) |
+						  (((u32)p[6]) << 16) |
+						  (((u32)p[5]) << 8) |
+						  p[4];
+
+		} else
+			partition_offset_blocks = this_board->
+				   kernel_source[kernel].offset_if_no_partition;
+
+		if (this_board->kernel_source[kernel].block_read(
+				 kernel_dram, partition_offset_blocks, 8) < 0) {
+			puts ("Bad kernel header\n");
 			kernel++;
 			continue;
+		}
 
-		} else {
-			if (this_board->kernel_source[kernel].block_read(
-				kernel_dram, this_board->kernel_source[kernel].
-					    offset_if_no_partition, 4096) < 0) {
-				puts ("Bad kernel header\n");
-				kernel++;
-				continue;
-			}
+		hdr = (image_header_t *)kernel_dram;
 
-			hdr = (image_header_t *)kernel_dram;
+		if (_ntohl(hdr->ih_magic) != IH_MAGIC) {
+			puts("bad magic ");
+			print32(hdr->ih_magic);
+			kernel++;
+			continue;
+		}
 
-			if (_ntohl(hdr->ih_magic) != IH_MAGIC) {
-				puts("bad magic ");
-				print32(hdr->ih_magic);
-				kernel++;
-				continue;
-			}
+		puts("        Found: ");
+		puts((const char *)hdr->ih_name);
+		puts("\n         Size: ");
+		printdec(_ntohl(hdr->ih_size) >> 10);
+		puts(" KiB\n");
 
-			puts("        Found: ");
-			puts((const char *)hdr->ih_name);
-			puts("\n         Size: ");
-			printdec(_ntohl(hdr->ih_size) >> 10);
-			puts(" KiB\n");
-
-			if (nand_read_ll(kernel_dram,
-				this_board->kernel_source[kernel].
-				offset_if_no_partition, (_ntohl(hdr->ih_size) +
-						sizeof(image_header_t) + 2048) &
-							     ~(2048 - 1)) < 0) {
-				puts ("Bad kernel read\n");
-				kernel++;
-				continue;
-			}
+		if ((this_board->kernel_source[kernel].block_read)(
+			kernel_dram, partition_offset_blocks,
+			((_ntohl(hdr->ih_size) + sizeof(image_header_t) +
+					       2048) & ~(2048 - 1)) >> 9) < 0) {
+			puts ("Bad kernel read\n");
+			kernel++;
+			continue;
 		}
 
 		puts("      Cmdline: ");

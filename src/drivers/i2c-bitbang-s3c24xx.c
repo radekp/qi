@@ -56,7 +56,7 @@ static void i2c_spin_s3c24xx(void)
 {
 	int n;
 
-	for (n = 0; n < 700; n++)
+	for (n = 0; n < 1000; n++)
 		rGPJDAT |= (1 << 5);
 }
 

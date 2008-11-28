@@ -316,8 +316,14 @@ static int mmc_cmd(int opcode, int arg, int flags,
 		return 0;
 
 	if (error) {
-//		printf("cmd 0x%x, arg 0x%x flags 0x%x\n", opcode, arg, flags);
-#if 0
+		puts("cmd 0x");
+		print8(opcode);
+		puts(", arg 0x");
+		print8(arg);
+		puts(", flags 0x");
+		print32(flags);
+		puts("\n");
+#if 1
 		puts("Error after cmd: 0x");
 		print32(error);
 		puts("\n");
@@ -360,7 +366,7 @@ static int mmc_cmd(int opcode, int arg, int flags,
 		error = -5;
 	if (error) {
 //		printf("cmd 0x%x, arg 0x%x flags 0x%x\n", opcode, arg, flags);
-#if 0
+#if 1
 		puts("Error after resp: 0x");
 		print32(status);
 		puts("\n");
@@ -573,7 +579,7 @@ static void print_sd_cid(const struct sd_cid *cid)
 
 int mmc_init(int verbose)
 {
-	int retries = 14, rc = -1;
+	int retries = 16, rc = -1;
 	int resp;
 	u8 response[16];
 //	mmc_cid_t *mmc_cid = (mmc_cid_t *)response;
@@ -639,6 +645,7 @@ int mmc_init(int verbose)
 
 	while (retries--) {
 
+		udelay(100000);
 		udelay(100000);
 		udelay(100000);
 
