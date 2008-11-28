@@ -30,6 +30,8 @@
 #define u8 unsigned char
 typedef unsigned int uint32_t;
 
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
+
 enum filesystem {
 	FS_RAW,
 	FS_FAT,

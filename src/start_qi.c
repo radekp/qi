@@ -67,7 +67,7 @@ void start_qi(void)
 
 	this_board = boards[board];
 	while (!n) {
-		if (board >= (sizeof(boards) / sizeof(boards[0])))
+		if (board >= ARRAY_SIZE(boards))
 			/* can't put diagnostic on serial... too early */
 			goto unhappy;
 
