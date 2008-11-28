@@ -25,6 +25,7 @@
 #include <qi-ctype.h>
 #include <asm/byteorder.h>
 
+#define MALLOC_POOL_EXTENT (100 * 1024)
 
 #define u32 unsigned int
 #define u16 unsigned short
