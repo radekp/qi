@@ -158,7 +158,7 @@ static int mmc_cmd(int opcode, int arg, int flags,
 			GLAMO_REGOFS_MMC + GLAMO_REG_MMC_WDATADS1);
 		glamo_reg_write((u16)(GLAMO_FB_SIZE >> 16),
 			GLAMO_REGOFS_MMC + GLAMO_REG_MMC_WDATADS2);
-		glamo_reg_write((u16)GLAMO_FB_/*SIZE*/,
+		glamo_reg_write((u16)GLAMO_FB_SIZE,
 			GLAMO_REGOFS_MMC + GLAMO_REG_MMC_RDATADS1);
 		glamo_reg_write((u16)(GLAMO_FB_SIZE >> 16),
 			GLAMO_REGOFS_MMC + GLAMO_REG_MMC_RDATADS2);
@@ -521,7 +521,7 @@ static void print_mmc_cid(mmc_cid_t *cid)
 #endif
 static void print_sd_cid(const struct sd_cid *cid)
 {
-	puts("Card Type:          ");
+	puts("    Card Type: ");
 	switch (card_type) {
 	case CARDTYPE_NONE:
 		puts("(None)\n");
@@ -539,19 +539,33 @@ static void print_sd_cid(const struct sd_cid *cid)
 		puts("SD 2.0 SDHC\n");
 		break;
 	}
-#if 0
-	printf("Manufacturer:       0x%02x, OEM \"%c%c\"\n",
-	    cid->mid, cid->oid_0, cid->oid_1);
-	printf("Product name:       \"%c%c%c%c%c\", revision %d.%d\n",
-	    cid->pnm_0, cid->pnm_1, cid->pnm_2, cid->pnm_3, cid->pnm_4,
-	    cid->prv >> 4, cid->prv & 15);
-	printf("Serial number:      %u\n",
-	    cid->psn_0 << 24 | cid->psn_1 << 16 | cid->psn_2 << 8 |
+
+	puts(" Manufacturer: 0x");
+	print8(cid->mid);
+	puts(", OEM \"");
+	this_board->putc(cid->oid_0);
+	this_board->putc(cid->oid_1);
+	puts("\"\n");
+
+	puts(" Product name: \"");
+	this_board->putc(cid->pnm_0);
+	this_board->putc(cid->pnm_1);
+	this_board->putc(cid->pnm_2);
+	this_board->putc(cid->pnm_3);
+	this_board->putc(cid->pnm_4);
+	puts("\", revision ");
+	printdec(cid->prv >> 4);
+	puts(".");
+	printdec(cid->prv & 15);
+	puts("\nSerial number: ");
+	printdec(cid->psn_0 << 24 | cid->psn_1 << 16 | cid->psn_2 << 8 |
 	    cid->psn_3);
-	printf("Manufacturing date: %d/%d\n",
-	    cid->mdt_1 & 15,
-	    2000+((cid->mdt_0 & 15) << 4)+((cid->mdt_1 & 0xf0) >> 4));
-#endif
+	puts("\n   Manf. date: ");
+	printdec(cid->mdt_1 & 15);
+	puts("/");
+	printdec(2000 + ((cid->mdt_0 & 15) << 4)+((cid->mdt_1 & 0xf0) >> 4));
+	puts("\n");
+
 /*	printf("CRC:                0x%02x, b0 = %d\n",
 	    cid->crc >> 1, cid->crc & 1); */
 }
@@ -563,7 +577,7 @@ int mmc_init(int verbose)
 	int resp;
 	u8 response[16];
 //	mmc_cid_t *mmc_cid = (mmc_cid_t *)response;
-//	struct sd_cid *sd_cid = (struct sd_cid *)response;
+	struct sd_cid *sd_cid = (struct sd_cid *)response;
 	u32 hcs = 0;
 
 	card_type = CARDTYPE_NONE;
@@ -711,6 +725,7 @@ int mmc_init(int verbose)
 	case CARDTYPE_SD:
 	case CARDTYPE_SD20:
 	case CARDTYPE_SDHC:
+
 		if (verbose)
 			print_sd_cid(sd_cid);
 #if 0
@@ -754,7 +769,7 @@ int mmc_init(int verbose)
 //		mmc_dev.lba = (((unsigned long)1 << csd->c_size_mult1) *
 //				(unsigned long)csd->c_size) >> 9;
 		puts("  MMC/SD size: ");
-		print32((((unsigned long)1 << csd->c_size_mult1) *
+		printdec((((unsigned long)1 << csd->c_size_mult1) *
 				(unsigned long)csd->c_size) >> 10);
 		puts(" MiB\n");
 	}
