@@ -35,11 +35,50 @@ unsigned long partition_length_blocks = 0;
 
 struct kernel_source const * this_kernel = 0;
 
+const int INITRD_OFFSET = (8 * 1024 * 1024);
+
 int raise(int n)
 {
 	return 0;
 }
 
+int read_file(const char * filepath, u8 * destination, int size)
+{
+	unsigned int len = size;
+
+	switch (this_kernel->filesystem) {
+	case FS_EXT2:
+		if (!ext2fs_mount()) {
+			puts("Unable to mount ext2 filesystem\n");
+			return -1;
+		}
+		puts("    EXT2 open: ");
+		puts(filepath);
+		puts("\n");
+		len = ext2fs_open(filepath);
+		if (len < 0) {
+			puts("Open failed\n");
+			return -1;
+		}
+		ext2fs_read((char *)destination, size);
+		break;
+
+	case FS_FAT:
+		/* FIXME */
+	case FS_RAW:
+		puts("     RAW open: +");
+		printdec(partition_offset_blocks);
+		puts(" 512-byte blocks\n");
+		if (this_kernel->block_read(destination,
+				      partition_offset_blocks, size >> 9) < 0) {
+			puts ("Bad kernel header\n");
+			return -1;
+		}
+		break;
+	}
+
+	return len;
+}
 
 void bootloader_second_phase(void)
 {
@@ -47,6 +86,7 @@ void bootloader_second_phase(void)
 	int kernel = 0;
 	const struct board_variant * board_variant =
 					      (this_board->get_board_variant)();
+	unsigned int initramfs_len = 0;
 
 	/* we try the possible kernels for this board in order */
 
@@ -124,40 +164,11 @@ void bootloader_second_phase(void)
 			partition_offset_blocks =
 				  this_kernel->offset_blocks512_if_no_partition;
 
-		switch (this_kernel->filesystem) {
-		case FS_EXT2:
-			if (!ext2fs_mount()) {
-				puts("Unable to mount ext2 filesystem\n");
-				this_kernel = &this_board->
-							kernel_source[kernel++];
-				continue;
-			}
-			puts("    EXT2 open: ");
-			puts(this_kernel->filepath);
-			puts("\n");
-			if (ext2fs_open(this_kernel->filepath) < 0) {
-				puts("Open failed\n");
-				this_kernel = &this_board->
-							kernel_source[kernel++];
-				continue;
-			}
-			ext2fs_read(kernel_dram, 4096);
-			break;
+		/* pull the kernel image */
 
-		case FS_FAT:
-			/* FIXME */
-		case FS_RAW:
-			puts("     RAW open: +");
-			printdec(partition_offset_blocks);
-			puts(" 512-byte blocks\n");
-			if (this_kernel->block_read(kernel_dram,
-					      partition_offset_blocks, 8) < 0) {
-				puts ("Bad kernel header\n");
-				this_kernel = &this_board->
-							kernel_source[kernel++];
-				continue;
-			}
-			break;
+		if (read_file(this_kernel->filepath, kernel_dram, 4096) < 0) {
+			this_kernel = &this_board->kernel_source[kernel++];
+			continue;
 		}
 
 		hdr = (image_header_t *)kernel_dram;
@@ -179,24 +190,22 @@ void bootloader_second_phase(void)
 		kernel_size = ((__be32_to_cpu(hdr->ih_size) +
 				  sizeof(image_header_t) + 2048) & ~(2048 - 1));
 
-		switch (this_kernel->filesystem) {
-		case FS_EXT2:
-			/* This read API always restarts from beginning */
-			ext2fs_read(kernel_dram, kernel_size);
-			break;
+		if (read_file(this_kernel->filepath, kernel_dram,
+							     kernel_size) < 0) {
+			this_kernel = &this_board->kernel_source[kernel++];
+			continue;
+		}
 
-		case FS_FAT:
-			/* FIXME */
-		case FS_RAW:
-			if ((this_kernel->block_read)(
-				kernel_dram, partition_offset_blocks,
-						kernel_size >> 9) < 0) {
-				puts ("Bad kernel read\n");
-				this_kernel = &this_board->
-							kernel_source[kernel++];
+		/* initramfs if needed */
+
+		if (this_kernel->initramfs_filepath) {
+			initramfs_len = read_file(this_kernel->initramfs_filepath,
+			    (u8 *)this_board->linux_mem_start + INITRD_OFFSET, 16 * 1024 * 1024);
+			if (initramfs_len < 0) {
+				puts("initramfs load failed\n");
+				this_kernel = &this_board->kernel_source[kernel++];
 				continue;
 			}
-			break;
 		}
 
 		puts("      Cmdline: ");
@@ -243,6 +252,16 @@ void bootloader_second_phase(void)
 		params->u.mem.start = this_board->linux_mem_start;
 		params->u.mem.size = this_board->linux_mem_size;
 		params = tag_next(params);
+
+		if (this_kernel->initramfs_filepath) {
+			/* INITRD2 tag */
+			params->hdr.tag = ATAG_INITRD2;
+			params->hdr.size = tag_size (tag_initrd);
+			params->u.initrd.start = this_board->linux_mem_start +
+							      INITRD_OFFSET;
+			params->u.initrd.size = initramfs_len;
+			params = tag_next(params);
+		}
 
 		/* kernel commandline */
 

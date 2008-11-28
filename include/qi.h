@@ -46,6 +46,7 @@ enum filesystem {
 struct kernel_source {
 	const char *name; /* NULL name means invalid */
 	const char *filepath;
+	const char *initramfs_filepath;
 	int (*block_init)(void);
 	int (*block_read)(unsigned char * buf, unsigned long start512,
 							       int blocks512);
