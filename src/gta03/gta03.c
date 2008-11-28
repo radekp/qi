@@ -156,7 +156,7 @@ void port_init_gta03(void)
 	*MPLLCON = ((169 << 12) + (2 << 4) + 1);
 
 
-	serial_init_115200_s3c24xx(GTA03_DEBUG_UART, 50 /*MHz PCLK */);
+	serial_init_115200_s3c24xx(GTA03_DEBUG_UART, 66 /*MHz PCLK */);
 }
 
 /**
