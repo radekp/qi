@@ -18,6 +18,10 @@ static const struct board_variant board_variants[] = {
 
 void port_init_gta03(void)
 {
+	unsigned int * MPLLCON = (unsigned int *)0x4c000004;
+	unsigned int * UPLLCON = (unsigned int *)0x4c000008;
+	unsigned int * CLKDIVN = (unsigned int *)0x4c000014;
+
 	//CAUTION:Follow the configuration order for setting the ports.
 	// 1) setting value(GPnDAT)
 	// 2) setting control register  (GPnCON)
@@ -116,7 +120,34 @@ void port_init_gta03(void)
 	rGPJCON = 0x02AAAAAA;
 	rGPJUP = 0x1FFFF;
 
-	serial_init_115200_s3c24xx(GTA03_DEBUG_UART, 33 /*MHz PCLK */);
+	/*
+	 * We have to talk to the PMU a little bit
+	 */
+
+	/* push DOWN1 (CPU Core rail) to 1.7V, allowing 533MHz */
+	i2c_write_sync(&bb_s3c24xx, PCF50633_I2C_ADS, 0x1e, 0x2b);
+
+	/* change CPU clocking to 533MHz 1:4:8 */
+
+	/* clock divide 1:4:8 - do it first */
+	*CLKDIVN = 5;
+	/* configure UPLL */
+	*UPLLCON = ((88 << 12) + (4 << 4) + 2);
+	/* Magic delay: Page 7-19, seven nops between UPLL and MPLL */
+	asm __volatile__ (
+		"nop\n"\
+		"nop\n"\
+		"nop\n"\
+		"nop\n"\
+		"nop\n"\
+		"nop\n"\
+		"nop\n"\
+	);
+	/* configure MPLL */
+	*MPLLCON = ((169 << 12) + (2 << 4) + 1);
+
+
+	serial_init_115200_s3c24xx(GTA03_DEBUG_UART, 50 /*MHz PCLK */);
 }
 
 /**
