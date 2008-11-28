@@ -49,6 +49,22 @@ static enum card_type card_type = CARDTYPE_NONE;
 
 int mmc_read(unsigned long src, u8 *dst, int size);
 
+#define UNSTUFF_BITS(resp,start,size)                                   \
+        ({                                                              \
+                const int __size = size;                                \
+                const u32 __mask = (__size < 32 ? 1 << __size : 0) - 1; \
+                const int __off = 3 - ((start) / 32);                   \
+                const int __shft = (start) & 31;                        \
+                u32 __res;                                              \
+                                                                        \
+                __res = resp[__off] >> __shft;                          \
+                if (__size + __shft > 32)                               \
+                        __res |= resp[__off-1] << ((32 - __shft) & 31); \
+                __res & __mask;                                         \
+        })
+
+
+
 int q;
 
 void udelay(int n)
@@ -578,7 +594,7 @@ static void print_sd_cid(const struct sd_cid *cid)
 
 int mmc_init(int verbose)
 {
-	int retries = 16, rc = -1;
+	int retries = 50, rc = -1;
 	int resp;
 	u8 response[16];
 //	mmc_cid_t *mmc_cid = (mmc_cid_t *)response;
@@ -774,9 +790,18 @@ int mmc_init(int verbose)
 //		mmc_dev.blksz = 512;
 //		mmc_dev.lba = (((unsigned long)1 << csd->c_size_mult1) *
 //				(unsigned long)csd->c_size) >> 9;
-		puts("  MMC/SD size: ");
-		printdec((((unsigned long)1 << csd->c_size_mult1) *
-				(unsigned long)csd->c_size) >> 10);
+
+		switch (card_type) {
+		case CARDTYPE_SDHC:
+			puts("    SDHC size: ");
+			printdec((UNSTUFF_BITS(((u32 *)&response[0]), 48, 22)
+								    + 1) / 2);
+			break;
+		default:
+			puts("  MMC/SD size: ");
+			printdec((((unsigned long)1 << csd->c_size_mult1) *
+					(unsigned long)(csd->c_size)) >> 10);
+		}
 		puts(" MiB\n");
 	}
 
