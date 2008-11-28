@@ -199,7 +199,7 @@ start_code:
 	str	r1, [r0]
 
 	ldr	r0, =0x7f0081a0		@ SPCON[1:0] = 01
-	mov	r1, =0xbfc11501
+	ldr	r1, =0xbfc11501
 	str	r1, [r0]
 
 	/* SDRAM */
