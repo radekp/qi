@@ -60,7 +60,7 @@ const struct board_api board_api_gta03 = {
 	.noboot = "boot/noboot-GTA03",
 	.append = "boot/append-GTA03",
 	.commandline_board = "console=ttySAC3,115200 " \
-			     "init=/bin/sh " \
+			     "init=/sbin/init " \
 			     "loglevel=8 ",
 	.kernel_source = {
 		[0] = {
