@@ -21,13 +21,13 @@
  * MA 02111-1307 USA
  */
 
-#ifndef _MMC_H_
-#define _MMC_H_
-#include <asm/arch/mmc.h>
+#ifndef _S3C24XX_MMC_H_
+#define _S3C24XX_MMC_H_
+#include <mmc.h>
 
-int mmc_init(int verbose);
-int mmc_read(ulong src, uchar *dst, int size);
-int mmc_write(uchar *src, ulong dst, int size);
-int mmc2info(ulong addr);
+int s3c24xx_mmc_init(int verbose);
+u32 s3c24xx_mmc_bread(int dev_num, u32 blknr, u32 blkcnt, void *dst);
+int s3c24xx_mmc_read(u32 src, u8 *dst, int size);
+int s3c24xx_mmc_write(u8 *src, u32 dst, int size);
 
 #endif /* _MMC_H_ */

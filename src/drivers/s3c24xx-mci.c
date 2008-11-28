@@ -1,5 +1,8 @@
-#if 0
 /*
+ * qi s3c24xx SD card driver
+ * Author: Andy Green <andy@openmoko.com>
+ * based on ---->
+ *
  * u-boot S3C2410 MMC/SD card driver
  * (C) Copyright 2006 by OpenMoko, Inc.
  * Author: Harald Welte <laforge@openmoko.org>
@@ -23,32 +26,51 @@
  * MA 02111-1307 USA
  */
 
-#include <config.h>
-#include <common.h>
+#include <qi.h>
 #include <mmc.h>
-#include <asm/io.h>
-#include <s3c2410.h>
-#include <part.h>
-#include <fat.h>
+#include <s3c24xx-regs-sdi.h>
+#include <string.h>
 
-#if defined(CONFIG_MMC) && defined(CONFIG_MMC_S3C)
+#define SDICON (*(u32 *)0x5a000000)
+#define SDIPRE (*(u32 *)0x5a000004)
+#define SDICARG (*(u32 *)0x5a000008)
+#define SDICCON (*(u32 *)0x5a00000c)
+#define SDICSTA (*(u32 *)0x5a000010)
+#define SDIRSP0 (*(u32 *)0x5a000014)
+#define SDIRSP1 (*(u32 *)0x5a000018)
+#define SDIRSP2 (*(u32 *)0x5a00001c)
+#define SDIRSP3 (*(u32 *)0x5a000020)
+#define SDIDTIMER (*(u32 *)0x5a000024)
+#define SDIBSIZE (*(u32 *)0x5a000028)
+#define SDIDCON (*(u32 *)0x5a00002c)
+#define SDIDCNT (*(u32 *)0x5a000030)
+#define SDIDSTA (*(u32 *)0x5a000034)
+#define SDIFSTA (*(u32 *)0x5a000038)
+/* s3c2410 in GTA01 has these two last ones the other way around!!! */
+#define SDIIMSK (*(u32 *)0x5a00003c)
+#define SDIDAT (*(u32 *)0x5a000040)
+#define SDIDAT2410 (*(u32 *)0x5a00003c)
+#define SDIIMSK2410 (*(u32 *)0x5a000040)
+
+#define CFG_MMC_BASE		0xff000000
+
+/* FIXME: anyone who wants to use this on GTA01 / s3c2410 need to
+ * have this return 1 on that CPU
+ */
+
+int am_i_s3c2410(void)
+{
+	return 0;
+}
 
 #define CONFIG_MMC_WIDE
-
-static S3C2410_SDI *sdi;
-
-static block_dev_desc_t mmc_dev;
-
-block_dev_desc_t * mmc_get_dev(int dev)
-{
-	return ((block_dev_desc_t *)&mmc_dev);
-}
+#define MMC_BLOCK_SIZE 512
 
 /*
  * FIXME needs to read cid and csd info to determine block size
  * and other parameters
  */
-static uchar mmc_buf[MMC_BLOCK_SIZE];
+static u8 mmc_buf[MMC_BLOCK_SIZE];
 static mmc_csd_t mmc_csd;
 static int mmc_ready = 0;
 static int wide = 0;
@@ -57,22 +79,22 @@ static int wide = 0;
 #define CMD_F_RESP	0x01
 #define CMD_F_RESP_LONG	0x02
 
-static u_int32_t *mmc_cmd(ushort cmd, ulong arg, ushort flags)
+static u32 *mmc_cmd(u16 cmd, u32 arg, u16 flags)
 {
-	static u_int32_t resp[5];
+	static u32 resp[5];
 
-	u_int32_t ccon, csta;
-	u_int32_t csta_rdy_bit = S3C2410_SDICMDSTAT_CMDSENT;
+	u32 ccon, csta;
+	u32 csta_rdy_bit = S3C2410_SDICMDSTAT_CMDSENT;
 
 	memset(resp, 0, sizeof(resp));
 
-	debug("mmc_cmd CMD%d arg=0x%08x flags=%x\n", cmd, arg, flags);
+//	debug("mmc_cmd CMD%d arg=0x%08x flags=%x\n", cmd, arg, flags);
 
-	sdi->SDICSTA = 0xffffffff;
-	sdi->SDIDSTA = 0xffffffff;
-	sdi->SDIFSTA = 0xffffffff;
+	SDICSTA = 0xffffffff;
+	SDIDSTA = 0xffffffff;
+	SDIFSTA = 0xffffffff;
 
-	sdi->SDICARG = arg;
+	SDICARG = arg;
 
 	ccon = cmd & S3C2410_SDICMDCON_INDEX;
 	ccon |= S3C2410_SDICMDCON_SENDERHOST|S3C2410_SDICMDCON_CMDSTART;
@@ -85,51 +107,51 @@ static u_int32_t *mmc_cmd(ushort cmd, ulong arg, ushort flags)
 	if (flags & CMD_F_RESP_LONG)
 		ccon |= S3C2410_SDICMDCON_LONGRSP;
 
-	sdi->SDICCON = ccon;
+	SDICCON = ccon;
 
 	while (1) {
-		csta = sdi->SDICSTA;
+		csta = SDICSTA;
 		if (csta & csta_rdy_bit)
 			break;
 		if (csta & S3C2410_SDICMDSTAT_CMDTIMEOUT) {
-			printf("===============> MMC CMD Timeout\n");
-			sdi->SDICSTA |= S3C2410_SDICMDSTAT_CMDTIMEOUT;
+			puts("===============> MMC CMD Timeout\n");
+			SDICSTA |= S3C2410_SDICMDSTAT_CMDTIMEOUT;
 			break;
 		}
 	}
 
-	debug("final MMC CMD status 0x%x\n", csta);
+//	debug("final MMC CMD status 0x%x\n", csta);
 
-	sdi->SDICSTA |= csta_rdy_bit;
+	SDICSTA |= csta_rdy_bit;
 
 	if (flags & CMD_F_RESP) {
-		resp[0] = sdi->SDIRSP0;
-		resp[1] = sdi->SDIRSP1;
-		resp[2] = sdi->SDIRSP2;
-		resp[3] = sdi->SDIRSP3;
+		resp[0] = SDIRSP0;
+		resp[1] = SDIRSP1;
+		resp[2] = SDIRSP2;
+		resp[3] = SDIRSP3;
 	}
 
 	return resp;
 }
 
-#define FIFO_FILL(host) ((host->SDIFSTA & S3C2410_SDIFSTA_COUNTMASK) >> 2)
+#define FIFO_FILL() ((SDIFSTA & S3C2410_SDIFSTA_COUNTMASK) >> 2)
 
-static int mmc_block_read(uchar *dst, ulong src, ulong len)
+static int mmc_block_read(u8 *dst, u32 src, u32 len)
 {
-	u_int32_t dcon, fifo;
-	u_int32_t *dst_u32 = (u_int32_t *)dst;
-	u_int32_t *resp;
+	u32 dcon, fifo;
+	u32 *dst_u32 = (u32 *)dst;
+	u32 *resp;
 
 	if (len == 0)
 		return 0;
 
-	debug("mmc_block_rd dst %lx src %lx len %d\n", (ulong)dst, src, len);
+//	debug("mmc_block_rd dst %lx src %lx len %d\n", (u32)dst, src, len);
 
 	/* set block len */
 	resp = mmc_cmd(MMC_CMD_SET_BLOCKLEN, len, CMD_F_RESP);
-	sdi->SDIBSIZE = len;
+	SDIBSIZE = len;
 
-	//sdi->SDIPRE = 0xff;
+	//SDIPRE = 0xff;
 
 	/* setup data */
 	dcon = (len >> 9) & S3C2410_SDIDCON_BLKNUM;
@@ -137,66 +159,82 @@ static int mmc_block_read(uchar *dst, ulong src, ulong len)
 	dcon |= S3C2410_SDIDCON_RXAFTERCMD|S3C2410_SDIDCON_XFER_RXSTART;
 	if (wide)
 		dcon |= S3C2410_SDIDCON_WIDEBUS;
-#if defined(CONFIG_S3C2440) || defined(CONFIG_S3C2442)
-	dcon |= S3C2440_SDIDCON_DS_WORD | S3C2440_SDIDCON_DATSTART;
-#endif
-	sdi->SDIDCON = dcon;
+
+	if (!am_i_s3c2410())
+		dcon |= S3C2440_SDIDCON_DS_WORD | S3C2440_SDIDCON_DATSTART;
+
+	SDIDCON = dcon;
 
 	/* send read command */
 	resp = mmc_cmd(MMC_CMD_READ_BLOCK, src, CMD_F_RESP);
 
 	while (len > 0) {
-		u_int32_t sdidsta = sdi->SDIDSTA;
-		fifo = FIFO_FILL(sdi);
+		u32 sdidsta = SDIDSTA;
+		fifo = FIFO_FILL();
 		if (sdidsta & (S3C2410_SDIDSTA_FIFOFAIL|
 				S3C2410_SDIDSTA_CRCFAIL|
 				S3C2410_SDIDSTA_RXCRCFAIL|
 				S3C2410_SDIDSTA_DATATIMEOUT)) {
-			printf("mmc_block_read: err SDIDSTA=0x%08x\n", sdidsta);
-			return -EIO;
+			puts("mmc_block_read: err SDIDSTA=0x");
+			print32(sdidsta);
+			puts("\n");
+			return -1;
 		}
 
-		while (fifo--) {
-			//debug("dst_u32 = 0x%08x\n", dst_u32);
-			*(dst_u32++) = sdi->SDIDAT;
-			if (len >= 4)
-				len -= 4;
-			else {
-				len = 0;
-				break;
+		if (am_i_s3c2410()) {
+			while (fifo--) {
+				//debug("dst_u32 = 0x%08x\n", dst_u32);
+				*(dst_u32++) = SDIDAT2410;
+				if (len >= 4)
+					len -= 4;
+				else {
+					len = 0;
+					break;
+				}
+			}
+		} else {
+			while (fifo--) {
+				//debug("dst_u32 = 0x%08x\n", dst_u32);
+				*(dst_u32++) = SDIDAT;
+				if (len >= 4)
+					len -= 4;
+				else {
+					len = 0;
+					break;
+				}
 			}
 		}
 	}
 
-	debug("waiting for SDIDSTA  (currently 0x%08x\n", sdi->SDIDSTA);
-	while (!(sdi->SDIDSTA & (1 << 4))) {}
-	debug("done waiting for SDIDSTA (currently 0x%08x\n", sdi->SDIDSTA);
+//	debug("waiting for SDIDSTA  (currently 0x%08x\n", SDIDSTA);
+	while (!(SDIDSTA & (1 << 4))) {}
+//	debug("done waiting for SDIDSTA (currently 0x%08x\n", SDIDSTA);
 
-	sdi->SDIDCON = 0;
+	SDIDCON = 0;
 
-	if (!(sdi->SDIDSTA & S3C2410_SDIDSTA_XFERFINISH))
-		debug("mmc_block_read; transfer not finished!\n");
+	if (!(SDIDSTA & S3C2410_SDIDSTA_XFERFINISH))
+		puts("mmc_block_read; transfer not finished!\n");
 
 	return 0;
 }
 
-static int mmc_block_write(ulong dst, uchar *src, int len)
+static int mmc_block_write(u32 dst, u8 *src, int len)
 {
-	printf("MMC block write not yet supported on S3C2410!\n");
+	puts("MMC block write not yet supported on S3C2410!\n");
 	return -1;
 }
 
 
-int mmc_read(ulong src, uchar *dst, int size)
+int  s3c24xx_mmc_read(u32 src, u8 *dst, int size)
 {
-	ulong end, part_start, part_end, part_len, aligned_start, aligned_end;
-	ulong mmc_block_size, mmc_block_address;
+	u32 end, part_start, part_end, part_len, aligned_start, aligned_end;
+	u32 mmc_block_size, mmc_block_address;
 
 	if (size == 0)
 		return 0;
 
 	if (!mmc_ready) {
-		printf("Please initialize the MMC first\n");
+		puts("Please initialize the MMC first\n");
 		return -1;
 	}
 
@@ -211,12 +249,12 @@ int mmc_read(ulong src, uchar *dst, int size)
 	aligned_end = mmc_block_address & end;
 
 	/* all block aligned accesses */
-	debug("src %lx dst %lx end %lx pstart %lx pend %lx astart %lx aend %lx\n",
-	src, (ulong)dst, end, part_start, part_end, aligned_start, aligned_end);
+//	debug("src %lx dst %lx end %lx pstart %lx pend %lx astart %lx aend %lx\n",
+//	src, (u32)dst, end, part_start, part_end, aligned_start, aligned_end);
 	if (part_start) {
 		part_len = mmc_block_size - part_start;
-		debug("ps src %lx dst %lx end %lx pstart %lx pend %lx astart %lx aend %lx\n",
-		src, (ulong)dst, end, part_start, part_end, aligned_start, aligned_end);
+//		debug("ps src %lx dst %lx end %lx pstart %lx pend %lx astart %lx aend %lx\n",
+//		src, (u32)dst, end, part_start, part_end, aligned_start, aligned_end);
 		if ((mmc_block_read(mmc_buf, aligned_start, mmc_block_size)) < 0)
 			return -1;
 
@@ -224,19 +262,19 @@ int mmc_read(ulong src, uchar *dst, int size)
 		dst += part_len;
 		src += part_len;
 	}
-	debug("src %lx dst %lx end %lx pstart %lx pend %lx astart %lx aend %lx\n",
-	src, (ulong)dst, end, part_start, part_end, aligned_start, aligned_end);
+//	debug("src %lx dst %lx end %lx pstart %lx pend %lx astart %lx aend %lx\n",
+//	src, (u32)dst, end, part_start, part_end, aligned_start, aligned_end);
 	for (; src < aligned_end; src += mmc_block_size, dst += mmc_block_size) {
-		debug("al src %lx dst %lx end %lx pstart %lx pend %lx astart %lx aend %lx\n",
-		src, (ulong)dst, end, part_start, part_end, aligned_start, aligned_end);
-		if ((mmc_block_read((uchar *)(dst), src, mmc_block_size)) < 0)
+//		debug("al src %lx dst %lx end %lx pstart %lx pend %lx astart %lx aend %lx\n",
+//		src, (u32)dst, end, part_start, part_end, aligned_start, aligned_end);
+		if ((mmc_block_read((u8 *)(dst), src, mmc_block_size)) < 0)
 			return -1;
 	}
-	debug("src %lx dst %lx end %lx pstart %lx pend %lx astart %lx aend %lx\n",
-	src, (ulong)dst, end, part_start, part_end, aligned_start, aligned_end);
+//	debug("src %lx dst %lx end %lx pstart %lx pend %lx astart %lx aend %lx\n",
+//	src, (u32)dst, end, part_start, part_end, aligned_start, aligned_end);
 	if (part_end && src < end) {
-		debug("pe src %lx dst %lx end %lx pstart %lx pend %lx astart %lx aend %lx\n",
-		src, (ulong)dst, end, part_start, part_end, aligned_start, aligned_end);
+//		debug("pe src %lx dst %lx end %lx pstart %lx pend %lx astart %lx aend %lx\n",
+//		src, (u32)dst, end, part_start, part_end, aligned_start, aligned_end);
 		if ((mmc_block_read(mmc_buf, aligned_end, mmc_block_size)) < 0)
 			return -1;
 
@@ -245,16 +283,16 @@ int mmc_read(ulong src, uchar *dst, int size)
 	return 0;
 }
 
-int mmc_write(uchar *src, ulong dst, int size)
+int s3c24xx_mmc_write(u8 *src, u32 dst, int size)
 {
-	ulong end, part_start, part_end, part_len, aligned_start, aligned_end;
-	ulong mmc_block_size, mmc_block_address;
+	u32 end, part_start, part_end, part_len, aligned_start, aligned_end;
+	u32 mmc_block_size, mmc_block_address;
 
 	if (size == 0)
 		return 0;
 
 	if (!mmc_ready) {
-		printf("Please initialize the MMC first\n");
+		puts("Please initialize the MMC first\n");
 		return -1;
 	}
 
@@ -269,12 +307,12 @@ int mmc_write(uchar *src, ulong dst, int size)
 	aligned_end = mmc_block_address & end;
 
 	/* all block aligned accesses */
-	debug("src %lx dst %lx end %lx pstart %lx pend %lx astart %lx aend %lx\n",
-	src, (ulong)dst, end, part_start, part_end, aligned_start, aligned_end);
+//	debug("src %lx dst %lx end %lx pstart %lx pend %lx astart %lx aend %lx\n",
+//	src, (u32)dst, end, part_start, part_end, aligned_start, aligned_end);
 	if (part_start) {
 		part_len = mmc_block_size - part_start;
-		debug("ps src %lx dst %lx end %lx pstart %lx pend %lx astart %lx aend %lx\n",
-		(ulong)src, dst, end, part_start, part_end, aligned_start, aligned_end);
+//		debug("ps src %lx dst %lx end %lx pstart %lx pend %lx astart %lx aend %lx\n",
+//		(u32)src, dst, end, part_start, part_end, aligned_start, aligned_end);
 		if ((mmc_block_read(mmc_buf, aligned_start, mmc_block_size)) < 0)
 			return -1;
 
@@ -285,20 +323,20 @@ int mmc_write(uchar *src, ulong dst, int size)
 		dst += part_len;
 		src += part_len;
 	}
-	debug("src %lx dst %lx end %lx pstart %lx pend %lx astart %lx aend %lx\n",
-	src, (ulong)dst, end, part_start, part_end, aligned_start, aligned_end);
+//	debug("src %lx dst %lx end %lx pstart %lx pend %lx astart %lx aend %lx\n",
+//	src, (u32)dst, end, part_start, part_end, aligned_start, aligned_end);
 	for (; dst < aligned_end; src += mmc_block_size, dst += mmc_block_size) {
-		debug("al src %lx dst %lx end %lx pstart %lx pend %lx astart %lx aend %lx\n",
-		src, (ulong)dst, end, part_start, part_end, aligned_start, aligned_end);
-		if ((mmc_block_write(dst, (uchar *)src, mmc_block_size)) < 0)
+//		debug("al src %lx dst %lx end %lx pstart %lx pend %lx astart %lx aend %lx\n",
+//		src, (u32)dst, end, part_start, part_end, aligned_start, aligned_end);
+		if ((mmc_block_write(dst, (u8 *)src, mmc_block_size)) < 0)
 			return -1;
 
 	}
-	debug("src %lx dst %lx end %lx pstart %lx pend %lx astart %lx aend %lx\n",
-	src, (ulong)dst, end, part_start, part_end, aligned_start, aligned_end);
+//	debug("src %lx dst %lx end %lx pstart %lx pend %lx astart %lx aend %lx\n",
+//	src, (u32)dst, end, part_start, part_end, aligned_start, aligned_end);
 	if (part_end && dst < end) {
-		debug("pe src %lx dst %lx end %lx pstart %lx pend %lx astart %lx aend %lx\n",
-		src, (ulong)dst, end, part_start, part_end, aligned_start, aligned_end);
+//		debug("pe src %lx dst %lx end %lx pstart %lx pend %lx astart %lx aend %lx\n",
+//		src, (u32)dst, end, part_start, part_end, aligned_start, aligned_end);
 		if ((mmc_block_read(mmc_buf, aligned_end, mmc_block_size)) < 0)
 			return -1;
 
@@ -310,12 +348,12 @@ int mmc_write(uchar *src, ulong dst, int size)
 	return 0;
 }
 
-ulong mmc_bread(int dev_num, ulong blknr, ulong blkcnt, void *dst)
+u32 s3c24xx_mmc_bread(int dev_num, u32 blknr, u32 blkcnt, void *dst)
 {
 	int mmc_block_size = MMC_BLOCK_SIZE;
-	ulong src = blknr * mmc_block_size + CFG_MMC_BASE;
+	u32 src = blknr * mmc_block_size + CFG_MMC_BASE;
 
-	mmc_read(src, dst, blkcnt*mmc_block_size);
+	s3c24xx_mmc_read(src, dst, blkcnt*mmc_block_size);
 	return blkcnt;
 }
 
@@ -323,9 +361,10 @@ ulong mmc_bread(int dev_num, ulong blknr, ulong blkcnt, void *dst)
    that expects it to be shifted. */
 static u_int16_t rca = MMC_DEFAULT_RCA >> 16;
 
-static u_int32_t mmc_size(const struct mmc_csd *csd)
+#if 0
+static u32 mmc_size(const struct mmc_csd *csd)
 {
-	u_int32_t block_len, mult, blocknr;
+	u32 block_len, mult, blocknr;
 
 	block_len = csd->read_bl_len << 12;
 	mult = csd->c_size_mult1 << 8;
@@ -333,6 +372,7 @@ static u_int32_t mmc_size(const struct mmc_csd *csd)
 
 	return blocknr * block_len;
 }
+#endif
 
 struct sd_cid {
 	char		pnm_0;	/* product name */
@@ -355,71 +395,92 @@ struct sd_cid {
 
 static void print_mmc_cid(mmc_cid_t *cid)
 {
-	printf("MMC found. Card desciption is:\n");
-	printf("Manufacturer ID = %02x%02x%02x\n",
-		cid->id[0], cid->id[1], cid->id[2]);
-	printf("HW/FW Revision = %x %x\n",cid->hwrev, cid->fwrev);
+	puts("MMC found. Card desciption is:\n");
+	puts("Manufacturer ID = ");
+	print8(cid->id[0]);
+	print8(cid->id[1]);
+	print8(cid->id[2]);
+	puts("\nHW/FW Revision = ");
+	print8(cid->hwrev);
+	print8(cid->fwrev);
 	cid->hwrev = cid->fwrev = 0;	/* null terminate string */
-	printf("Product Name = %s\n",cid->name);
-	printf("Serial Number = %02x%02x%02x\n",
-		cid->sn[0], cid->sn[1], cid->sn[2]);
-	printf("Month = %d\n",cid->month);
-	printf("Year = %d\n",1997 + cid->year);
+	puts("Product Name = ");
+	puts((char *)cid->name);
+	puts("\nSerial Number = ");
+	print8(cid->sn[0]);
+	print8(cid->sn[1]);
+	print8(cid->sn[2]);
+	puts("\nMonth = ");
+	printdec(cid->month);
+	puts("\nYear = ");
+	printdec(1997 + cid->year);
+	puts("\n");
 }
 
 static void print_sd_cid(const struct sd_cid *cid)
 {
-	printf("Manufacturer:       0x%02x, OEM \"%c%c\"\n",
-	    cid->mid, cid->oid_0, cid->oid_1);
-	printf("Product name:       \"%c%c%c%c%c\", revision %d.%d\n",
-	    cid->pnm_0, cid->pnm_1, cid->pnm_2, cid->pnm_3, cid->pnm_4,
-	    cid->prv >> 4, cid->prv & 15);
-	printf("Serial number:      %u\n",
-	    cid->psn_0 << 24 | cid->psn_1 << 16 | cid->psn_2 << 8 |
+	puts("Manufacturer:       0x");
+	print8(cid->mid);
+	puts("OEM \"");
+	this_board->putc(cid->oid_0);
+	this_board->putc(cid->oid_1);
+	puts("\"\nProduct name:       \"");
+	this_board->putc(cid->pnm_0);
+	this_board->putc(cid->pnm_1);
+	this_board->putc(cid->pnm_2);
+	this_board->putc(cid->pnm_3);
+	this_board->putc(cid->pnm_4);
+	puts("\", revision ");
+	printdec(cid->prv >> 4);
+	puts(".");
+	printdec(cid->prv & 15);
+	puts("\nSerial number:      ");
+	printdec(cid->psn_0 << 24 | cid->psn_1 << 16 | cid->psn_2 << 8 |
 	    cid->psn_3);
-	printf("Manufacturing date: %d/%d\n",
-	    cid->mdt_1 & 15,
-	    2000+((cid->mdt_0 & 15) << 4)+((cid->mdt_1 & 0xf0) >> 4));
-	printf("CRC:                0x%02x, b0 = %d\n",
-	    cid->crc >> 1, cid->crc & 1);
+	puts("\nManufacturing date: ");
+	printdec(cid->mdt_1 & 15);
+	puts("/");
+	printdec(2000+((cid->mdt_0 & 15) << 4)+((cid->mdt_1 & 0xf0) >> 4));
+	puts("\nCRC:                0x");
+	print8(cid->crc >> 1);
+	puts(" b0 = ");
+	print8(cid->crc & 1);
+	puts("\n");
 }
 
-int mmc_init(int verbose)
+int s3c24xx_mmc_init(int verbose)
 {
- 	int retries, rc = -ENODEV;
+ 	int retries, rc = -2;
 	int is_sd = 0;
-	u_int32_t *resp;
-	S3C24X0_CLOCK_POWER * const clk_power = S3C24X0_GetBase_CLOCK_POWER();
+	u32 *resp;
 
-	sdi = S3C2410_GetBase_SDI();
+	SDICON = S3C2410_SDICON_FIFORESET | S3C2410_SDICON_CLOCKTYPE;
+	SDIBSIZE = 512;
+	if (am_i_s3c2410()) {
+		/* S3C2410 has some bug that prevents reliable operation at higher speed */
+		//SDIPRE = 0x3e;  /* SDCLK = PCLK/2 / (SDIPRE+1) = 396kHz */
+		SDIPRE = 0x02;  /* 2410: SDCLK = PCLK/2 / (SDIPRE+1) = 11MHz */
+		SDIDTIMER = 0xffff;
+		SDIIMSK2410 = 0x0;
+	} else {
+		SDIPRE = 0x05;  /* 2410: SDCLK = PCLK / (SDIPRE+1) = 11MHz */
+		SDIDTIMER = 0x7fffff;
+		SDIIMSK = 0x0;
+	}
 
-	debug("mmc_init(PCLK=%u)\n", get_PCLK());
-
-	clk_power->CLKCON |= (1 << 9);
-
-	sdi->SDIBSIZE = 512;
-#if defined(CONFIG_S3C2410)
-	/* S3C2410 has some bug that prevents reliable operation at higher speed */
-	//sdi->SDIPRE = 0x3e;  /* SDCLK = PCLK/2 / (SDIPRE+1) = 396kHz */
-	sdi->SDIPRE = 0x02;  /* 2410: SDCLK = PCLK/2 / (SDIPRE+1) = 11MHz */
-	sdi->SDIDTIMER = 0xffff;
-#elif defined(CONFIG_S3C2440) || defined(CONFIG_S3C2442)
-	sdi->SDIPRE = 0x05;  /* 2410: SDCLK = PCLK / (SDIPRE+1) = 11MHz */
-	sdi->SDIDTIMER = 0x7fffff;
-#endif
-	sdi->SDIIMSK = 0x0;
-	sdi->SDICON = S3C2410_SDICON_FIFORESET|S3C2410_SDICON_CLOCKTYPE;
-	udelay(125000); /* FIXME: 74 SDCLK cycles */
+	udelay(1250000); /* FIXME: 74 SDCLK cycles */
 
 	mmc_csd.c_size = 0;
+
+	puts("Sending reset...\n");
 
 	/* reset */
 	retries = 10;
 	resp = mmc_cmd(MMC_CMD_RESET, 0, 0);
 
-	printf("trying to detect SD Card...\n");
+	puts("trying to detect SD Card...\n");
 	while (retries--) {
-		udelay(100000);
+		udelay(1000000);
 		resp = mmc_cmd(55, 0x00000000, CMD_F_RESP);
 		resp = mmc_cmd(41, 0x00300000, CMD_F_RESP);
 
@@ -429,16 +490,8 @@ int mmc_init(int verbose)
 		}
 	}
 
-	if (retries == 0 && !is_sd) {
-		retries = 10;
-		printf("failed to detect SD Card, trying MMC\n");
-		resp = mmc_cmd(MMC_CMD_SEND_OP_COND, 0x00ffc000, CMD_F_RESP);
-		while (retries-- && resp && !(resp[4] & 0x80)) {
-			debug("resp %x %x\n", resp[0], resp[1]);
-			udelay(50);
-			resp = mmc_cmd(1, 0x00ffff00, CMD_F_RESP);
-		}
-	}
+	if (retries < 0 && !is_sd)
+		return -3;
 
 	/* try to get card id */
 	resp = mmc_cmd(MMC_CMD_ALL_SEND_CID, 0, CMD_F_RESP|CMD_F_RESP_LONG);
@@ -450,6 +503,7 @@ int mmc_init(int verbose)
 
 			if (verbose)
 				print_mmc_cid(cid);
+#if 0
 			sprintf((char *) mmc_dev.vendor,
 				"Man %02x%02x%02x Snr %02x%02x%02x",
 				cid->id[0], cid->id[1], cid->id[2],
@@ -457,12 +511,14 @@ int mmc_init(int verbose)
 			sprintf((char *) mmc_dev.product,"%s",cid->name);
 			sprintf((char *) mmc_dev.revision,"%x %x",
 				cid->hwrev, cid->fwrev);
+#endif
 		}
 		else {
 			struct sd_cid *cid = (struct sd_cid *) resp;
 
 			if (verbose)
 				print_sd_cid(cid);
+#if 0
 			sprintf((char *) mmc_dev.vendor,
 			    "Man %02 OEM %c%c \"%c%c%c%c%c\"",
 			    cid->mid, cid->oid_0, cid->oid_1,
@@ -473,19 +529,9 @@ int mmc_init(int verbose)
 			    cid->psn_2 << 8 | cid->psn_3);
 			sprintf((char *) mmc_dev.revision, "%d.%d",
 			    cid->prv >> 4, cid->prv & 15);
+#endif
 		}
 
-		/* fill in device description */
-		mmc_dev.if_type = IF_TYPE_MMC;
-		mmc_dev.part_type = PART_TYPE_DOS;
-		mmc_dev.dev = 0;
-		mmc_dev.lun = 0;
-		mmc_dev.type = 0;
-		/* FIXME fill in the correct size (is set to 32MByte) */
-		mmc_dev.blksz = 512;
-		mmc_dev.lba = 0x10000;
-		mmc_dev.removable = 0;
-		mmc_dev.block_read = mmc_bread;
 
 		/* MMC exists, get CSD too */
 		resp = mmc_cmd(MMC_CMD_SET_RCA, MMC_DEFAULT_RCA, CMD_F_RESP);
@@ -498,10 +544,12 @@ int mmc_init(int verbose)
 			memcpy(&mmc_csd, csd, sizeof(csd));
 			rc = 0;
 			mmc_ready = 1;
+#if 0
 			/* FIXME add verbose printout for csd */
 			printf("READ_BL_LEN=%u, C_SIZE_MULT=%u, C_SIZE=%u\n",
 				csd->read_bl_len, csd->c_size_mult1, csd->c_size);
 			printf("size = %u\n", mmc_size(csd));
+#endif
 		}
 	}
 
@@ -515,26 +563,7 @@ int mmc_init(int verbose)
 	}
 #endif
 
-	fat_register_device(&mmc_dev,1); /* partitions start counting with 1 */
-
 	return rc;
 }
 
-int
-mmc_ident(block_dev_desc_t *dev)
-{
-	return 0;
-}
 
-int
-mmc2info(ulong addr)
-{
-	/* FIXME hard codes to 32 MB device */
-	if (addr >= CFG_MMC_BASE && addr < CFG_MMC_BASE + 0x02000000)
-		return 1;
-
-	return 0;
-}
-
-#endif	/* defined(CONFIG_MMC) && defined(CONFIG_MMC_S3C) */
-#endif

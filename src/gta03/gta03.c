@@ -4,6 +4,7 @@
 #include <ports-s3c24xx.h>
 #include <i2c-bitbang-s3c24xx.h>
 #include <pcf50633.h>
+#include <s3c24xx-mci.h>
 
 #define GTA03_DEBUG_UART 2
 
@@ -215,6 +216,18 @@ static void putc_gta03(char c)
 	serial_putc_s3c24xx(GTA03_DEBUG_UART, c);
 }
 
+int sd_card_init_gta03(void)
+{
+	return s3c24xx_mmc_init(1);
+}
+
+int sd_card_block_read_gta03(unsigned char * buf, unsigned long start512,
+							       int blocks512)
+{
+	return s3c24xx_mmc_bread(0, start512, blocks512, buf);
+}
+
+
 
 /*
  * our API for bootloader on this machine
@@ -232,6 +245,28 @@ const struct board_api board_api_gta03 = {
 	/* these are the ways we could boot GTA03 in order to try */
 	.kernel_source = {
 		[0] = {
+			.name = "SD Card EXT2 Kernel",
+			.block_init = sd_card_init_gta03,
+			.block_read = sd_card_block_read_gta03,
+			.partition_index = 1,
+			.filesystem = FS_EXT2,
+			.filepath = "boot/uImage.bin",
+			.commandline = "mtdparts=physmap-flash:-(nor);" \
+					"neo1973-nand:" \
+					 "0x00040000(qi)," \
+					 "0x00040000(cmdline)," \
+					 "0x00800000(backupkernel)," \
+					 "0x000a0000(extra)," \
+					 "0x00040000(identity)," \
+					 "0x0f6a0000(backuprootfs) " \
+				       "rootfstype=ext2 " \
+				       "root=/dev/mmcblk0p1 " \
+				       "console=ttySAC2,115200 " \
+				       "loglevel=4 " \
+				       "init=/sbin/init "\
+				       "ro"
+		},
+		[1] = {
 			.name = "NAND Kernel",
 			.block_read = nand_read_ll,
 			.offset_blocks512_if_no_partition = 0x80000 / 512,

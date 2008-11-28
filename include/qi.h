@@ -98,6 +98,8 @@ void print8(unsigned char u);
 void print32(unsigned int u);
 void printdec(int n);
 void hexdump(unsigned char *start, int len);
+void udelay(int n);
+
 
 unsigned long crc32(unsigned long crc, const unsigned char *buf,
 							      unsigned int len);

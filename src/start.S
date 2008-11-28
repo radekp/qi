@@ -166,7 +166,7 @@ startup_2442:
 
 	/* enable only CPU peripheral block clocks we actually use */
 	ldr	r0, =0x4c00000c		/* clkcon */
-	ldr	r1, =0x3d10		/* uart, pwm, gpio, nand clocks on */
+	ldr	r1, =0x3f10	/* uart, pwm, gpio, nand, sdi clocks on */
 	str	r1, [r0]
 
 	/* gpio UART2 init, H port */

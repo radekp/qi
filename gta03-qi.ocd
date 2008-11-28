@@ -3,6 +3,7 @@
 
 reset halt
 wait_halt
+sleep 2000
 
 # bring the steppingstone part of qi image into steppingstone
 #
