@@ -188,7 +188,7 @@ unsigned long s3c6410_mmc_bread(int dev_num, unsigned long blknr, unsigned long 
  */
 const struct board_api board_api_tla01 = {
 	.name = "TLA01",
-	.linux_machine_id = 1304 /*1866*/,
+	.linux_machine_id = 1626 /*1866*/,
 	.linux_mem_start = 0x50000000,
 	.linux_mem_size = (128 * 1024 * 1024),
 	.linux_tag_placement = 0x50000000 + 0x100,
