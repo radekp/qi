@@ -115,7 +115,7 @@ void start_qi(void)
 								     void *dst);
 		sd_sectors = s3c6410_mmc_init(1);
 		s3c6410_mmc_bread(0, sd_sectors - 1026 - 16 - (256 * 2),
-						     256 * 2, (u8 *)0x53000000);
+						     32 * 2, (u8 *)0x53000000);
 	}
 
 	/* all of Qi is in memory now, stuff outside steppingstone too */
