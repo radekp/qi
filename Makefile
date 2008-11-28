@@ -84,6 +84,10 @@ ${UDFU_IMAGE}:${OBJS} ${MKUDFU}
 	@$(OBJDUMP) -d ${TARGET} >${IMAGE}.dis
 
 clean:
-	@rm -f src/*.o src/*~ src/cpu/*/*.o src/cpu/*/*~ src/drivers/*.o \
-		src/drivers/*~ src/fs/*.o src/fs/*~ include/*~ ${IMAGE_DIR}/*
+	@rm -f *~ src/*.o src/*~
+	@rm -f src/cpu/*/*.o src/cpu/*/*~
+	@rm -f src/drivers/*.o src/drivers/*~
+	@rm -f src/fs/*.o src/fs/*~
+	@rm -f include/*~ ${IMAGE_DIR}/*
 	@make clean -C $(TOOLS)
+
