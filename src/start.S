@@ -22,6 +22,11 @@
 #define __ASM_MODE__
 #include <neo_gta02.h>
 
+#define S3C2410_MISCCR_nEN_SCLK0    (1 << 17)
+#define S3C2410_MISCCR_nEN_SCLK1    (1 << 18)
+#define S3C2410_MISCCR_nEN_SCLKE    (1 << 19)
+
+
 .globl _start
 _start:	b       start_code
 /* if we are injected by JTAG, the script sets _istag content to nonzero */
@@ -168,8 +173,6 @@ start_code:
 	ldr	r1, =0x54
 	str	r1, [r0, #0x20]
 
-	bl	cpu_init_crit
-
 /* reset nand controller, or it is dead to us */
 
         mov     r1, #0x4E000000
@@ -181,6 +184,57 @@ start_code:
         ldr     r3, [r1, #4]
         orr     r3, r3, #1              @ enable nand controller
         str     r3, [r1, #4]
+
+
+	/* take sdram out of power down */
+	ldr	r0, =0x56000080		/* misccr */
+	ldr	r1, [ r0 ]
+	bic	r1, r1, #(S3C2410_MISCCR_nEN_SCLK0 | S3C2410_MISCCR_nEN_SCLK1 | S3C2410_MISCCR_nEN_SCLKE)
+	str	r1, [ r0 ]
+
+	/* ensure signals stabalise */
+	mov	r1, #128
+1:	subs	r1, r1, #1
+	bpl	1b
+
+	bl	cpu_init_crit
+
+	/* ensure some refresh has happened */
+	ldr	r1, =0xfffff
+1:	subs	r1, r1, #1
+	bpl	1b
+
+	/* capture full EINT situation into gstatus 4 */
+
+	ldr	r0, =0x4A000000 /* SRCPND */
+	ldr	r1, [ r0 ]
+	and	r1, r1, #0xf
+
+	ldr	r0, =0x560000BC /* gstatus4 */
+	str	r1, [ r0 ]
+
+	ldr	r0, =0x560000A8 /* EINTPEND */
+	ldr	r1, [ r0 ]
+	ldr	r0, =0xfff0
+	and	r1, r1, r0
+	ldr	r0, =0x560000BC /* gstatus4 */
+	ldr     r0, [ r0 ]
+	orr	r1, r1, r0
+	ldr	r0, =0x560000BC /* gstatus4 */
+	str	r1, [ r0 ]
+
+	/* test for resume */
+
+	ldr	r1, =0x560000B4		/* gstatus2 */
+	ldr	r0, [ r1 ]
+	tst	r0, #0x02		/* is this resume from power down */
+					/* well, if it was, we are going to jump to
+					 * whatever address we stashed in gstatus3,
+					 * and gstatus4 will hold the wake interrupt
+					 * source for the OS to look at
+					 */
+	ldrne	pc, [r1, #4]
+
 
 								/* >> CFG_VIDEO_LOGO_MAX_SIZE */
 #define CFG_GBL_DATA_SIZE		128			/* size in bytes reserved for initial data */
