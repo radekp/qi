@@ -798,6 +798,11 @@ void port_init_gta03(void)
 		(0 << 30)   /* GPQ15 - no pull up or down */
 	;
 
+	/* LCD Controller enable */
+
+	__REG(0x7410800c) = 0;
+	__REG(0x7f0081a0) = 0xbfc11501;
+
 	/*
 	 * We have to talk to the PMU a little bit
 	 */

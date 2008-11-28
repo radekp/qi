@@ -192,16 +192,6 @@ start_code:
 	orr	r0, r0, #0x13
     	mcr	p15,0,r0,c15,c2,4       @ 256M(0x70000000-0x7fffffff)
 
-	/* LCD Controller enable */
-
-	ldr	r0, =0x7410800c		@ MIFPCON[3] = 0
-	mov	r1, #0
-	str	r1, [r0]
-
-	ldr	r0, =0x7f0081a0		@ SPCON[1:0] = 01
-	ldr	r1, =0xbfc11501
-	str	r1, [r0]
-
 	/* SDRAM */
 
 	ldr	r0, =ELFIN_MEM_SYS_CFG			@Memory sussystem address 0x7e00f120
