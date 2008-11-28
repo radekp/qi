@@ -221,7 +221,7 @@ static void putc_gta03(char c)
  */
 const struct board_api board_api_gta03 = {
 	.name = "GTA03",
-	.linux_machine_id = 1808,
+	.linux_machine_id = 1866,
 	.linux_mem_start = 0x30000000,
 	.linux_mem_size = (128 * 1024 * 1024),
 	.linux_tag_placement = 0x30000000 + 0x100,
@@ -236,7 +236,7 @@ const struct board_api board_api_gta03 = {
 			.block_read = nand_read_ll,
 			.offset_blocks512_if_no_partition = 0x80000 / 512,
 			.filesystem = FS_RAW,
-			.commandline = 	"neo1973-nand:" \
+			.commandline = 	"mtdparts=neo1973-nand:" \
 					 "0x00040000(qi)," \
 					 "0x00040000(cmdline)," \
 					 "0x00800000(backupkernel)," \
