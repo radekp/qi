@@ -29,7 +29,7 @@
 #include <malloc.h>
 #include <string.h>
 
-extern int ext2fs_devread(int sector, int byte_offset, int byte_len,
+extern int ext2fs_devread(int sector, int log2blksize, int byte_offset, int byte_len,
 			   char *buf);
 
 /* Magic value used to identify an ext2 filesystem.  */
@@ -193,8 +193,8 @@ static int ext2fs_blockgroup
 	puts("ext2fs read blockgroup\n");
 #endif
 	return ext2fs_devread
-		(((__le32_to_cpu(data->sblock.first_data_block) +
-		   1) << LOG2_EXT2_BLOCK_SIZE(data)),
+		((__le32_to_cpu(data->sblock.first_data_block) +
+		   1), LOG2_EXT2_BLOCK_SIZE(data),
 		 group * sizeof(struct ext2_block_group),
 		 sizeof(struct ext2_block_group),(char *) blkgrp);
 }
@@ -231,10 +231,11 @@ static int ext2fs_read_inode
 	puts("ext2fs read inode blkno %d blkoff %d\n", blkno, blkoff);
 #endif
 	/* Read the inode.  */
-	status = ext2fs_devread((__le32_to_cpu(blkgrp.inode_table_id) +
-				   blkno) << LOG2_EXT2_BLOCK_SIZE(data),
-				 ext2_inode_size * blkoff,
-				 sizeof(struct ext2_inode),(char *) inode);
+
+	status = ext2fs_devread(__le32_to_cpu(blkgrp.inode_table_id) + blkno,
+				LOG2_EXT2_BLOCK_SIZE(data),
+				ext2_inode_size * blkoff,
+				sizeof(struct ext2_inode), (char *)inode);
 
 	return !!status;
 }
@@ -284,7 +285,7 @@ static int ext2fs_read_block(ext2fs_node_t node, int fileblock) {
 		}
 		if ((__le32_to_cpu(inode->b.blocks.indir_block) <<
 		     log2_blksz) != indir1_blkno) {
-			status = ext2fs_devread(__le32_to_cpu(inode->b.blocks.indir_block) << log2_blksz,
+			status = ext2fs_devread(__le32_to_cpu(inode->b.blocks.indir_block), log2_blksz,
 						 0, blksz,
 						(char *) indir1_block);
 			if (status == 0) {
@@ -328,7 +329,7 @@ static int ext2fs_read_block(ext2fs_node_t node, int fileblock) {
 		}
 		if ((__le32_to_cpu(inode->b.blocks.double_indir_block) <<
 		     log2_blksz) != indir1_blkno) {
-			status = ext2fs_devread(__le32_to_cpu(inode->b.blocks.double_indir_block) << log2_blksz,
+			status = ext2fs_devread(__le32_to_cpu(inode->b.blocks.double_indir_block), log2_blksz,
 						0, blksz,
 						(char *) indir1_block);
 			if (status == 0) {
@@ -362,7 +363,7 @@ static int ext2fs_read_block(ext2fs_node_t node, int fileblock) {
 		}
 		if ((__le32_to_cpu(indir1_block[rblock / perblock]) <<
 		     log2_blksz) != indir1_blkno) {
-			status = ext2fs_devread(__le32_to_cpu(indir1_block[rblock / perblock]) << log2_blksz,
+			status = ext2fs_devread(__le32_to_cpu(indir1_block[rblock / perblock]), log2_blksz,
 						 0, blksz,
 						(char *) indir2_block);
 			if (status == 0) {
@@ -434,7 +435,7 @@ int ext2fs_read_file
 		if (blknr) {
 			int status;
 
-			status = ext2fs_devread(blknr, skipfirst, blockend, buf);
+			status = ext2fs_devread(blknr, 0 /* already accounted */, skipfirst, blockend, buf);
 			if (status == 0)
 				return -1;
 		} else
@@ -864,7 +865,7 @@ int ext2fs_mount(void) {
 		return 0;
 
 	/* Read the superblock.  */
-	status = ext2fs_devread(1 * 2, 0, sizeof(struct ext2_sblock),
+	status = ext2fs_devread(1 * 2, 0, 0, sizeof(struct ext2_sblock),
 				(char *) &data->sblock);
 	if (!status)
 		goto fail;

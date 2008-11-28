@@ -32,10 +32,12 @@ extern unsigned long partition_offset_blocks;
 extern unsigned long partition_length_blocks;
 
 
-int ext2fs_devread(int sector, int byte_offset, int byte_len, u8 *buf)
+int ext2fs_devread(int sector, int filesystem_block_log2, int byte_offset, int byte_len, u8 *buf)
 {
 	unsigned char sec_buf[SECTOR_SIZE];
 	unsigned block_len;
+
+	sector = sector << filesystem_block_log2;
 
 /*
  *  Check partition boundaries
