@@ -34,7 +34,7 @@ LDFLAGS =
 #START	= start.o lowlevel_init.o
 S_SRCS	= src/start.S src/lowlevel_init.S
 S_OBJS	= $(patsubst %.S,%.o, $(S_SRCS))
-C_SRCS	= $(wildcard src/*.c) $(wildcard src/gt*/*.c)
+C_SRCS	= $(wildcard src/*.c) $(wildcard src/gt*/*.c) $(wildcard src/drivers/*.c)
 C_OBJS	= $(patsubst %.c,%.o, $(C_SRCS))
 
 #SRCS	:= $(START: .o=.S) $(COBJS: .o=.c)
