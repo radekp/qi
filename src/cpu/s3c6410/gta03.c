@@ -34,8 +34,12 @@ const struct pcf50633_init gta03_pcf50633_init[] = {
 	{ PCF50633_REG_MBCC3,		0x19 },	/* 25/255 == 98mA pre-charge */
 	{ PCF50633_REG_MBCC4,		0xff }, /* 255/255 == 1A adapter fast */
 	{ PCF50633_REG_MBCC5,		0x19 },	/* 25/255 == 98mA soft-start usb fast */
+
 	{ PCF50633_REG_MBCC6,		0x00 }, /* cutoff current 1/32 * Ichg */
+#if 0
+	/* current prototype is pulling > 100mA at startup */
 	{ PCF50633_REG_MBCC7,		0x00 },	/* 1.6A max bat curr, USB 100mA */
+#endif
 	{ PCF50633_REG_MBCC8,		0x00 },
 	{ PCF50633_REG_MBCC1,		0xff }, /* chgena */
 
@@ -797,7 +801,6 @@ void port_init_gta03(void)
 	/*
 	 * We have to talk to the PMU a little bit
 	 */
-
 	for (n = 0; n < ARRAY_SIZE(gta03_pcf50633_init); n++)
 		i2c_write_sync(&bb_s3c6410, PCF50633_I2C_ADS,
 			       gta03_pcf50633_init[n].index,
