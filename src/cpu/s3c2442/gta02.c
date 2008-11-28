@@ -32,8 +32,8 @@
 #include <glamo-init.h>
 
 #define GTA02_DEBUG_UART 2
-
 #define PCF50633_I2C_ADS 0x73
+#define BOOST_TO_400MHZ 1
 
 struct pcf50633_init {
 	u8 index;
@@ -92,7 +92,7 @@ static const struct board_variant board_variants[] = {
 
 void port_init_gta02(void)
 {
-#if 0
+#if BOOST_TO_400MHZ
 	unsigned int * MPLLCON = (unsigned int *)0x4c000004;
 	unsigned int * UPLLCON = (unsigned int *)0x4c000008;
 	unsigned int * CLKDIVN = (unsigned int *)0x4c000014;
@@ -226,7 +226,7 @@ void port_init_gta02(void)
 		i2c_write_sync(&bb_s3c24xx, PCF50633_I2C_ADS,
 			       pcf50633_init[n].index, pcf50633_init[n].value);
 
-#if 0
+#if BOOST_TO_400MHZ
 	/* change CPU clocking to 400MHz 1:4:8 */
 
 	/* clock divide 1:4:8 - do it first */
