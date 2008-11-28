@@ -26,7 +26,7 @@ SIG=1
 
 FDISK_SCRIPT=/tmp/_fds
 
-if [ -z $1 -o -z $2 -o -z $3 ] ; then
+if [ -z "$1" -o -z "$2" -o -z "$3" ] ; then
   echo "This formats a SD card for usage on SD Card boot"
   echo "  on 6410 based systems"
   echo

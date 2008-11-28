@@ -30,10 +30,10 @@ CFLAGS	= -Wall -Werror -I $(INCLUDE) -g -c -Os -fno-strict-aliasing -mlong-calls
 	  -fno-common -ffixed-r8 -msoft-float -fno-builtin -ffreestanding \
 	  -march=armv4t -mno-thumb-interwork -Wstrict-prototypes \
 	  -DBUILD_HOST="${BUILD_HOST}" -DBUILD_VERSION="${BUILD_VERSION}" \
-	  -DBUILD_DATE="${BUILD_DATE}"
+	  -DBUILD_DATE="${BUILD_DATE}" -DQI_CPU="${CPU}"
 LDFLAGS = 
 
-S_SRCS	= src/cpu/$(CPU)/start.S src/lowlevel_init.S
+S_SRCS	= $(wildcard src/cpu/$(CPU)/*.S)
 S_OBJS	= $(patsubst %.S,%.o, $(S_SRCS))
 C_SRCS	= $(wildcard src/*.c) \
 	  $(wildcard src/drivers/*.c)  $(wildcard src/fs/*.c) \
@@ -43,6 +43,8 @@ C_OBJS	= $(patsubst %.c,%.o, $(C_SRCS))
 SRCS	= ${S_SRCS} ${C_SRCS}
 OBJS	= ${S_OBJS} ${C_OBJS}
 LIBS	= -L${COMPILER_LIB_PATH} -lgcc
+
+OBJS = src/cpu/s3c6410/start.o src/cpu/s3c6410/start_qi.o src/cpu/s3c6410/serial-s3c64xx.o src/ctype.o src/utils.o src/cpu/s3c6410/tla01.o src/phase2.o
 
 # GTA02 A5 and A6 U-Boot will eat these for DFU action
 UDFU_VID = 0x1d50
@@ -77,5 +79,5 @@ ${UDFU_IMAGE}:${OBJS} ${MKUDFU}
 	@$(OBJDUMP) -d ${TARGET} >${IMAGE}.dis
 
 clean:
-	@rm -f src/*.o  src/*~ include/*~ ${IMAGE_DIR}/* ${TARGET} ${UDFU_IMAGE}
+	@rm -f src/*.o  cpu/*/*.o cpu/*/*~ src/*~ src/drivers/*.o src/drivers/*~ include/*~ ${IMAGE_DIR}/* ${TARGET} ${UDFU_IMAGE}
 	@make clean -C $(TOOLS)

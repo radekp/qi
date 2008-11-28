@@ -26,10 +26,6 @@
 static u8 malloc_pool[100 * 1024];
 void * malloc_pointer = &malloc_pool[0];
 
-int raise(int n)
-{
-	return 0;
-}
 
 size_t strlen(const char *s)
 {
@@ -139,22 +135,38 @@ void hexdump(unsigned char *start, int len)
 
 void printdec(int n)
 {
-	int d = 1 * 1000 * 1000 * 1000;
+	int d[] = {
+		1 * 1000 * 1000 * 1000,
+		     100 * 1000 * 1000,
+		      10 * 1000 * 1000,
+		       1 * 1000 * 1000,
+			    100 * 1000,
+			     10 * 1000,
+			      1 * 1000,
+				   100,
+				    10,
+				     1,
+				     0
+	};
 	int flag = 0;
+	int div = 0;
 
 	if (n < 0) {
 		this_board->putc('-');
 		n = -n;
 	}
 
-	while (d) {
-		int r = n / d;
-		if (r || flag || (d == 1)) {
+	while (d[div]) {
+		int r = 0;
+		while (n >= d[div]) {
+			r++;
+			n -= d[div];
+		}
+		if (r || flag || (d[div] == 1)) {
 			this_board->putc('0' + r);
 			flag = 1;
 		}
-		n -= r * d;
-		d = d / 10;
+		div++;
 	}
 }
 

@@ -29,29 +29,35 @@ SECTIONS
 {
 	. = 0x00000000;
 
-	/* this is intended to take the first 4KBytes of stuff initially.
-	 * We have to make sure we have .rodata* in there for everything
-	 * because we do not compile PIC.
+	/* this text section is magically pulled from the SD Card
+	 * and stored by the iRom at 0x0c000000, then it is jumped into
+	 * by the iRom.  So we arrange our early parts needed at 0 in the
+	 * output file, but set to run at 0x0c000000+
 	 */
 
-	. = ALIGN(4);
-	.text      :
+	.text   0x0c000000    : AT ( 0 )
 	{
-	  src/cpu/s3c6410/start.o	(.text .rodata* .data)
-	  src/lowlevel_init.o		(.text .rodata* .data)
-	  src/cpu/s3c6410/start_qi.o	(.text .rodata* .data)
-	  src/blink_led.o		(.text .rodata* .data)
+	  src/cpu/s3c6410/start.o		(.text .rodata* .data)
+	  src/cpu/s3c6410/start_qi.o		(.text .rodata* .data)
+	  src/cpu/s3c6410/serial-s3c64xx.o	(.text .rodata* .data)
+	  src/cpu/s3c6410/tla01.o		(.text .rodata* .data)
+	  src/ctype.o				(.text .rodata* .data)
+	  src/phase2.o				(.text .rodata* .data)
+	  src/utils.o				(.text .rodata* .data)
 	}
 
-	. = ALIGN(4);
+/*	. = ALIGN(4);
 	.everything_else  ADDR (.text) + SIZEOF (.text) + 0x53000000 :
 		AT ( ADDR (.text) + SIZEOF (.text) ) { *(.text .rodata* .data) }
 
+*/
 	. = 0x53800000 ;
+/*	. = 0x0c001900 ; */
 	__bss_start = .;
 	.bss_6410 (NOLOAD) :
     {
         * (.bss)
     }
+
 	_end = .;
 }

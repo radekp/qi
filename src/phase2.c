@@ -39,13 +39,17 @@ unsigned long partition_length_blocks = 0;
 
 struct kernel_source const * this_kernel = 0;
 
+int raise(int n)
+{
+	return 0;
+}
+
 
 void bootloader_second_phase(void)
 {
 	void	(*the_kernel)(int zero, int arch, uint params);
 	int kernel = 0;
-	const struct board_variant * board_variant =
-					      (this_board->get_board_variant)();
+	const struct board_variant * board_variant;
 
 	/* okay, do the critical port and serial init for our board */
 
@@ -53,9 +57,10 @@ void bootloader_second_phase(void)
 
 	/* stick some hello messages on debug console */
 
-	puts("\n\n\nQi Bootloader  "stringify2(BUILD_HOST)" "
-				    stringify2(BUILD_VERSION)" "
-				    stringify2(BUILD_DATE)"\n");
+	puts("\n\n\nQi Bootloader "stringify2(QI_CPU)"  "
+				   stringify2(BUILD_HOST)" "
+				   stringify2(BUILD_VERSION)" "
+				   stringify2(BUILD_DATE)"\n");
 
 	puts("Copyright (C) 2008 Openmoko, Inc.\n");
 	puts("This is free software; see the source for copying conditions.\n"
@@ -145,6 +150,7 @@ void bootloader_second_phase(void)
 
 		switch (this_kernel->filesystem) {
 		case FS_EXT2:
+#if 0
 			if (!ext2fs_mount()) {
 				puts("Unable to mount ext2 filesystem\n");
 				this_kernel = &this_board->
@@ -162,6 +168,7 @@ void bootloader_second_phase(void)
 			}
 			ext2fs_read(kernel_dram, 4096);
 			break;
+#endif
 		case FS_FAT:
 			/* FIXME */
 		case FS_RAW:
@@ -199,9 +206,11 @@ void bootloader_second_phase(void)
 
 		switch (this_kernel->filesystem) {
 		case FS_EXT2:
+#if 0
 			/* This read API always restarts from beginning */
 			ext2fs_read(kernel_dram, kernel_size);
 			break;
+#endif
 		case FS_FAT:
 			/* FIXME */
 		case FS_RAW:
@@ -297,5 +306,5 @@ void bootloader_second_phase(void)
 
 	puts("No usable kernel image found, we've had it  :-(\n");
 	while (1)
-		blue_on(1);
+		;
 }

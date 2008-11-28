@@ -141,11 +141,6 @@ _start_armboot:
 _TEXT_BASE:
 	.word	TEXT_BASE
 
-processor_id:
-	.word	0
-	.word	0x41129200 /* s3c2442 ID */
-	.word	0x410fb760 /* s3c6410 ID */
-
 /*
  * These are defined in the board-specific linker script.
  */
@@ -311,12 +306,12 @@ start_code:
 	mov	r1, #0x0
 	str	r1, [r0, #INDEX_DMC_MEMC_CMD]
 
-check_dmc1_ready:
+1:
 	ldr	r1, [r0, #INDEX_DMC_MEMC_STATUS]
 	mov	r2, #0x3
 	and	r1, r1, r2
 	cmp	r1, #0x1
-	bne	check_dmc1_ready
+	bne	1b
 	nop
 
 	ldr	r0, =ELFIN_CLOCK_POWER_BASE	@0x7e00f000
@@ -336,12 +331,12 @@ check_dmc1_ready:
 	orr	r1, r1, r2
 	str	r1, [r0, #OTHERS_OFFSET]
 
-check_syncack:
+2:
 	ldr	r1, [r0, #OTHERS_OFFSET]
 	ldr	r2, =0xf00
 	and	r1, r1, r2
 	cmp	r1, #0xf00
-	bne	check_syncack
+	bne	2b
 
 	mov	r1, #0xff00
 	orr	r1, r1, #0xff
@@ -385,8 +380,8 @@ check_syncack:
 
 	/* wait at least 200us to stablize all clock */
 	mov	r1, #0x10000
-1:	subs	r1, r1, #1
-	bne	1b
+3:	subs	r1, r1, #1
+	bne	3b
 
 	ldr	r1, [r0, #OTHERS_OFFSET]
 	orr	r1, r1, #0x20
@@ -417,121 +412,14 @@ check_syncack:
 	ldr	r1, =0x1FFF
 	str	r1, [r0, #UDIVSLOT_OFFSET]
 
-	ldr	r1, =0x4f4f4f4f
-	str	r1, [r0, #UTXH_OFFSET]		@'O'
-
-	/* send out a char to say hello */
-	ldr	r1, =0x55
-	str	r1, [r0, #UTXH_OFFSET]
-
-
-#if 0
-/* Below code is for ARM926EJS and ARM1026EJS */
-	.globl cleanDCache
-cleanDCache:
-	mrc	p15, 0, pc, c7, c10, 3	/* test/clean D-Cache */
-	bne	cleanDCache
-	mov	pc, lr
-
-	.globl cleanFlushDCache
-cleanFlushDCache:
-	mrc	p15, 0, pc, c7, c14, 3	/* test/cleanflush D-Cache */
-	bne	cleanFlushDCache
-	mov	pc, lr
-
-	.globl cleanFlushCache
-cleanFlushCache:
-	mrc	p15, 0, pc, c7, c14, 3	/* test/cleanflush D-Cache */
-	bne	cleanFlushCache
-	mcr	p15, 0, r0, c7, c5, 0	/* flush I-Cache */
-	mov	pc, lr
-
-	.ltorg
-#endif
-
-#if 0
-
-	/* enable only CPU peripheral block clocks we actually use */
-	ldr	r0, =0x4c00000c		/* clkcon */
-	ldr	r1, =0x3f10	/* uart, pwm, gpio, nand, sdi clocks on */
-	str	r1, [r0]
-
-	/* gpio UART2 init, H port */
-	ldr	r0, =0x56000070
-	ldr	r1, =0x001AAAAA
-	str	r1, [r0]
-
-	/* enable KEEPACT(GPJ8) to make sure PMU keeps us alive */
-	ldr	r0, =0x56000000	/* GPJ base */
-	ldr	r1, [r0, #0xd0]	/* GPJCON */
-	orr	r1, r1, #(1 << 16)
-	str	r1, [r0, #0xd0]
-
-	ldr	r1, [r0, #0xd4]	/* GPJDAT */
-	orr	r1, r1, #(1 << 8)
-	str	r1, [r0, #0xd4]
-
-
-
-	/* take sdram out of power down */
-	ldr	r0, =0x56000080		/* misccr */
-	ldr	r1, [ r0 ]
-	bic	r1, r1, #(S3C2410_MISCCR_nEN_SCLK0 | S3C2410_MISCCR_nEN_SCLK1 | S3C2410_MISCCR_nEN_SCLKE)
-	str	r1, [ r0 ]
-
-	/* ensure signals stabalise */
-	mov	r1, #128
-1:	subs	r1, r1, #1
-	bpl	1b
-
-	bl	cpu_init_crit
-
-	/* ensure some refresh has happened */
-	ldr	r1, =0xfffff
-1:	subs	r1, r1, #1
-	bpl	1b
-
-	/* capture full EINT situation into gstatus 4 */
-
-	ldr	r0, =0x4A000000 /* SRCPND */
-	ldr	r1, [ r0 ]
-	and	r1, r1, #0xf
-
-	ldr	r0, =0x560000BC /* gstatus4 */
-	str	r1, [ r0 ]
-
-	ldr	r0, =0x560000A8 /* EINTPEND */
-	ldr	r1, [ r0 ]
-	ldr	r0, =0xfff0
-	and	r1, r1, r0
-	ldr	r0, =0x560000BC /* gstatus4 */
-	ldr     r0, [ r0 ]
-	orr	r1, r1, r0
-	ldr	r0, =0x560000BC /* gstatus4 */
-	str	r1, [ r0 ]
-
-	/* test for resume */
-
-	ldr	r1, =0x560000B4		/* gstatus2 */
-	ldr	r0, [ r1 ]
-	tst	r0, #0x02		/* is this resume from power down */
-					/* well, if it was, we are going to jump to
-					 * whatever address we stashed in gstatus3,
-					 * and gstatus4 will hold the wake interrupt
-					 * source for the OS to look at
-					 */
-	ldrne	pc, [r1, #4]
-
-#endif
 
 								/* >> CFG_VIDEO_LOGO_MAX_SIZE */
 #define CFG_GBL_DATA_SIZE		128			/* size in bytes reserved for initial data */
 
-stack_setup:
+
 	ldr	r0, _TEXT_BASE		/* upper 128 KiB: relocated uboot   */
 	sub	r0, r0, #CFG_GBL_DATA_SIZE 	/* bdinfo                        */
 	sub	sp, r0, #12		/* leave 3 words for abort-stack    */
-
 clear_bss:
 	ldr	r0, _bss_start		/* find start of bss segment        */
 	ldr	r1, _bss_end		/* stop here                        */
@@ -543,6 +431,14 @@ clbss_l:
 	cmp	r0, r1
 	ble	clbss_l
 
-/* we are going to jump into the C part of the init now */
-spin:
+#if 0
+	ldr	r0, =ELFIN_UART_CONSOLE_BASE
+	ldr	r1, =0x55
+	push	{r1}
+	pop	{r1}
+	str	r1, [r0, #UTXH_OFFSET]		@'U'
+#endif
 	b	_steppingstone_done
+
+4:
+	b 4b

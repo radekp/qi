@@ -37,6 +37,8 @@ const struct board_api *boards[] = {
 struct board_api const * this_board;
 extern int is_jtag;
 
+#include <serial-s3c64xx.h>
+
 void start_qi(void)
 {
 	int flag = 0;
@@ -97,9 +99,8 @@ void start_qi(void)
 	 * jump to bootloader_second_phase() running from DRAM copy
 	 */
 	bootloader_second_phase();
-#if 0
-unhappy:
+
 	while(1)
 		;
-#endif
+
 }

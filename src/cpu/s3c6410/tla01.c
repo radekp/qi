@@ -1,24 +1,25 @@
 #include <qi.h>
 #include <neo_tla01.h>
-#include <serial-s3c24xx.h>
-#include <ports-s3c24xx.h>
-#include <i2c-bitbang-s3c24xx.h>
+#include <serial-s3c64xx.h>
+//#include <ports-s3c24xx.h>
+//#include <i2c-bitbang-s3c24xx.h>
 #include <pcf50633.h>
 
-#define GTA03_DEBUG_UART 2
+#define GTA03_DEBUG_UART 0
 
 #define PCF50633_I2C_ADS 0x73
 
 
 static const struct board_variant board_variants[] = {
 	[0] = {
-		.name = "TLA01",
+		.name = "SMDK",
 		.machine_revision = 0x010,
 	},
 };
 
 void port_init_tla01(void)
 {
+#if 0
 	unsigned int * MPLLCON = (unsigned int *)0x4c000004;
 	unsigned int * UPLLCON = (unsigned int *)0x4c000008;
 	unsigned int * CLKDIVN = (unsigned int *)0x4c000014;
@@ -135,28 +136,7 @@ void port_init_tla01(void)
 	/* push DOWN1 (CPU Core rail) to 1.7V, allowing 533MHz */
 	i2c_write_sync(&bb_s3c24xx, PCF50633_I2C_ADS, PCF50633_REG_DOWN1OUT,
 									  0x2b);
-
-	/* change CPU clocking to 533MHz 1:4:8 */
-
-	/* clock divide 1:4:8 - do it first */
-	*CLKDIVN = 5;
-	/* configure UPLL */
-	*UPLLCON = ((88 << 12) + (4 << 4) + 2);
-	/* Magic delay: Page 7-19, seven nops between UPLL and MPLL */
-	asm __volatile__ (
-		"nop\n"\
-		"nop\n"\
-		"nop\n"\
-		"nop\n"\
-		"nop\n"\
-		"nop\n"\
-		"nop\n"\
-	);
-	/* configure MPLL */
-	*MPLLCON = ((169 << 12) + (2 << 4) + 1);
-
-
-	serial_init_115200_s3c24xx(GTA03_DEBUG_UART, 66 /*MHz PCLK */);
+#endif
 }
 
 /**
@@ -167,36 +147,7 @@ void port_init_tla01(void)
 
 int tla01_get_pcb_revision(void)
 {
-	int n;
-	u32 u;
-
-	/* make B0 inputs */
-	rGPBCON &= ~0x00000003;
-	/* D8 and D9 inputs */
-	rGPDCON &= ~0x000f0000;
-
-	/* delay after changing pulldowns */
-	u = rGPBDAT;
-	u = rGPDDAT;
-
-	/* read the version info */
-	u = rGPBDAT;
-	n = (u >> (0 - 0))& 0x001;
-	u = rGPDDAT;
-	n |= (u >> (8 -1))  & 0x002;
-	n |= (u >> (9 - 2))  & 0x004;
-
-	/*
-	 * when not being interrogated, all of the revision GPIO
-	 * are set to output
-	 */
-	/* make B0 high ouput */
-	rGPBCON |= 0x00000001;
-	/* D8 and D9 high ouputs */
-	rGPDCON |= 0x00050000;
-
-	return n;
-
+	return 0;
 }
 
 const struct board_variant const * get_board_variant_tla01(void)
@@ -212,7 +163,7 @@ int is_this_board_tla01(void)
 
 static void putc_tla01(char c)
 {
-	serial_putc_s3c24xx(GTA03_DEBUG_UART, c);
+	serial_putc_s3c64xx(GTA03_DEBUG_UART, c);
 }
 
 
@@ -222,9 +173,9 @@ static void putc_tla01(char c)
 const struct board_api board_api_tla01 = {
 	.name = "TLA01",
 	.linux_machine_id = 1866,
-	.linux_mem_start = 0x30000000,
+	.linux_mem_start = 0x50000000,
 	.linux_mem_size = (128 * 1024 * 1024),
-	.linux_tag_placement = 0x30000000 + 0x100,
+	.linux_tag_placement = 0x50000000 + 0x100,
 	.get_board_variant = get_board_variant_tla01,
 	.is_this_board = is_this_board_tla01,
 	.port_init = port_init_tla01,

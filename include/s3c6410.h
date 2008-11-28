@@ -45,6 +45,8 @@ typedef enum {
 	S3C64XX_UART2,
 } S3C64XX_UARTS_NR;
 
+#define __REG(x) (*((unsigned int *)(x)))
+
 //#include <s3c64x0.h>
 #endif
 
@@ -1306,79 +1308,6 @@ typedef enum {
 
 /* include common stuff */
 #ifndef __ASSEMBLY__
-static inline S3C64XX_MEMCTL * S3C64XX_GetBase_MEMCTL(void)
-{
-	return (S3C64XX_MEMCTL *)(ELFIN_DMC0_BASE);
-}
-static inline S3C64XX_USB_HOST * S3C64XX_GetBase_USB_HOST(void)
-{
-	return (S3C64XX_USB_HOST *)ELFIN_USB_HOST_BASE;
-}
-static inline S3C64XX_INTERRUPT * S3C64XX_GetBase_INTERRUPT(void)
-{
-	return (S3C64XX_INTERRUPT *)ELFIN_VIC0_BASE_ADDR;
-}
-static inline S3C64XX_DMAS * S3C64XX_GetBase_DMAS(void)
-{
-	return (S3C64XX_DMAS *)ELFIN_DMA_BASE;
-}
-static inline S3C64XX_CLOCK_POWER * S3C64XX_GetBase_CLOCK_POWER(void)
-{
-	return (S3C64XX_CLOCK_POWER *)ELFIN_CLOCK_POWER_BASE;
-}
-static inline S3C64XX_LCD * S3C64XX_GetBase_LCD(void)
-{
-	return (S3C64XX_LCD *)ELFIN_LCD_BASE;
-}
-/*
-static inline S3C2410_NAND * S3C2410_GetBase_NAND(void)
-{
-	return (S3C2410_NAND *)ELFIN_NAND_BASE;
-}
-*/
-static inline S3C64XX_UART * S3C64XX_GetBase_UART(S3C64XX_UARTS_NR nr)
-{
-//	return (S3C64XX_UART *)(ELFIN_UART_BASE + (nr * 0x4000));
-	return (S3C64XX_UART *)(ELFIN_UART_BASE + (nr*0x400));
-}
-static inline S3C64XX_TIMERS * S3C64XX_GetBase_TIMERS(void)
-{
-	return (S3C64XX_TIMERS *)ELFIN_TIMER_BASE;
-}
-/*
-static inline S3C64XX_USB_DEVICE * S3C64XX_GetBase_USB_DEVICE(void)
-{
-	return (S3C64XX_USB_DEVICE *)ELFIN_USB_DEVICE_BASE;
-}
-*/
-static inline S3C64XX_WATCHDOG * S3C64XX_GetBase_WATCHDOG(void)
-{
-	return (S3C64XX_WATCHDOG *)ELFIN_WATCHDOG_BASE;
-}
-static inline S3C64XX_I2C * S3C64XX_GetBase_I2C(void)
-{
-	return (S3C64XX_I2C *)ELFIN_I2C_BASE;
-}
-static inline S3C64XX_I2S * S3C64XX_GetBase_I2S(void)
-{
-	return (S3C64XX_I2S *)ELFIN_I2S_BASE;
-}
-static inline S3C64XX_GPIO * S3C64XX_GetBase_GPIO(void)
-{
-	return (S3C64XX_GPIO *)ELFIN_GPIO_BASE;
-}
-static inline S3C64XX_RTC * S3C64XX_GetBase_RTC(void)
-{
-	return (S3C64XX_RTC *)ELFIN_RTC_BASE;
-}
-static inline S3C2410_ADC * S3C2410_GetBase_ADC(void)
-{
-	return (S3C2410_ADC *)ELFIN_ADC_BASE;
-}
-static inline S3C64XX_SPI * S3C64XX_GetBase_SPI(void)
-{
-	return (S3C64XX_SPI *)ELFIN_SPI_BASE;
-}
 #if 0
 static inline S3C2410_SDI * S3C2410_GetBase_SDI(void)
 {
