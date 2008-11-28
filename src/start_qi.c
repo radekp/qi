@@ -52,9 +52,11 @@ void start_qi(void)
 	 * steppingstone SRAM for free.  Now we pull the whole bootloader
 	 * image into SDRAM.
 	 *
-	 * So this doesn't trash position-dependent code, we took care in the
-	 * linker script to arrange all rodata* segment content to be in the
-	 * first 4K region.
+	 * This code and the .S files are arranged by the linker script to
+	 * expect to run from 0x0.  But the linker script has told everything
+	 * else to expect to run from 0x33000000+.  That's why we are going to
+	 * be able to copy this code and not have it crash when we run it from
+	 * there.
 	 */
 
 	/* We randomly pull 24KBytes of bootloader */
