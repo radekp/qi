@@ -44,10 +44,17 @@ SRCS	= ${S_SRCS} ${C_SRCS}
 OBJS	= ${S_OBJS} ${C_OBJS}
 LIBS	= -L${COMPILER_LIB_PATH} -lgcc
 
-# GTA02 A5 and A6 U-Boot will eat these for DFU action
-UDFU_VID = 0x1d50
-UDFU_PID = 0x5119
-UDFU_REV = 0x350
+ifeq ($(CPU),s3c2410)
+  # GTA01 U-Boot IDs
+  UDFU_VID = 0x1457
+  UDFU_PID = 0x5119
+  UDFU_REV = 0x0240
+else
+  # GTA02 A5 and A6 U-Boot will eat these for DFU action
+  UDFU_VID = 0x1d50
+  UDFU_PID = 0x5119
+  UDFU_REV = 0x350
+endif
 
 TARGET	= $(IMAGE_DIR)/start_qi_all-$(CPU)
 IMAGE = $(IMAGE_DIR)/qi-$(CPU)-$(BUILD_VERSION)
@@ -77,6 +84,6 @@ ${UDFU_IMAGE}:${OBJS} ${MKUDFU}
 	@$(OBJDUMP) -d ${TARGET} >${IMAGE}.dis
 
 clean:
-	@rm -f src/*.o  cpu/*/*.o cpu/*/*~ src/*~ src/drivers/*.o src/drivers/*~ \
-		include/*~ ${IMAGE_DIR}/* ${TARGET} ${UDFU_IMAGE}
+	@rm -f src/*.o src/*~ src/cpu/*/*.o src/cpu/*/*~ src/drivers/*.o \
+		src/drivers/*~ src/fs/*.o src/fs/*~ include/*~ ${IMAGE_DIR}/*
 	@make clean -C $(TOOLS)
