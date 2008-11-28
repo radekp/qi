@@ -80,7 +80,9 @@ void start_qi(void)
 
 	/* okay, do the critical port and serial init for our board */
 
-	this_board->port_init();
+	if (this_board->early_port_init)
+		this_board->early_port_init();
+
 	set_putc_func(this_board->putc);
 
 	/* stick some hello messages on debug console */
@@ -90,13 +92,7 @@ void start_qi(void)
 				   stringify2(BUILD_VERSION)" "
 				   "\n");
 
-	puts(stringify2(BUILD_DATE) "  Copyright (C) 2008 Openmoko, Inc.\n");
-	puts("\n     Detected: ");
-
-	puts(this_board->name);
-	puts(", ");
-	puts((this_board->get_board_variant)()->name);
-	puts("\n");
+	puts(stringify2(BUILD_DATE) "  Copyright (C) 2008 Openmoko, Inc.\n\n");
 
 	if (!is_jtag) {
 		/*
@@ -122,6 +118,16 @@ void start_qi(void)
 						     256 * 2, (u8 *)0x53000000);
 	}
 
+	/* all of Qi is in memory now, stuff outside steppingstone too */
+
+	if (this_board->port_init)
+		this_board->port_init();
+
+	puts("\n     Detected: ");
+	puts(this_board->name);
+	puts(", ");
+	puts((this_board->get_board_variant)()->name);
+	puts("\n");
 
 	/*
 	 * jump to bootloader_second_phase() running from DRAM copy

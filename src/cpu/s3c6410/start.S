@@ -421,6 +421,8 @@ start_code:
 	ldr	r1, =0x1FFF
 	str	r1, [r0, #UDIVSLOT_OFFSET]
 
+	ldr	r1, =0x55
+	str	r1, [r0, #UTXH_OFFSET]		@'U'
 
 								/* >> CFG_VIDEO_LOGO_MAX_SIZE */
 #define CFG_GBL_DATA_SIZE		128			/* size in bytes reserved for initial data */

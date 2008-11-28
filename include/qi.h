@@ -74,6 +74,7 @@ struct board_api {
 	unsigned long linux_tag_placement;
 	const struct board_variant const * (*get_board_variant)(void);
 	int (*is_this_board)(void);
+	void (*early_port_init)(void);
 	void (*port_init)(void);
 	void (*putc)(char);
 	void (*close)(void);

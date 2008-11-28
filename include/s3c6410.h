@@ -96,8 +96,6 @@ extern ulong virt_to_phy_smdk2416(ulong addr);
 
 extern void test_hsmmc (uint width, uint test, uint start_blk, uint blknum);
 
-/* external variables */
-extern struct movi_offset_t ofsinfo;
 
 //#include <asm/hardware.h>
 
@@ -107,7 +105,7 @@ typedef enum {
 	S3C64XX_UART2,
 } S3C64XX_UARTS_NR;
 
-#define __REG(x) (*((unsigned int *)(x)))
+#define __REG(x) (*((volatile unsigned int *)(x)))
 
 //#include <s3c64x0.h>
 #endif
