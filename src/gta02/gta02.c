@@ -28,6 +28,7 @@
 #include <serial-s3c24xx.h>
 #include <ports-s3c24xx.h>
 #include <i2c-bitbang-s3c24xx.h>
+#include <pcf50633.h>
 
 #define GTA02_DEBUG_UART 2
 
@@ -167,13 +168,15 @@ void port_init_gta02(void)
 	 */
 
 	/* We need SD Card rail (HCLDO) at 3.0V */
-	i2c_write_sync(&bb_s3c24xx, PCF50633_I2C_ADS, 0x39, 21);
+	i2c_write_sync(&bb_s3c24xx, PCF50633_I2C_ADS, PCF50633_REG_HCLDOOUT,
+									    21);
 
 	/* switch HCLDO on */
-	i2c_write_sync(&bb_s3c24xx, PCF50633_I2C_ADS, 0x3a, 1);
+	i2c_write_sync(&bb_s3c24xx, PCF50633_I2C_ADS, PCF50633_REG_HCLDOENA, 1);
 
 	/* push DOWN1 (CPU Core rail) to 1.3V, allowing 400MHz */
-	i2c_write_sync(&bb_s3c24xx, PCF50633_I2C_ADS, 0x1e, 0x1b);
+	i2c_write_sync(&bb_s3c24xx, PCF50633_I2C_ADS, PCF50633_REG_DOWN1OUT,
+									  0x1b);
 
 	/* change CPU clocking to 400MHz 1:4:8 */
 
