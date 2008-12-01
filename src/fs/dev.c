@@ -52,6 +52,12 @@ int ext2fs_devread(int sector, int filesystem_block_log2, int byte_offset, int b
 		return 0;
 	}
 
+	if (this_board->get_ui_keys)
+		if ((this_board->get_ui_keys)() & UI_ACTION_SKIPKERNEL) {
+			puts(" ** skipping \n");
+			return 0;
+		}
+
 /*
  *  Get the read to the beginning of a partition.
  */

@@ -45,6 +45,7 @@ int raise(int n)
 int read_file(const char * filepath, u8 * destination, int size)
 {
 	int len = size;
+	int ret;
 
 	switch (this_kernel->filesystem) {
 	case FS_EXT2:
@@ -60,7 +61,11 @@ int read_file(const char * filepath, u8 * destination, int size)
 			return -1;
 		}
 		puts(" OK\n");
-		ext2fs_read((char *)destination, size);
+		ret = ext2fs_read((char *)destination, size);
+		if (ret < 0) {
+			puts(" Read failed\n");
+			return -1;
+		}
 		break;
 
 	case FS_FAT:
@@ -282,26 +287,24 @@ void bootloader_second_phase(void)
 
 		/* kernel commandline */
 
-		if (*p) {
-			cmdline = params->u.cmdline.cmdline;
-			cmdline += strlen(strcpy(cmdline, p));
-			if (this_kernel->commandline_append)
-				cmdline += strlen(strcpy(cmdline,
+		cmdline = params->u.cmdline.cmdline;
+		cmdline += strlen(strcpy(cmdline, p));
+		if (this_kernel->commandline_append)
+			cmdline += strlen(strcpy(cmdline,
 					      this_kernel->commandline_append));
 			if (commandline_rootfs_append[0])
 				cmdline += strlen(strcpy(cmdline,
 					      commandline_rootfs_append));
 
-			params->hdr.tag = ATAG_CMDLINE;
-			params->hdr.size = (sizeof (struct tag_header) +
-				strlen(params->u.cmdline.cmdline) + 1 + 4) >> 2;
+		params->hdr.tag = ATAG_CMDLINE;
+		params->hdr.size = (sizeof (struct tag_header) +
+			strlen(params->u.cmdline.cmdline) + 1 + 4) >> 2;
 
-			puts("      Cmdline: ");
-			puts(params->u.cmdline.cmdline);
-			puts("\n");
+		puts("      Cmdline: ");
+		puts(params->u.cmdline.cmdline);
+		puts("\n");
 
-			params = tag_next (params);
-		}
+		params = tag_next (params);
 
 		/* needs to always be the last tag */
 		params->hdr.tag = ATAG_NONE;

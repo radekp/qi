@@ -143,6 +143,12 @@ int nand_read_ll(unsigned char *buf, unsigned long start_block512,
 		start_block512 += j;
 		buf += j << 9;
 		blocks512 -= j;
+
+		if (this_board->get_ui_keys)
+			if ((this_board->get_ui_keys)() & UI_ACTION_SKIPKERNEL) {
+				puts(" ** skipping \n");
+				return -3;
+			}
 	}
 
 	/* chip Disable */
