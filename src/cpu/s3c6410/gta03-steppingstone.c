@@ -89,6 +89,7 @@ const struct board_api board_api_gta03 = {
 			     "console=ttySAC3,115200 " \
 			     "init=/sbin/init " \
 			     "loglevel=8 " \
+			     "rootdelay=1 " \
 			     "ro ",
 	.kernel_source = {
 		[0] = {
