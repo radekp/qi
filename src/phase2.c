@@ -59,7 +59,7 @@ int read_file(const char * filepath, u8 * destination, int size)
 		if (!ext2fs_mount()) {
 			puts("Unable to mount ext2 filesystem\n");
 			indicate(UI_IND_MOUNT_FAIL);
-			return -1;
+			return -2; /* death */
 		}
 		puts("    EXT2 open: ");
 		puts(filepath);
@@ -104,6 +104,7 @@ void bootloader_second_phase(void)
 					      (this_board->get_board_variant)();
 	unsigned int initramfs_len = 0;
 	static char commandline_rootfs_append[512] = "";
+	int ret;
 
 	/* we try the possible kernels for this board in order */
 
@@ -189,12 +190,16 @@ void bootloader_second_phase(void)
 
 		/* does he want us to skip this? */
 
-		if (read_file(this_board->noboot, kernel_dram, 512) >= 0) {
-			puts("    (Skipping on finding ");
-			puts(this_board->noboot);
-			puts(")\n");
+		ret = read_file(this_board->noboot, kernel_dram, 512);
+		if (ret != -1) {
+			/* -2 (mount fail) should make us give up too */
+			if (ret >= 0) {
+				puts("    (Skipping on finding ");
+				puts(this_board->noboot);
+				puts(")\n");
+				indicate(UI_IND_SKIPPING);
+			}
 			this_kernel = &this_board->kernel_source[kernel++];
-			indicate(UI_IND_SKIPPING);
 			continue;
 		}
 
