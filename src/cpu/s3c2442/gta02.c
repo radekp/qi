@@ -168,7 +168,7 @@ void port_init_gta02(void)
 	 *     Binary :  01      01 ,  01     01  ,     10       10  , 10     10
 	 */
 	/* pulldown on GPF03: TP-4705+debug - debug conn will float */
-	rGPFCON = 0x0000AAAA;
+	rGPFCON = 0x00008AAA;
 	rGPFUP = 0x000000FF & ~(1 << 3);
 	rGPFDAT = 0x00000000;
 
@@ -366,6 +366,10 @@ static void close_gta02(void)
 	/* set I2C GPIO back to peripheral unit */
 
 	(bb_s3c24xx.close)();
+
+	/* aux back to being EINT */
+	rGPFCON = 0x0000AAAA;
+
 }
 
 static u8 get_ui_keys_gta02(void)
