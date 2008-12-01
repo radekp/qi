@@ -396,6 +396,40 @@ static u8 get_ui_keys_gta02(void)
 	
 	return ret;
 }
+
+static void set_ui_indication_gta02(enum ui_indication ui_indication)
+{
+	switch (ui_indication) {
+		case UI_IND_UPDATE_ONLY:
+			break;
+
+		case UI_IND_MOUNT_PART:
+		case UI_IND_KERNEL_PULL_OK:
+		case UI_IND_INITRAMFS_PULL_OK:
+			rGPBDAT |= 4;
+			break;
+
+		case UI_IND_KERNEL_PULL_FAIL:
+		case UI_IND_SKIPPING:
+		case UI_IND_INITRAMFS_PULL_FAIL:
+		case UI_IND_MOUNT_FAIL:
+			rGPBDAT &= ~4;
+			rGPBDAT |= 8;
+			udelay(2000000);
+			rGPBDAT &= ~8;
+			udelay(200000);
+			break;
+
+		case UI_IND_KERNEL_START:
+		case UI_IND_MEM_TEST:
+		case UI_IND_KERNEL_PULL:
+		case UI_IND_INITRAMFS_PULL:
+			rGPBDAT &= ~4;
+			break;
+	}
+}
+
+
 /*
  * our API for bootloader on this machine
  */
@@ -412,6 +446,7 @@ const struct board_api board_api_gta02 = {
 	.putc = putc_gta02,
 	.close = close_gta02,
 	.get_ui_keys = get_ui_keys_gta02,
+	.set_ui_indication = set_ui_indication_gta02,
 	.commandline_board = "mtdparts=physmap-flash:-(nor);" \
 				       "neo1973-nand:" \
 				       "0x00040000(qi)," \

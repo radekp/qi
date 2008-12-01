@@ -47,6 +47,21 @@ enum ui_actions {
 	UI_ACTION_SKIPKERNEL	= (1 << 1),
 };
 
+enum ui_indication {
+	UI_IND_UPDATE_ONLY,
+	UI_IND_MOUNT_PART,
+	UI_IND_MOUNT_FAIL,
+	UI_IND_SKIPPING,
+	UI_IND_KERNEL_PULL,
+	UI_IND_KERNEL_PULL_OK,
+	UI_IND_KERNEL_PULL_FAIL,
+	UI_IND_INITRAMFS_PULL,
+	UI_IND_INITRAMFS_PULL_OK,
+	UI_IND_INITRAMFS_PULL_FAIL,
+	UI_IND_KERNEL_START,
+	UI_IND_MEM_TEST
+};
+
 /* describes a source for getting kernel image */
 
 struct kernel_source {
@@ -89,6 +104,7 @@ struct board_api {
 	void (*putc)(char);
 	void (*close)(void);
 	u8 (*get_ui_keys)(void);
+	void (*set_ui_indication)(enum ui_indication);
 
 	struct kernel_source kernel_source[8];
 };

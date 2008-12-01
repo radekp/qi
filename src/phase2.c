@@ -37,9 +37,16 @@ struct kernel_source const * this_kernel = 0;
 
 const int INITRD_OFFSET = (8 * 1024 * 1024);
 
+
 int raise(int n)
 {
 	return 0;
+}
+
+void indicate(enum ui_indication ui_indication)
+{
+	if (this_board->set_ui_indication)
+		(this_board->set_ui_indication)(ui_indication);
 }
 
 int read_file(const char * filepath, u8 * destination, int size)
@@ -51,6 +58,7 @@ int read_file(const char * filepath, u8 * destination, int size)
 	case FS_EXT2:
 		if (!ext2fs_mount()) {
 			puts("Unable to mount ext2 filesystem\n");
+			indicate(UI_IND_MOUNT_FAIL);
 			return -1;
 		}
 		puts("    EXT2 open: ");
@@ -120,12 +128,15 @@ void bootloader_second_phase(void)
 		puts(this_kernel->name);
 		puts("\n");
 
+		indicate(UI_IND_MOUNT_PART);
+
 		/* if this device needs initializing, try to init it */
 		if (this_kernel->block_init)
 			if ((this_kernel->block_init)()) {
 				puts("block device init failed\n");
 				this_kernel = &this_board->
 							kernel_source[kernel++];
+				indicate(UI_IND_MOUNT_FAIL);
 				continue;
 			}
 
@@ -140,6 +151,7 @@ void bootloader_second_phase(void)
 				puts("Bad partition read\n");
 				this_kernel = &this_board->
 							kernel_source[kernel++];
+				indicate(UI_IND_MOUNT_FAIL);
 				continue;
 			}
 
@@ -147,6 +159,7 @@ void bootloader_second_phase(void)
 				puts("partition signature missing\n");
 				this_kernel = &this_board->
 							kernel_source[kernel++];
+				indicate(UI_IND_MOUNT_FAIL);
 				continue;
 			}
 
@@ -181,6 +194,7 @@ void bootloader_second_phase(void)
 			puts(this_board->noboot);
 			puts(")\n");
 			this_kernel = &this_board->kernel_source[kernel++];
+			indicate(UI_IND_SKIPPING);
 			continue;
 		}
 
@@ -189,6 +203,8 @@ void bootloader_second_phase(void)
 		commandline_rootfs_append[0] = '\0';
 		read_file(this_board->append, (u8 *)commandline_rootfs_append,
 									   512);
+
+		indicate(UI_IND_KERNEL_PULL);
 
 		/* pull the kernel image */
 
@@ -219,19 +235,26 @@ void bootloader_second_phase(void)
 		if (read_file(this_kernel->filepath, kernel_dram,
 							     kernel_size) < 0) {
 			this_kernel = &this_board->kernel_source[kernel++];
+			indicate(UI_IND_KERNEL_PULL_FAIL);
 			continue;
 		}
+
+		indicate(UI_IND_KERNEL_PULL_OK);
 
 		/* initramfs if needed */
 
 		if (this_kernel->initramfs_filepath) {
+			indicate(UI_IND_INITRAMFS_PULL);
 			initramfs_len = read_file(this_kernel->initramfs_filepath,
-			    (u8 *)this_board->linux_mem_start + INITRD_OFFSET, 16 * 1024 * 1024);
+			      (u8 *)this_board->linux_mem_start + INITRD_OFFSET,
+							      16 * 1024 * 1024);
 			if (initramfs_len < 0) {
 				puts("initramfs load failed\n");
 				this_kernel = &this_board->kernel_source[kernel++];
+				indicate(UI_IND_INITRAMFS_PULL_FAIL);
 				continue;
 			}
+			indicate(UI_IND_INITRAMFS_PULL_OK);
 		}
 
 		/*
@@ -329,6 +352,7 @@ void bootloader_second_phase(void)
 			(this_board->close)();
 
 		puts ("Starting --->\n\n");
+		indicate(UI_IND_KERNEL_START);
 
 		/*
 		* ooh that's it, we're gonna try boot this image!
@@ -354,6 +378,8 @@ void bootloader_second_phase(void)
 	 * It means we just boot with SD Card with kernel(s) renamed or removed
 	 * to provoke memory test.
 	 */
+
+	indicate(UI_IND_MEM_TEST);
 
 	memory_test((void *)this_board->linux_mem_start,
 						    this_board->linux_mem_size);
