@@ -35,6 +35,8 @@
 #define PCF50633_I2C_ADS 0x73
 #define BOOST_TO_400MHZ 1
 
+static int battery_condition_reasonable = 0;
+
 const struct pcf50633_init pcf50633_init[] = {
 
 	{ PCF50633_REG_OOCWAKE,		0xd3 }, /* wake from ONKEY,EXTON!,RTC,USB,ADP */
@@ -43,8 +45,8 @@ const struct pcf50633_init pcf50633_init[] = {
 	{ PCF50633_REG_OOCMODE,		0x55 },
 	{ PCF50633_REG_OOCCTL,		0x47 },
 
-	{ PCF50633_REG_SVMCTL,		0x08 },	/* 3.10V SYS voltage thresh. */
-	{ PCF50633_REG_BVMCTL,		0x02 },	/* 2.80V BAT voltage thresh. */
+	{ PCF50633_REG_SVMCTL,		0x18 },	/* 3.10V SYS vth, 62ms filter */
+	{ PCF50633_REG_BVMCTL,		0x12 },	/* 2.80V BAT vth, 62ms filter */
 
 	{ PCF50633_REG_AUTOENA,		0x01 },	/* always on */
 
@@ -95,11 +97,9 @@ static const struct board_variant board_variants[] = {
 
 void port_init_gta02(void)
 {
-#if BOOST_TO_400MHZ
 	unsigned int * MPLLCON = (unsigned int *)0x4c000004;
 	unsigned int * UPLLCON = (unsigned int *)0x4c000008;
 	unsigned int * CLKDIVN = (unsigned int *)0x4c000014;
-#endif
 	int n;
 
 	//CAUTION:Follow the configuration order for setting the ports.
@@ -229,31 +229,36 @@ void port_init_gta02(void)
 		i2c_write_sync(&bb_s3c24xx, PCF50633_I2C_ADS,
 			       pcf50633_init[n].index, pcf50633_init[n].value);
 
-#if BOOST_TO_400MHZ
-	/* change CPU clocking to 400MHz 1:4:8 */
+	/* what does the battery monitoring unit say about the battery? */
 
-	/* clock divide 1:4:8 - do it first */
-	*CLKDIVN = 5;
-	/* configure UPLL */
-	*UPLLCON = ((88 << 12) + (4 << 4) + 2);
-	/* Magic delay: Page 7-19, seven nops between UPLL and MPLL */
-	asm __volatile__ (
-		"nop\n"\
-		"nop\n"\
-		"nop\n"\
-		"nop\n"\
-		"nop\n"\
-		"nop\n"\
-		"nop\n"\
-	);
-	/* configure MPLL */
-	*MPLLCON = ((42 << 12) + (1 << 4) + 0);
+	battery_condition_reasonable = !(i2c_read_sync(&bb_s3c24xx,
+				    PCF50633_I2C_ADS, PCF50633_REG_BVMCTL) & 1);
 
-	/* get debug UART working at 115kbps */
-	serial_init_115200_s3c24xx(GTA02_DEBUG_UART, 50 /* 50MHz PCLK */);
-#else
-	serial_init_115200_s3c24xx(GTA02_DEBUG_UART, 33 /* 33MHz PCLK */);
-#endif
+	if (battery_condition_reasonable) {
+		/* change CPU clocking to 400MHz 1:4:8 */
+
+		/* clock divide 1:4:8 - do it first */
+		*CLKDIVN = 5;
+		/* configure UPLL */
+		*UPLLCON = ((88 << 12) + (4 << 4) + 2);
+		/* Magic delay: Page 7-19, seven nops between UPLL and MPLL */
+		asm __volatile__ (
+			"nop\n"\
+			"nop\n"\
+			"nop\n"\
+			"nop\n"\
+			"nop\n"\
+			"nop\n"\
+			"nop\n"\
+		);
+		/* configure MPLL */
+		*MPLLCON = ((42 << 12) + (1 << 4) + 0);
+
+		/* get debug UART working at 115kbps */
+		serial_init_115200_s3c24xx(GTA02_DEBUG_UART, 50 /* 50MHz */);
+	} else {
+		serial_init_115200_s3c24xx(GTA02_DEBUG_UART, 33 /* 33MHz */);
+	}
 
 	/* we're going to use Glamo for SD Card access, so we need to init the
 	 * evil beast
@@ -399,6 +404,7 @@ static u8 get_ui_keys_gta02(void)
 
 static void set_ui_indication_gta02(enum ui_indication ui_indication)
 {
+
 	switch (ui_indication) {
 		case UI_IND_UPDATE_ONLY:
 			break;
@@ -406,7 +412,8 @@ static void set_ui_indication_gta02(enum ui_indication ui_indication)
 		case UI_IND_MOUNT_PART:
 		case UI_IND_KERNEL_PULL_OK:
 		case UI_IND_INITRAMFS_PULL_OK:
-			rGPBDAT |= 4;
+			if (battery_condition_reasonable)
+				rGPBDAT |= 4;
 			break;
 
 		case UI_IND_KERNEL_PULL_FAIL:
@@ -414,10 +421,12 @@ static void set_ui_indication_gta02(enum ui_indication ui_indication)
 		case UI_IND_INITRAMFS_PULL_FAIL:
 		case UI_IND_MOUNT_FAIL:
 			rGPBDAT &= ~4;
-			rGPBDAT |= 8;
-			udelay(2000000);
-			rGPBDAT &= ~8;
-			udelay(200000);
+			if (battery_condition_reasonable) {
+				rGPBDAT |= 8;
+				udelay(2000000);
+				rGPBDAT &= ~8;
+				udelay(200000);
+			}
 			break;
 
 		case UI_IND_KERNEL_START:
