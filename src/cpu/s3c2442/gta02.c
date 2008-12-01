@@ -455,11 +455,12 @@ const struct board_api board_api_gta02 = {
 				       "0x000a0000(extra)," \
 				       "0x00040000(identity)," \
 				       "0x0f6a0000(backuprootfs) " \
+				      "loglevel=4 " \
+				      "console=tty0 " \
 				      "console=ttySAC2,115200 " \
 				      "init=/sbin/init " \
-				      "ro",
-	.commandline_board_debug = " console=tty0 " \
-				   "loglevel=8",
+				      "ro ",
+	.commandline_board_debug =  "loglevel=8",
 	.noboot = "boot/noboot-GTA02",
 	.append = "boot/append-GTA02",
 	/* these are the ways we could boot GTA02 in the order to try */

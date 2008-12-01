@@ -85,9 +85,11 @@ const struct board_api board_api_gta03 = {
 	.noboot = "boot/noboot-GTA03",
 	.append = "boot/append-GTA03",
 	.get_ui_keys = get_ui_keys_gta03,
-	.commandline_board = "console=ttySAC3,115200 " \
+	.commandline_board = "console=tty0 " \
+			     "console=ttySAC3,115200 " \
 			     "init=/sbin/init " \
-			     "loglevel=8 ",
+			     "loglevel=8 " \
+			     "ro ",
 	.kernel_source = {
 		[0] = {
 			.name = "SD Card rootfs",
