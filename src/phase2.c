@@ -105,6 +105,8 @@ void bootloader_second_phase(void)
 	unsigned int initramfs_len = 0;
 	static char commandline_rootfs_append[512] = "";
 	int ret;
+	void * last_block_init = NULL;
+	int last_block_init_result = 0;
 
 	/* we try the possible kernels for this board in order */
 
@@ -132,14 +134,26 @@ void bootloader_second_phase(void)
 		indicate(UI_IND_MOUNT_PART);
 
 		/* if this device needs initializing, try to init it */
-		if (this_kernel->block_init)
-			if ((this_kernel->block_init)()) {
+		if (this_kernel->block_init) {
+			/*
+			 * cache result to limit attempts for same
+			 * block device to one time
+			 */
+			if (this_kernel->block_init != last_block_init)
+				last_block_init_result =
+						    (this_kernel->block_init)();
+
+			if (last_block_init_result) {
 				puts("block device init failed\n");
+				if (this_kernel->block_init != last_block_init)
+					indicate(UI_IND_MOUNT_FAIL);
 				this_kernel = &this_board->
 							kernel_source[kernel++];
-				indicate(UI_IND_MOUNT_FAIL);
+				last_block_init = this_kernel->block_init;
 				continue;
 			}
+			last_block_init = this_kernel->block_init;
+		}
 
 		/* if there's a partition table implied, parse it, otherwise
 		 * just use a fixed offset
