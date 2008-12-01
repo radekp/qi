@@ -27,20 +27,21 @@ OUTPUT_ARCH(arm)
 ENTRY(_start)
 SECTIONS
 {
-	. = 0x00000000;
+	__steppingstone_always = 0x40000000;
+	__qi_sdram_copy = 0x33000000;
+
+	. = __steppingstone_always;
 
 	/* this is intended to take the first 4KBytes of stuff initially.
 	 * We have to make sure we have .rodata* in there for everything
 	 * because we do not compile PIC.
 	 */
 
-	. = ALIGN(4);
-	.text      :
+	.text __steppingstone_always : AT (0x0)
 	{
 	  src/cpu/s3c2442/start.o		(.text .rodata* .data .bss)
 	  src/cpu/s3c2442/lowlevel_init.o	(.text .rodata* .data .bss)
 	  src/cpu/s3c2442/start_qi.o		(.text .rodata* .data .bss)
-/*	  src/blink_led.o			(.text .rodata* .data .bss) */
 	  src/cpu/s3c2442/nand_read.o		(.text .rodata* .data .bss)
 	  src/cpu/s3c2442/serial-s3c24xx.o	(.text .rodata* .data .bss)
 	  src/memory-test.o			(.text .rodata* .data .bss)
@@ -50,10 +51,10 @@ SECTIONS
 	}
 
 	. = ALIGN(4);
-	.everything_else  ADDR (.text) + SIZEOF (.text) + 0x33000000 :
-		AT ( ADDR (.text) + SIZEOF (.text) ) { *(.text .rodata* .data) }
+	.everything_else  ADDR (.text) - __steppingstone_always + SIZEOF (.text) + __qi_sdram_copy :
+		AT ( ADDR (.text) - __steppingstone_always + SIZEOF (.text) ) { *(.text .rodata* .data) }
 
-	. = 0x33800000 ;
+	. = __qi_sdram_copy + 0x800000 ;
 	__bss_start = .;
 	.bss (NOLOAD) : 
     { 
