@@ -42,6 +42,11 @@ enum filesystem {
 	FS_EXT2
 };
 
+enum ui_actions {
+	UI_ACTION_ADD_DEBUG 	= (1 << 0),
+	UI_ACTION_SKIPKERNEL	= (1 << 1),
+};
+
 /* describes a source for getting kernel image */
 
 struct kernel_source {
@@ -76,20 +81,16 @@ struct board_api {
 	const char *commandline_board_debug;
 	const char *noboot;
 	const char *append;
+
 	const struct board_variant const * (*get_board_variant)(void);
 	int (*is_this_board)(void);
 	void (*early_port_init)(void);
 	void (*port_init)(void);
 	void (*putc)(char);
 	void (*close)(void);
+	u8 (*get_ui_keys)(void);
+
 	struct kernel_source kernel_source[8];
-};
-
-/* these are the boards we support for a given CPU */
-
-struct cpu_supported_boards {
-	const u32 cpu_id;
-	const struct board_api **boards;
 };
 
 /* this is the board we are running on */
