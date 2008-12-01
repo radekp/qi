@@ -296,6 +296,18 @@ void bootloader_second_phase(void)
 				cmdline += strlen(strcpy(cmdline,
 					      commandline_rootfs_append));
 
+		/*
+		 * if he's still holding down the UI_ACTION_SKIPKERNEL key
+		 * now we finished loading the kernel, take it to mean he wants
+		 * to have the debugging options added to the commandline
+		 */
+
+		if (this_board->commandline_board_debug &&
+							this_board->get_ui_keys)
+			if ((this_board->get_ui_keys)() & UI_ACTION_SKIPKERNEL)
+				cmdline += strlen(strcpy(cmdline, this_board->
+						      commandline_board_debug));
+
 		params->hdr.tag = ATAG_CMDLINE;
 		params->hdr.size = (sizeof (struct tag_header) +
 			strlen(params->u.cmdline.cmdline) + 1 + 4) >> 2;
