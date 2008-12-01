@@ -47,6 +47,31 @@ unsigned long s3c6410_mmc_bread(int dev_num, unsigned long blknr, unsigned long 
  *  "root=/dev/ram ramdisk_size=6000000"
  */
 
+static u8 get_ui_keys_gta03(void)
+{
+	u8 keys;
+	u8 ret;
+	static u8 old_keys = 0; /* previous state for debounce */
+	static u8 old_ret = 0; /* previous debounced output for edge detect */
+
+	/* GPN1 is MINUS on GTA03, map to UI_ACTION_ADD_DEBUG, down = 1 */
+	keys = !!(__REG(GPMDAT) & (1 << 1));
+
+	if (keys == old_keys)
+		ret = keys;
+	else
+		ret = old_keys;
+
+	/* edge action */
+	if ((ret & 1) && !(old_ret & 1))
+		ret |= UI_ACTION_SKIPKERNEL;
+
+	old_keys = keys;
+	old_ret = ret;
+
+	return ret;
+}
+
 const struct board_api board_api_gta03 = {
 	.name = "GTA03",
 	.linux_machine_id = 1866,
@@ -59,6 +84,7 @@ const struct board_api board_api_gta03 = {
 	.putc = putc_gta03,
 	.noboot = "boot/noboot-GTA03",
 	.append = "boot/append-GTA03",
+	.get_ui_keys = get_ui_keys_gta03,
 	.commandline_board = "console=ttySAC3,115200 " \
 			     "init=/sbin/init " \
 			     "loglevel=8 ",
