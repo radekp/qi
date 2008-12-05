@@ -538,7 +538,8 @@ void port_init_gta03(void)
 	__REG(GPKPUD) = 0; /* all pullup and pulldown disabled */
 
 	__REG(GPKDAT) =
-		(1 << 2)  /* deassert nMODEM_ON */
+		(1 << 2)  | /* deassert nMODEM_ON */
+		(1 << 0)    /* deassert nWLAN_POWERON */
 	;
 
 	/* ---------------------------- Port L ---------------------------- */
