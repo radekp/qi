@@ -73,10 +73,11 @@ const struct pcf50633_init pcf50633_init[] = {
 	{ PCF50633_REG_MBCC8,		0x00 },
 	{ PCF50633_REG_MBCC1,		0xff }, /* chgena */
 
-	{ PCF50633_REG_LDO1ENA,		2 }, /* enabled if GPIO1 = H */
-	{ PCF50633_REG_LDO2ENA,		2 }, /* enabled if GPIO1 = H */
-	{ PCF50633_REG_LDO5ENA,		1 },
-	{ PCF50633_REG_LDO6ENA,		1 },
+	{ PCF50633_REG_LDO1ENA,		2 }, /* accel enabled if GPIO1 = H */
+	{ PCF50633_REG_LDO2ENA,		2 }, /* codec enabled if GPIO1 = H */
+	{ PCF50633_REG_LDO4ENA,		0 }, /* bt off */
+	{ PCF50633_REG_LDO5ENA,		0 }, /* gps off */
+	{ PCF50633_REG_LDO6ENA,		2 }, /* lcm enabled if GPIO1 = H */
 
 	{ PCF50633_REG_BBCCTL,		0x19 },	/* 3V, 200uA, on */
 	{ PCF50633_REG_OOCSHDWN,	0x04 },  /* defeat 8s death from lowsys on A5 */
