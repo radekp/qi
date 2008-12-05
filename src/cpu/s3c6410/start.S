@@ -423,9 +423,19 @@ start_code:
 	ldr	r1, =0x1FFF
 	str	r1, [r0, #UDIVSLOT_OFFSET]
 
+	/* resuming? */
+
+        ldr     r0, =(ELFIN_CLOCK_POWER_BASE+RST_STAT_OFFSET)
+        ldr     r1, [r0]
+        bic     r1, r1, #0xfffffff7
+        cmp     r1, #0x8
+        beq     wakeup_reset
+
+	/* no, cold boot */
+
+	ldr	r0, =ELFIN_UART_BASE + ELFIN_UART3_OFFSET
 	ldr	r1, =0x55
 	str	r1, [r0, #UTXH_OFFSET]		@'U'
-
 								/* >> CFG_VIDEO_LOGO_MAX_SIZE */
 #define CFG_GBL_DATA_SIZE		128			/* size in bytes reserved for initial data */
 
@@ -445,6 +455,33 @@ clbss_l:
 	ble	clbss_l
 
 	b	_steppingstone_done
+
+	/* resume */
+
+wakeup_reset:
+
+	ldr	r0, =ELFIN_UART_BASE + ELFIN_UART3_OFFSET
+	ldr	r1, =0x4b4b4b4b
+	str	r1, [r0, #UTXH_OFFSET]
+
+	/*Clear wakeup status register*/
+	ldr	r0, =(ELFIN_CLOCK_POWER_BASE+WAKEUP_STAT_OFFSET)
+	ldr	r1, [r0]
+	str	r1, [r0]
+
+#if 0
+        /*LED test*/
+        ldr     r0, =ELFIN_GPIO_BASE
+        ldr     r1, =0x3000
+        str     r1, [r0, #GPNDAT_OFFSET]
+#endif
+
+	/*Load return address and jump to kernel*/
+	ldr	r0, =(ELFIN_CLOCK_POWER_BASE+INF_REG0_OFFSET)
+	ldr	r1, [r0]	/* r1 = physical address of s3c6400_cpu_resume function*/
+	mov	pc, r1		/*Jump to kernel (sleep-s3c6400.S)*/
+	nop
+	nop
 
 4:
 	b 4b
