@@ -87,7 +87,7 @@ const struct board_api board_api_gta03 = {
 	.get_ui_keys = get_ui_keys_gta03,
 	.commandline_board = "console=tty0 " \
 			     "console=ttySAC3,115200 " \
-			     "init=/sbin/init " \
+			     "init=/bin/sh " \
 			     "loglevel=8 " \
 			     "rootdelay=1 " \
 			     "ro ",
