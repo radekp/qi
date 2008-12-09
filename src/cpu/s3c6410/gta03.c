@@ -100,19 +100,30 @@ void port_init_gta03(void)
 		(2 << 28)   /* GPA7  - UART_RTS1 */
 	;
 
-	__REG(GPAPUD) = 0; /* all pullup and pulldown disabled */
-
+	__REG(GPAPUD) =  /* all pullup and pulldown disabled */
+		0
+	;
 	__REG(GPADAT) = 0; /* just for determinism */
 
 	__REG(GPACONSLP) =
-		(3 << 0)  | /* GPA0  - keep */
-		(3 << 2)  | /* GPA1  - keep */
-		(3 << 4)  | /* GPA2  - keep */
-		(3 << 6)  | /* GPA3  - keep */
-		(3 << 8)  | /* GPA4  - keep */
-		(3 << 10) | /* GPA5  - keep */
-		(3 << 12) | /* GPA6  - keep */
-		(3 << 14)   /* GPA7  - keep */
+		(2 << 0)  | /* GPA0  - input */
+		(2 << 2)  | /* GPA1  - input */
+		(2 << 4)  | /* GPA2  - input */
+		(2 << 6)  | /* GPA3  - input */
+		(2 << 8)  | /* GPA4  - input */
+		(2 << 10) | /* GPA5  - input */
+		(2 << 12) | /* GPA6  - input */
+		(2 << 14)   /* GPA7  - input */
+	;
+	__REG(GPAPUDSLP) =
+		(1 << 0)  | /* GPA0  - pulldown */
+		(1 << 2)  | /* GPA1  - pulldown */
+		(1 << 4)  | /* GPA2  - pulldown */
+		(1 << 6)  | /* GPA3  - pulldown */
+		(1 << 8)  | /* GPA4  - pulldown */
+		(1 << 10) | /* GPA5  - pulldown */
+		(1 << 12) | /* GPA6  - pulldown */
+		(1 << 14)   /* GPA7  - pulldown */
 	;
 
 	/* ---------------------------- Port B ---------------------------- */
@@ -127,30 +138,32 @@ void port_init_gta03(void)
 		(1 << 24)   /* GPB6  - (I2C BB SDA) OUTPUT */
 	;
 
-	__REG(GPBPUD) = 0; /* all pullup and pulldown disabled */
+	__REG(GPBPUD) =  /* all pullup and pulldown disabled */
+		0
+	;
 
 	__REG(GPBDAT) = 0; /* just for determinism */
 
 	__REG(GPBCONSLP) =
-		(3 << 0)  | /* GPB0  - keep */
-		(3 << 2)  | /* GPB1  - keep */
-		(3 << 4)  | /* GPB2  - keep */
-		(3 << 6)  | /* GPB3  - keep */
-		(3 << 8)  | /* GPB4  - keep */
-		(3 << 10) | /* GPB5  - keep */
-		(3 << 12) | /* GPB6  - keep */
-		(3 << 14)   /* GPB7  - keep */
+		(2 << 0)  | /* GPB0  - input */
+		(2 << 2)  | /* GPB1  - input */
+		(2 << 4)  | /* GPB2  - input */
+		(2 << 6)  | /* GPB3  - input */
+		(2 << 8)  | /* GPB4  - input */
+		(2 << 10) | /* GPB5  - input */
+		(2 << 12) | /* GPB6  - input */
+		(2 << 14)   /* GPB7  - input */
 	;
 
 	__REG(GPBPUDSLP) =
-		(0 << 0)  | /* GPB0  - no pull up or down */
-		(0 << 2)  | /* GPB1  - no pull up or down */
-		(0 << 4)  | /* GPB2  - no pull up or down */
-		(0 << 6)  | /* GPB3  - no pull up or down */
-		(0 << 8)  | /* GPB4  - no pull up or down */
-		(0 << 10) | /* GPB5  - no pull up or down */
-		(0 << 12) | /* GPB6  - no pull up or down */
-		(0 << 14)   /* GPB7  - no pull up or down */
+		(1 << 0)  | /* GPB0  - pull down */
+		(1 << 2)  | /* GPB1  - pull down */
+		(1 << 4)  | /* GPB2  - pull down */
+		(1 << 6)  | /* GPB3  - pull down */
+		(1 << 8)  | /* GPB4  - pull down */
+		(1 << 10) | /* GPB5  - pull down */
+		(1 << 12) | /* GPB6  - pull down */
+		(1 << 14)   /* GPB7  - pull down */
 	;
 
 	/* ---------------------------- Port C ---------------------------- */
@@ -166,30 +179,31 @@ void port_init_gta03(void)
 		(1 << 28)   /* GPC7  - SPI_CS1   OUTPUT */
 	;
 
-	__REG(GPCPUD) = 0; /* all pullup and pulldown disabled */
-
+	__REG(GPCPUD) =  /* all pullup and pulldown disabled */
+		0
+	;
 	__REG(GPCDAT) = 0; /* just for determinism */
 
 	__REG(GPCCONSLP) =
-		(3 << 0)  | /* GPC0  - keep */
-		(3 << 2)  | /* GPC1  - keep */
-		(3 << 4)  | /* GPC2  - keep */
-		(3 << 6)  | /* GPC3  - keep */
-		(3 << 8)  | /* GPC4  - keep */
-		(3 << 10) | /* GPC5  - keep */
-		(3 << 12) | /* GPC6  - keep */
-		(3 << 14)   /* GPC7  - keep */
+		(2 << 0)  | /* GPC0  - input */
+		(2 << 2)  | /* GPC1  - input */
+		(2 << 4)  | /* GPC2  - input */
+		(2 << 6)  | /* GPC3  - input */
+		(2 << 8)  | /* GPC4  - input */
+		(2 << 10) | /* GPC5  - input */
+		(2 << 12) | /* GPC6  - input */
+		(2 << 14)   /* GPC7  - input */
 	;
 
 	__REG(GPCPUDSLP) =
-		(0 << 0)  | /* GPC0  - no pull up or down */
-		(0 << 2)  | /* GPC1  - no pull up or down */
-		(0 << 4)  | /* GPC2  - no pull up or down */
-		(0 << 6)  | /* GPC3  - no pull up or down */
-		(0 << 8)  | /* GPC4  - no pull up or down */
-		(0 << 10) | /* GPC5  - no pull up or down */
-		(0 << 12) | /* GPC6  - no pull up or down */
-		(0 << 14)   /* GPC7  - no pull up or down */
+		(1 << 0)  | /* GPC0  - pull down */
+		(1 << 2)  | /* GPC1  - pull down */
+		(1 << 4)  | /* GPC2  - pull down */
+		(1 << 6)  | /* GPC3  - pull down */
+		(1 << 8)  | /* GPC4  - pull down */
+		(1 << 10) | /* GPC5  - pull down */
+		(1 << 12) | /* GPC6  - pull down */
+		(1 << 14)   /* GPC7  - pull down */
 	;
 
 	/* ---------------------------- Port D ---------------------------- */
@@ -207,19 +221,19 @@ void port_init_gta03(void)
 	__REG(GPDDAT) = 0; /* just for determinism */
 
 	__REG(GPDCONSLP) =
-		(3 << 0)  | /* GPD0  - keep */
-		(3 << 2)  | /* GPD1  - keep */
-		(3 << 4)  | /* GPD2  - keep */
-		(3 << 6)  | /* GPD3  - keep */
-		(3 << 8)    /* GPD4  - keep */
+		(2 << 0)  | /* GPD0  - input */
+		(2 << 2)  | /* GPD1  - input */
+		(2 << 4)  | /* GPD2  - input */
+		(2 << 6)  | /* GPD3  - input */
+		(2 << 8)    /* GPD4  - input */
 	;
 
 	__REG(GPDPUDSLP) =
-		(0 << 0)  | /* GPD0  - no pull up or down */
-		(0 << 2)  | /* GPD1  - no pull up or down */
-		(0 << 4)  | /* GPD2  - no pull up or down */
-		(0 << 6)  | /* GPD3  - no pull up or down */
-		(0 << 8)    /* GPD4  - no pull up or down */
+		(1 << 0)  | /* GPD0  - pull down */
+		(1 << 2)  | /* GPD1  - pull down */
+		(1 << 4)  | /* GPD2  - pull down */
+		(1 << 6)  | /* GPD3  - pull down */
+		(1 << 8)    /* GPD4  - pull down */
 	;
 
 	/* ---------------------------- Port E ---------------------------- */
@@ -237,11 +251,11 @@ void port_init_gta03(void)
 	__REG(GPEDAT) = 0; /* just for determinism */
 
 	__REG(GPECONSLP) =
-		(3 << 0)  | /* GPE0  - keep */
-		(3 << 2)  | /* GPE1  - keep */
-		(3 << 4)  | /* GPE2  - keep */
-		(3 << 6)  | /* GPE3  - keep */
-		(3 << 8)    /* GPE4  - keep */
+		(2 << 0)  | /* GPE0  - input */
+		(2 << 2)  | /* GPE1  - input */
+		(2 << 4)  | /* GPE2  - input */
+		(2 << 6)  | /* GPE3  - input */
+		(2 << 8)    /* GPE4  - input */
 	;
 
 	__REG(GPEPUDSLP) =
@@ -278,41 +292,41 @@ void port_init_gta03(void)
 	__REG(GPFDAT) = (1 << 15); /* assert CAM_PWRDN */
 
 	__REG(GPFCONSLP) =
-		(0 << 0)  | /* GPF0  - OUTPUT 0 */
-		(0 << 2)  | /* GPF1  - OUTPUT 0 */
-		(0 << 4)  | /* GPF2  - OUTPUT 0 */
-		(0 << 6)  | /* GPF3  - OUTPUT 0 */
-		(0 << 8)  | /* GPF4  - OUTPUT 0 */
-		(0 << 10) | /* GPF5  - OUTPUT 0 */
-		(0 << 12) | /* GPF6  - OUTPUT 0 */
-		(0 << 14) | /* GPF7  - OUTPUT 0 */
-		(0 << 16) | /* GPF8  - OUTPUT 0 */
-		(0 << 18) | /* GPF9  - OUTPUT 0 */
-		(0 << 20) | /* GPF10 - OUTPUT 0 */
-		(0 << 22) | /* GPF11 - OUTPUT 0 */
-		(0 << 24) | /* GPF12 - OUTPUT 0 */
-		(0 << 26) | /* GPF13 - OUTPUT 0 */
-		(0 << 28) | /* GPF14 - OUTPUT 0 */
-		(0 << 30)   /* GPF15 - OUTPUT 0 */
+		(2 << 0)  | /* GPF0  - input */
+		(2 << 2)  | /* GPF1  - input */
+		(2 << 4)  | /* GPF2  - input */
+		(2 << 6)  | /* GPF3  - input */
+		(2 << 8)  | /* GPF4  - input */
+		(2 << 10) | /* GPF5  - input */
+		(2 << 12) | /* GPF6  - input */
+		(2 << 14) | /* GPF7  - input */
+		(2 << 16) | /* GPF8  - input */
+		(2 << 18) | /* GPF9  - input */
+		(2 << 20) | /* GPF10 - input */
+		(2 << 22) | /* GPF11 - input */
+		(2 << 24) | /* GPF12 - input */
+		(2 << 26) | /* GPF13 - input */
+		(2 << 28) | /* GPF14 - input */
+		(2 << 30)   /* GPF15 - input */
 	;
 
 	__REG(GPFPUDSLP) =
-		(0 << 0)  | /* GPF0  - no pull up or down */
-		(0 << 2)  | /* GPF1  - no pull up or down */
-		(0 << 4)  | /* GPF2  - no pull up or down */
-		(0 << 6)  | /* GPF3  - no pull up or down */
-		(0 << 8)  | /* GPF4  - no pull up or down */
-		(0 << 10) | /* GPF5  - no pull up or down */
-		(0 << 12) | /* GPF6  - no pull up or down */
-		(0 << 14) | /* GPF7  - no pull up or down */
-		(0 << 16) | /* GPF8  - no pull up or down */
-		(0 << 18) | /* GPF9  - no pull up or down */
-		(0 << 20) | /* GPF10 - no pull up or down */
-		(0 << 22) | /* GPF11 - no pull up or down */
-		(0 << 24) | /* GPF12 - no pull up or down */
-		(0 << 26) | /* GPF13 - no pull up or down */
-		(0 << 28) | /* GPF14 - no pull up or down */
-		(0 << 30)   /* GPF15 - no pull up or down */
+		(1 << 0)  | /* GPF0  - pull down */
+		(1 << 2)  | /* GPF1  - pull down */
+		(1 << 4)  | /* GPF2  - pull down */
+		(1 << 6)  | /* GPF3  - pull down */
+		(1 << 8)  | /* GPF4  - pull down */
+		(1 << 10) | /* GPF5  - pull down */
+		(1 << 12) | /* GPF6  - pull down */
+		(1 << 14) | /* GPF7  - pull down */
+		(1 << 16) | /* GPF8  - pull down */
+		(1 << 18) | /* GPF9  - pull down */
+		(1 << 20) | /* GPF10 - pull down */
+		(1 << 22) | /* GPF11 - pull down */
+		(1 << 24) | /* GPF12 - pull down */
+		(1 << 26) | /* GPF13 - pull down */
+		(1 << 28) | /* GPF14 - pull down */
+		(1 << 30)   /* GPF15 - pull down */
 	;
 
 	/* ---------------------------- Port G ---------------------------- */
@@ -332,23 +346,23 @@ void port_init_gta03(void)
 	__REG(GPGDAT) = 0; /* just for determinism */
 
 	__REG(GPGCONSLP) =
-		(0 << 0)  | /* GPG0  - OUTPUT 0 */
-		(0 << 2)  | /* GPG1  - OUTPUT 0 */
-		(0 << 4)  | /* GPG2  - OUTPUT 0 */
-		(0 << 6)  | /* GPG3  - OUTPUT 0 */
-		(0 << 8)  | /* GPG4  - OUTPUT 0 */
-		(0 << 10) | /* GPG5  - OUTPUT 0 */
-		(0 << 12)   /* GPG6  - OUTPUT 0 */
+		(2 << 0)  | /* GPG0  - input */
+		(2 << 2)  | /* GPG1  - input */
+		(2 << 4)  | /* GPG2  - input */
+		(2 << 6)  | /* GPG3  - input */
+		(2 << 8)  | /* GPG4  - input */
+		(2 << 10) | /* GPG5  - input */
+		(2 << 12)   /* GPG6  - input */
 	;
 
 	__REG(GPGPUDSLP) =
-		(0 << 0)  | /* GPG0  - no pull up or down */
-		(0 << 2)  | /* GPG1  - no pull up or down */
-		(0 << 4)  | /* GPG2  - no pull up or down */
-		(0 << 6)  | /* GPG3  - no pull up or down */
-		(0 << 8)  | /* GPG4  - no pull up or down */
-		(0 << 10) | /* GPG5  - no pull up or down */
-		(0 << 12)   /* GPG6  - no pull up or down */
+		(1 << 0)  | /* GPG0  - pull down */
+		(1 << 2)  | /* GPG1  - pull down */
+		(1 << 4)  | /* GPG2  - pull down */
+		(1 << 6)  | /* GPG3  - pull down */
+		(1 << 8)  | /* GPG4  - pull down */
+		(1 << 10) | /* GPG5  - pull down */
+		(1 << 12)   /* GPG6  - pull down */
 	;
 
 	/* ---------------------------- Port H ---------------------------- */
@@ -373,29 +387,29 @@ void port_init_gta03(void)
 	__REG(GPHDAT) = 0;
 
 	__REG(GPHCONSLP) =
-		(0 << 0)  | /* GPH0  - OUTPUT 0 */
-		(0 << 2)  | /* GPH1  - OUTPUT 0 */
-		(0 << 4)  | /* GPH2  - OUTPUT 0 */
-		(0 << 6)  | /* GPH3  - OUTPUT 0 */
-		(0 << 8)  | /* GPH4  - OUTPUT 0 */
-		(0 << 10) | /* GPH5  - OUTPUT 0 */
-		(0 << 12) | /* GPH6  - OUTPUT 0 */
+		(2 << 0)  | /* GPH0  - input */
+		(2 << 2)  | /* GPH1  - input */
+		(2 << 4)  | /* GPH2  - input */
+		(2 << 6)  | /* GPH3  - input */
+		(2 << 8)  | /* GPH4  - input */
+		(2 << 10) | /* GPH5  - input */
+		(2 << 12) | /* GPH6  - input */
 		(2 << 14) | /* GPH7  - INPUT (HDQ) */
-		(0 << 16) | /* GPH8  - OUTPUT 0 */
-		(0 << 18)   /* GPH9  - OUTPUT 0 */
+		(2 << 16) | /* GPH8  - input */
+		(2 << 18)   /* GPH9  - input */
 	;
 
 	__REG(GPHPUDSLP) =
-		(0 << 0)  | /* GPH0  - no pull up or down */
-		(0 << 2)  | /* GPH1  - no pull up or down */
-		(0 << 4)  | /* GPH2  - no pull up or down */
-		(0 << 6)  | /* GPH3  - no pull up or down */
-		(0 << 8)  | /* GPH4  - no pull up or down */
-		(0 << 10) | /* GPH5  - no pull up or down */
+		(1 << 0)  | /* GPH0  - pull down */
+		(1 << 2)  | /* GPH1  - pull down */
+		(1 << 4)  | /* GPH2  - pull down */
+		(1 << 6)  | /* GPH3  - pull down */
+		(1 << 8)  | /* GPH4  - pull down */
+		(1 << 10) | /* GPH5  - pull down */
 		(2 << 12) | /* GPH6  - PULLUP (HDQ) */
-		(0 << 14) | /* GPH7  - no pull up or down */
-		(0 << 16) | /* GPH8  - no pull up or down */
-		(0 << 18)   /* GPH9  - no pull up or down */
+		(1 << 14) | /* GPH7  - pull down */
+		(1 << 16) | /* GPH8  - pull down */
+		(1 << 18)   /* GPH9  - pull down */
 	;
 
 	/* ---------------------------- Port I ---------------------------- */
@@ -424,41 +438,41 @@ void port_init_gta03(void)
 	__REG(GPIDAT) = 0; /* just for determinism */
 
 	__REG(GPICONSLP) =
-		(0 << 0)  | /* GPI0  - OUTPUT 0 */
-		(0 << 2)  | /* GPI1  - OUTPUT 0 */
-		(0 << 4)  | /* GPI2  - OUTPUT 0 */
-		(0 << 6)  | /* GPI3  - OUTPUT 0 */
-		(0 << 8)  | /* GPI4  - OUTPUT 0 */
-		(0 << 10) | /* GPI5  - OUTPUT 0 */
-		(0 << 12) | /* GPI6  - OUTPUT 0 */
-		(0 << 14) | /* GPI7  - OUTPUT 0 */
-		(0 << 16) | /* GPI8  - OUTPUT 0 */
-		(0 << 18) | /* GPI9  - OUTPUT 0 */
-		(0 << 20) | /* GPI10 - OUTPUT 0 */
-		(0 << 22) | /* GPI11 - OUTPUT 0 */
-		(0 << 24) | /* GPI12 - OUTPUT 0 */
-		(0 << 26) | /* GPI13 - OUTPUT 0 */
-		(0 << 28) | /* GPI14 - OUTPUT 0 */
-		(0 << 30)   /* GPI15 - OUTPUT 0 */
+		(2 << 0)  | /* GPI0  - input */
+		(2 << 2)  | /* GPI1  - input */
+		(2 << 4)  | /* GPI2  - input */
+		(2 << 6)  | /* GPI3  - input */
+		(2 << 8)  | /* GPI4  - input */
+		(2 << 10) | /* GPI5  - input */
+		(2 << 12) | /* GPI6  - input */
+		(2 << 14) | /* GPI7  - input */
+		(2 << 16) | /* GPI8  - input */
+		(2 << 18) | /* GPI9  - input */
+		(2 << 20) | /* GPI10 - input */
+		(2 << 22) | /* GPI11 - input */
+		(2 << 24) | /* GPI12 - input */
+		(2 << 26) | /* GPI13 - input */
+		(2 << 28) | /* GPI14 - input */
+		(2 << 30)   /* GPI15 - input */
 	;
 
 	__REG(GPIPUDSLP) =
-		(0 << 0)  | /* GPI0  - no pull up or down */
-		(0 << 2)  | /* GPI1  - no pull up or down */
-		(0 << 4)  | /* GPI2  - no pull up or down */
-		(0 << 6)  | /* GPI3  - no pull up or down */
-		(0 << 8)  | /* GPI4  - no pull up or down */
-		(0 << 10) | /* GPI5  - no pull up or down */
-		(0 << 12) | /* GPI6  - no pull up or down */
-		(0 << 14) | /* GPI7  - no pull up or down */
-		(0 << 16) | /* GPI8  - no pull up or down */
-		(0 << 18) | /* GPI9  - no pull up or down */
-		(0 << 20) | /* GPI10 - no pull up or down */
-		(0 << 22) | /* GPI11 - no pull up or down */
-		(0 << 24) | /* GPI12 - no pull up or down */
-		(0 << 26) | /* GPI13 - no pull up or down */
-		(0 << 28) | /* GPI14 - no pull up or down */
-		(0 << 30)   /* GPI15 - no pull up or down */
+		(1 << 0)  | /* GPI0  - pull down */
+		(1 << 2)  | /* GPI1  - pull down */
+		(1 << 4)  | /* GPI2  - pull down */
+		(1 << 6)  | /* GPI3  - pull down */
+		(1 << 8)  | /* GPI4  - pull down */
+		(1 << 10) | /* GPI5  - pull down */
+		(1 << 12) | /* GPI6  - pull down */
+		(1 << 14) | /* GPI7  - pull down */
+		(1 << 16) | /* GPI8  - pull down */
+		(1 << 18) | /* GPI9  - pull down */
+		(1 << 20) | /* GPI10 - pull down */
+		(1 << 22) | /* GPI11 - pull down */
+		(1 << 24) | /* GPI12 - pull down */
+		(1 << 26) | /* GPI13 - pull down */
+		(1 << 28) | /* GPI14 - pull down */
+		(1 << 30)   /* GPI15 - pull down */
 	;
 
 	/* ---------------------------- Port J ---------------------------- */
@@ -483,33 +497,33 @@ void port_init_gta03(void)
 	__REG(GPJDAT) = 0; /* just for determinism */
 
 	__REG(GPJCONSLP) =
-		(0 << 0)  | /* GPJ0  - OUTPUT 0 */
-		(0 << 2)  | /* GPJ1  - OUTPUT 0 */
-		(0 << 4)  | /* GPJ2  - OUTPUT 0 */
-		(0 << 6)  | /* GPJ3  - OUTPUT 0 */
-		(0 << 8)  | /* GPJ4  - OUTPUT 0 */
-		(0 << 10) | /* GPJ5  - OUTPUT 0 */
-		(0 << 12) | /* GPJ6  - OUTPUT 0 */
-		(0 << 14) | /* GPJ7  - OUTPUT 0 */
-		(0 << 16) | /* GPJ8  - OUTPUT 0 */
-		(0 << 18) | /* GPJ9  - OUTPUT 0 */
-		(0 << 20) | /* GPJ10 - OUTPUT 0 */
-		(0 << 22)   /* GPJ11 - OUTPUT 0 */
+		(2 << 0)  | /* GPJ0  - input */
+		(2 << 2)  | /* GPJ1  - input */
+		(2 << 4)  | /* GPJ2  - input */
+		(2 << 6)  | /* GPJ3  - input */
+		(2 << 8)  | /* GPJ4  - input */
+		(2 << 10) | /* GPJ5  - input */
+		(2 << 12) | /* GPJ6  - input */
+		(2 << 14) | /* GPJ7  - input */
+		(2 << 16) | /* GPJ8  - input */
+		(2 << 18) | /* GPJ9  - input */
+		(2 << 20) | /* GPJ10 - input */
+		(2 << 22)   /* GPJ11 - input */
 	;
 
 	__REG(GPJPUDSLP) =
-		(0 << 0)  | /* GPJ0  - no pull up or down */
-		(0 << 2)  | /* GPJ1  - no pull up or down */
-		(0 << 4)  | /* GPJ2  - no pull up or down */
-		(0 << 6)  | /* GPJ3  - no pull up or down */
-		(0 << 8)  | /* GPJ4  - no pull up or down */
-		(0 << 10) | /* GPJ5  - no pull up or down */
-		(0 << 12) | /* GPJ6  - no pull up or down */
-		(0 << 14) | /* GPJ7  - no pull up or down */
-		(0 << 16) | /* GPJ8  - no pull up or down */
-		(0 << 18) | /* GPJ9  - no pull up or down */
-		(0 << 20) | /* GPJ10 - no pull up or down */
-		(0 << 22)   /* GPJ11 - no pull up or down */
+		(1 << 0)  | /* GPJ0  - pull down */
+		(1 << 2)  | /* GPJ1  - pull down */
+		(1 << 4)  | /* GPJ2  - pull down */
+		(1 << 6)  | /* GPJ3  - pull down */
+		(1 << 8)  | /* GPJ4  - pull down */
+		(1 << 10) | /* GPJ5  - pull down */
+		(1 << 12) | /* GPJ6  - pull down */
+		(1 << 14) | /* GPJ7  - pull down */
+		(1 << 16) | /* GPJ8  - pull down */
+		(1 << 18) | /* GPJ9  - pull down */
+		(1 << 20) | /* GPJ10 - pull down */
+		(1 << 22)   /* GPJ11 - pull down */
 	;
 
 	/* ---------------------------- Port K ---------------------------- */
