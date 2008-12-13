@@ -609,7 +609,7 @@ static void print_sd_cid(const struct sd_cid *cid)
 
 int mmc_init(int verbose)
 {
-	int retries = 50, rc = -1;
+	int retries = 3000, rc = -1;
 	int resp;
 	u8 response[16];
 //	mmc_cid_t *mmc_cid = (mmc_cid_t *)response;
@@ -675,9 +675,7 @@ int mmc_init(int verbose)
 
 	while (retries--) {
 
-		udelay(100000);
-		udelay(100000);
-		udelay(100000);
+		udelay(10000);
 
 		resp = mmc_cmd(MMC_APP_CMD, 0x00000000,
 			MMC_CMD_AC | MMC_RSP_R1, 0, 0, 0,
