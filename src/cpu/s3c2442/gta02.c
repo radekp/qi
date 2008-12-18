@@ -482,7 +482,7 @@ const struct board_api board_api_gta02 = {
 			.partition_index = 1,
 			.filesystem = FS_EXT2,
 			.filepath = "boot/uImage-GTA02.bin",
-			.commandline_append = " root=/dev/mmcblk0p1 ",
+			.commandline_append = " root=/dev/mmcblk0p1 rootdelay=1 ",
 		},
 		[1] = {
 			.name = "SD Card EXT2 P2 Kernel",
@@ -491,7 +491,7 @@ const struct board_api board_api_gta02 = {
 			.partition_index = 2,
 			.filesystem = FS_EXT2,
 			.filepath = "boot/uImage-GTA02.bin",
-			.commandline_append = " root=/dev/mmcblk0p2 ",
+			.commandline_append = " root=/dev/mmcblk0p2 rootdelay=1 ",
 		},
 		[2] = {
 			.name = "SD Card EXT2 P3 Kernel",
@@ -500,7 +500,7 @@ const struct board_api board_api_gta02 = {
 			.partition_index = 3,
 			.filesystem = FS_EXT2,
 			.filepath = "boot/uImage-GTA02.bin",
-			.commandline_append = " root=/dev/mmcblk0p3 ",
+			.commandline_append = " root=/dev/mmcblk0p3 rootdelay=1 ",
 		},
 		[3] = {
 			.name = "NAND Kernel",
