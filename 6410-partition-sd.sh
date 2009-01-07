@@ -51,19 +51,23 @@ if [ ! -z "`grep $1 /proc/mounts`" ] ; then
 fi
 
 # set CUT_COLUMN for each OS
+# set USE_SED=some editing command
+# default: use cat as a no-op
+USE_SED='cat'
 case "$(lsb_release --short --description)" in
   Ubuntu\ 7*)
     CUT_COLUMN=5
     ;;
   Ubuntu\ 8.04*)
     CUT_COLUMN=5
+    USE_SED='sed s/^\[[[:space:]]*/[/'
     ;;
   *)
     CUT_COLUMN=4
     ;;
 esac
 
-DMESG_LINE=$(dmesg | grep "$1" | grep "512-byte hardware" | tail -n 1)
+DMESG_LINE=$(dmesg | ${USE_SED} | grep "$1" | grep "512-byte hardware" | tail -n 1)
 SECTORS=$(echo "${DMESG_LINE}" | cut -d' ' -f"${CUT_COLUMN}")
 
 if ! echo "${SECTORS}" | grep '^[[:digit:]]\+$'
