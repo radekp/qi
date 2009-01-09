@@ -277,6 +277,42 @@ static int do_crc(const image_header_t *hdr, const void *kernel_dram)
 	return 0;
 }
 
+static the_kernel_fn load_uimage(void *kernel_dram)
+{
+	image_header_t	*hdr;
+	u32 kernel_size;
+
+	hdr = (image_header_t *)kernel_dram;
+
+	if (__be32_to_cpu(hdr->ih_magic) != IH_MAGIC) {
+		puts("bad magic ");
+		print32(hdr->ih_magic);
+		puts("\n");
+		return NULL;
+	}
+
+	puts("        Found: \"");
+	puts((const char *)hdr->ih_name);
+	puts("\"\n         Size: ");
+	printdec(__be32_to_cpu(hdr->ih_size) >> 10);
+	puts(" KiB\n");
+
+	kernel_size = ((__be32_to_cpu(hdr->ih_size) +
+			  sizeof(image_header_t) + 2048) & ~(2048 - 1));
+
+	if (read_file(this_kernel->filepath, kernel_dram, kernel_size) < 0) {
+		indicate(UI_IND_KERNEL_PULL_FAIL);
+		return NULL;
+	}
+
+	indicate(UI_IND_KERNEL_PULL_OK);
+
+	if (!do_crc(hdr, kernel_dram))
+		return NULL;
+
+	return (the_kernel_fn) (((char *)hdr) + sizeof(image_header_t));
+}
+
 static void try_this_kernel(void)
 {
 	the_kernel_fn the_kernel;
@@ -284,8 +320,6 @@ static void try_this_kernel(void)
 	static char commandline_rootfs_append[512] = "";
 	int ret;
 	void * kernel_dram = (void *)this_board->linux_mem_start + 0x8000;
-	image_header_t	*hdr;
-	u32 kernel_size;
 
 	partition_offset_blocks = 0;
 	partition_length_blocks = 0;
@@ -328,30 +362,9 @@ static void try_this_kernel(void)
 	if (read_file(this_kernel->filepath, kernel_dram, 4096) < 0)
 		return;
 
-	hdr = (image_header_t *)kernel_dram;
-
-	if (__be32_to_cpu(hdr->ih_magic) != IH_MAGIC) {
-		puts("bad magic ");
-		print32(hdr->ih_magic);
-		puts("\n");
+	the_kernel = load_uimage(kernel_dram);
+	if (!the_kernel)
 		return;
-	}
-
-	puts("        Found: \"");
-	puts((const char *)hdr->ih_name);
-	puts("\"\n         Size: ");
-	printdec(__be32_to_cpu(hdr->ih_size) >> 10);
-	puts(" KiB\n");
-
-	kernel_size = ((__be32_to_cpu(hdr->ih_size) +
-			  sizeof(image_header_t) + 2048) & ~(2048 - 1));
-
-	if (read_file(this_kernel->filepath, kernel_dram, kernel_size) < 0) {
-		indicate(UI_IND_KERNEL_PULL_FAIL);
-		return;
-	}
-
-	indicate(UI_IND_KERNEL_PULL_OK);
 
 	/* initramfs if needed */
 
@@ -367,11 +380,6 @@ static void try_this_kernel(void)
 		}
 		indicate(UI_IND_INITRAMFS_PULL_OK);
 	}
-
-	if (!do_crc(hdr, kernel_dram))
-		return;
-
-	the_kernel = (the_kernel_fn) (((char *)hdr) + sizeof(image_header_t));
 
 	do_params(initramfs_len, commandline_rootfs_append);
 
