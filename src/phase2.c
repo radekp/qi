@@ -96,6 +96,34 @@ int read_file(const char * filepath, u8 * destination, int size)
 	return len;
 }
 
+static int do_block_init(void)
+{
+	static void * last_block_init = NULL;
+	static int last_block_init_result = 0;
+
+	/* if this device needs initializing, try to init it */
+	if (!this_kernel->block_init)
+		return 1;
+
+	/*
+	 * cache result to limit attempts for same
+	 * block device to one time
+	 */
+	if (this_kernel->block_init != last_block_init)
+		last_block_init_result = (this_kernel->block_init)();
+
+	if (last_block_init_result) {
+		puts("block device init failed\n");
+		if (this_kernel->block_init != last_block_init)
+			indicate(UI_IND_MOUNT_FAIL);
+		last_block_init = this_kernel[1].block_init;
+		return 0;
+	}
+	last_block_init = this_kernel->block_init;
+
+	return 1;
+}
+
 static int do_partitions(void *kernel_dram)
 {
 	unsigned char *p = kernel_dram;
@@ -251,8 +279,6 @@ static void try_this_kernel(void)
 	void	(*the_kernel)(int zero, int arch, uint params);
 	unsigned int initramfs_len = 0;
 	static char commandline_rootfs_append[512] = "";
-	static void * last_block_init = NULL;
-	static int last_block_init_result = 0;
 	int ret;
 	void * kernel_dram = (void *)this_board->linux_mem_start + 0x8000;
 	image_header_t	*hdr;
@@ -267,24 +293,8 @@ static void try_this_kernel(void)
 
 	indicate(UI_IND_MOUNT_PART);
 
-	/* if this device needs initializing, try to init it */
-	if (this_kernel->block_init) {
-		/*
-		 * cache result to limit attempts for same
-		 * block device to one time
-		 */
-		if (this_kernel->block_init != last_block_init)
-			last_block_init_result = (this_kernel->block_init)();
-
-		if (last_block_init_result) {
-			puts("block device init failed\n");
-			if (this_kernel->block_init != last_block_init)
-				indicate(UI_IND_MOUNT_FAIL);
-			last_block_init = this_kernel[1].block_init;
-			return;
-		}
-		last_block_init = this_kernel->block_init;
-	}
+	if (!do_block_init())
+		return;
 
 	if (!do_partitions(kernel_dram))
 		return;
