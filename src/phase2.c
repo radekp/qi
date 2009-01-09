@@ -96,6 +96,53 @@ int read_file(const char * filepath, u8 * destination, int size)
 	return len;
 }
 
+static int do_partitions(void *kernel_dram)
+{
+	unsigned char *p = kernel_dram;
+
+	/* if there's a partition table implied, parse it, otherwise
+	 * just use a fixed offset
+	 */
+	if (!this_kernel->partition_index) {
+		partition_offset_blocks =
+			  this_kernel->offset_blocks512_if_no_partition;
+		return 1;
+	}
+
+	if ((int)this_kernel->block_read(kernel_dram, 0, 4) < 0) {
+		puts("Bad partition read\n");
+		indicate(UI_IND_MOUNT_FAIL);
+		return 0;
+	}
+
+	if ((p[0x1fe] != 0x55) || (p[0x1ff] != 0xaa)) {
+		puts("partition signature missing\n");
+		indicate(UI_IND_MOUNT_FAIL);
+		return 0;
+	}
+
+	p += 0x1be + 8 + (0x10 * (this_kernel->partition_index - 1));
+
+	partition_offset_blocks = (((u32)p[3]) << 24) |
+				  (((u32)p[2]) << 16) |
+				  (((u32)p[1]) << 8) |
+				  p[0];
+	partition_length_blocks = (((u32)p[7]) << 24) |
+				  (((u32)p[6]) << 16) |
+				  (((u32)p[5]) << 8) |
+				  p[4];
+
+	puts("    Partition: ");
+	printdec(this_kernel->partition_index);
+	puts(" start +");
+	printdec(partition_offset_blocks);
+	puts(" 512-byte blocks, size ");
+	printdec(partition_length_blocks / 2048);
+	puts(" MiB\n");
+
+	return 1;
+}
+
 static void do_params(unsigned initramfs_len,
     const char *commandline_rootfs_append)
 {
@@ -217,46 +264,8 @@ static void try_this_kernel(void)
 		last_block_init = this_kernel->block_init;
 	}
 
-	/* if there's a partition table implied, parse it, otherwise
-	 * just use a fixed offset
-	 */
-	if (this_kernel->partition_index) {
-		unsigned char *p = kernel_dram;
-
-		if ((int)this_kernel->block_read(kernel_dram, 0, 4) < 0) {
-			puts("Bad partition read\n");
-			indicate(UI_IND_MOUNT_FAIL);
-			return;
-		}
-
-		if ((p[0x1fe] != 0x55) || (p[0x1ff] != 0xaa)) {
-			puts("partition signature missing\n");
-			indicate(UI_IND_MOUNT_FAIL);
-			return;
-		}
-
-		p += 0x1be + 8 + (0x10 * (this_kernel->partition_index - 1));
-
-		partition_offset_blocks = (((u32)p[3]) << 24) |
-					  (((u32)p[2]) << 16) |
-					  (((u32)p[1]) << 8) |
-					  p[0];
-		partition_length_blocks = (((u32)p[7]) << 24) |
-					  (((u32)p[6]) << 16) |
-					  (((u32)p[5]) << 8) |
-					  p[4];
-
-		puts("    Partition: ");
-		printdec(this_kernel->partition_index);
-		puts(" start +");
-		printdec(partition_offset_blocks);
-		puts(" 512-byte blocks, size ");
-		printdec(partition_length_blocks / 2048);
-		puts(" MiB\n");
-
-	} else
-		partition_offset_blocks =
-			  this_kernel->offset_blocks512_if_no_partition;
+	if (!do_partitions(kernel_dram))
+		return;
 
 	/* does he want us to skip this? */
 
