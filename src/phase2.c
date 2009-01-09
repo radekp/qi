@@ -35,7 +35,7 @@ unsigned long partition_length_blocks = 0;
 
 struct kernel_source const * this_kernel = 0;
 
-const int INITRD_OFFSET = (8 * 1024 * 1024);
+static const int INITRD_OFFSET = (8 * 1024 * 1024);
 
 
 int raise(int n)
@@ -43,13 +43,13 @@ int raise(int n)
 	return 0;
 }
 
-void indicate(enum ui_indication ui_indication)
+static void indicate(enum ui_indication ui_indication)
 {
 	if (this_board->set_ui_indication)
 		(this_board->set_ui_indication)(ui_indication);
 }
 
-int read_file(const char * filepath, u8 * destination, int size)
+static int read_file(const char * filepath, u8 * destination, int size)
 {
 	int len = size;
 	int ret;
