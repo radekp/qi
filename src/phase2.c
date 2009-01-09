@@ -96,19 +96,94 @@ int read_file(const char * filepath, u8 * destination, int size)
 	return len;
 }
 
+static void do_params(unsigned initramfs_len,
+    const char *commandline_rootfs_append)
+{
+	const struct board_variant * board_variant =
+					      (this_board->get_board_variant)();
+	const char *p;
+	char * cmdline;
+	struct tag *params = (struct tag *)this_board->linux_tag_placement;
+
+	/* eat leading white space */
+	for (p = this_board->commandline_board; *p == ' '; p++);
+
+	/* first tag */
+	params->hdr.tag = ATAG_CORE;
+	params->hdr.size = tag_size(tag_core);
+	params->u.core.flags = 0;
+	params->u.core.pagesize = 0;
+	params->u.core.rootdev = 0;
+	params = tag_next(params);
+
+	/* revision tag */
+	params->hdr.tag = ATAG_REVISION;
+	params->hdr.size = tag_size(tag_revision);
+	params->u.revision.rev = board_variant->machine_revision;
+	params = tag_next(params);
+
+	/* memory tags */
+	params->hdr.tag = ATAG_MEM;
+	params->hdr.size = tag_size(tag_mem32);
+	params->u.mem.start = this_board->linux_mem_start;
+	params->u.mem.size = this_board->linux_mem_size;
+	params = tag_next(params);
+
+	if (this_kernel->initramfs_filepath) {
+		/* INITRD2 tag */
+		params->hdr.tag = ATAG_INITRD2;
+		params->hdr.size = tag_size(tag_initrd);
+		params->u.initrd.start = this_board->linux_mem_start +
+							      INITRD_OFFSET;
+		params->u.initrd.size = initramfs_len;
+		params = tag_next(params);
+	}
+
+	/* kernel commandline */
+
+	cmdline = params->u.cmdline.cmdline;
+	cmdline += strlen(strcpy(cmdline, p));
+	if (this_kernel->commandline_append)
+		cmdline += strlen(strcpy(cmdline,
+				      this_kernel->commandline_append));
+		if (commandline_rootfs_append[0])
+			cmdline += strlen(strcpy(cmdline,
+				      commandline_rootfs_append));
+
+	/*
+	 * if he's still holding down the UI_ACTION_SKIPKERNEL key
+	 * now we finished loading the kernel, take it to mean he wants
+	 * to have the debugging options added to the commandline
+	 */
+
+	if (this_board->commandline_board_debug && this_board->get_ui_keys)
+		if ((this_board->get_ui_keys)() & UI_ACTION_SKIPKERNEL)
+			cmdline += strlen(strcpy(cmdline, this_board->
+					      commandline_board_debug));
+
+	params->hdr.tag = ATAG_CMDLINE;
+	params->hdr.size = (sizeof(struct tag_header) +
+		strlen(params->u.cmdline.cmdline) + 1 + 4) >> 2;
+
+	puts("      Cmdline: ");
+	puts(params->u.cmdline.cmdline);
+	puts("\n");
+
+	params = tag_next(params);
+
+	/* needs to always be the last tag */
+	params->hdr.tag = ATAG_NONE;
+	params->hdr.size = 0;
+}
+
 static void try_this_kernel(void)
 {
 	void	(*the_kernel)(int zero, int arch, uint params);
-	const struct board_variant * board_variant =
-					      (this_board->get_board_variant)();
 	unsigned int initramfs_len = 0;
 	static char commandline_rootfs_append[512] = "";
 	static void * last_block_init = NULL;
 	static int last_block_init_result = 0;
 	int ret;
-	const char *p;
-	char * cmdline;
-	struct tag *params = (struct tag *)this_board->linux_tag_placement;
 	void * kernel_dram = (void *)this_board->linux_mem_start + 0x8000;
 	unsigned long crc;
 	image_header_t	*hdr;
@@ -116,9 +191,6 @@ static void try_this_kernel(void)
 
 	partition_offset_blocks = 0;
 	partition_length_blocks = 0;
-
-	/* eat leading white space */
-	for (p = this_board->commandline_board; *p == ' '; p++);
 
 	puts("\nTrying kernel: ");
 	puts(this_kernel->name);
@@ -271,72 +343,7 @@ static void try_this_kernel(void)
 	the_kernel = (void (*)(int, int, uint))
 				(((char *)hdr) + sizeof(image_header_t));
 
-	/* first tag */
-	params->hdr.tag = ATAG_CORE;
-	params->hdr.size = tag_size(tag_core);
-	params->u.core.flags = 0;
-	params->u.core.pagesize = 0;
-	params->u.core.rootdev = 0;
-	params = tag_next(params);
-
-	/* revision tag */
-	params->hdr.tag = ATAG_REVISION;
-	params->hdr.size = tag_size(tag_revision);
-	params->u.revision.rev = board_variant->machine_revision;
-	params = tag_next(params);
-
-	/* memory tags */
-	params->hdr.tag = ATAG_MEM;
-	params->hdr.size = tag_size(tag_mem32);
-	params->u.mem.start = this_board->linux_mem_start;
-	params->u.mem.size = this_board->linux_mem_size;
-	params = tag_next(params);
-
-	if (this_kernel->initramfs_filepath) {
-		/* INITRD2 tag */
-		params->hdr.tag = ATAG_INITRD2;
-		params->hdr.size = tag_size(tag_initrd);
-		params->u.initrd.start = this_board->linux_mem_start +
-							      INITRD_OFFSET;
-		params->u.initrd.size = initramfs_len;
-		params = tag_next(params);
-	}
-
-	/* kernel commandline */
-
-	cmdline = params->u.cmdline.cmdline;
-	cmdline += strlen(strcpy(cmdline, p));
-	if (this_kernel->commandline_append)
-		cmdline += strlen(strcpy(cmdline,
-				      this_kernel->commandline_append));
-		if (commandline_rootfs_append[0])
-			cmdline += strlen(strcpy(cmdline,
-				      commandline_rootfs_append));
-
-	/*
-	 * if he's still holding down the UI_ACTION_SKIPKERNEL key
-	 * now we finished loading the kernel, take it to mean he wants
-	 * to have the debugging options added to the commandline
-	 */
-
-	if (this_board->commandline_board_debug && this_board->get_ui_keys)
-		if ((this_board->get_ui_keys)() & UI_ACTION_SKIPKERNEL)
-			cmdline += strlen(strcpy(cmdline, this_board->
-					      commandline_board_debug));
-
-	params->hdr.tag = ATAG_CMDLINE;
-	params->hdr.size = (sizeof(struct tag_header) +
-		strlen(params->u.cmdline.cmdline) + 1 + 4) >> 2;
-
-	puts("      Cmdline: ");
-	puts(params->u.cmdline.cmdline);
-	puts("\n");
-
-	params = tag_next(params);
-
-	/* needs to always be the last tag */
-	params->hdr.tag = ATAG_NONE;
-	params->hdr.size = 0;
+	do_params(initramfs_len, commandline_rootfs_append);
 
 	/* give board implementation a chance to shut down
 	 * anything it may have going on, leave GPIO set for Linux
