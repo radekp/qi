@@ -87,7 +87,7 @@ int read_file(const char * filepath, u8 * destination, int size)
 		puts(" 512-byte blocks\n");
 		if (this_kernel->block_read(destination,
 				      partition_offset_blocks, size >> 9) < 0) {
-			puts ("Bad kernel header\n");
+			puts("Bad kernel header\n");
 			return -1;
 		}
 		break;
@@ -273,7 +273,7 @@ static void try_this_kernel(void)
 
 	/* first tag */
 	params->hdr.tag = ATAG_CORE;
-	params->hdr.size = tag_size (tag_core);
+	params->hdr.size = tag_size(tag_core);
 	params->u.core.flags = 0;
 	params->u.core.pagesize = 0;
 	params->u.core.rootdev = 0;
@@ -281,13 +281,13 @@ static void try_this_kernel(void)
 
 	/* revision tag */
 	params->hdr.tag = ATAG_REVISION;
-	params->hdr.size = tag_size (tag_revision);
+	params->hdr.size = tag_size(tag_revision);
 	params->u.revision.rev = board_variant->machine_revision;
 	params = tag_next(params);
 
 	/* memory tags */
 	params->hdr.tag = ATAG_MEM;
-	params->hdr.size = tag_size (tag_mem32);
+	params->hdr.size = tag_size(tag_mem32);
 	params->u.mem.start = this_board->linux_mem_start;
 	params->u.mem.size = this_board->linux_mem_size;
 	params = tag_next(params);
@@ -295,7 +295,7 @@ static void try_this_kernel(void)
 	if (this_kernel->initramfs_filepath) {
 		/* INITRD2 tag */
 		params->hdr.tag = ATAG_INITRD2;
-		params->hdr.size = tag_size (tag_initrd);
+		params->hdr.size = tag_size(tag_initrd);
 		params->u.initrd.start = this_board->linux_mem_start +
 							      INITRD_OFFSET;
 		params->u.initrd.size = initramfs_len;
@@ -325,14 +325,14 @@ static void try_this_kernel(void)
 					      commandline_board_debug));
 
 	params->hdr.tag = ATAG_CMDLINE;
-	params->hdr.size = (sizeof (struct tag_header) +
+	params->hdr.size = (sizeof(struct tag_header) +
 		strlen(params->u.cmdline.cmdline) + 1 + 4) >> 2;
 
 	puts("      Cmdline: ");
 	puts(params->u.cmdline.cmdline);
 	puts("\n");
 
-	params = tag_next (params);
+	params = tag_next(params);
 
 	/* needs to always be the last tag */
 	params->hdr.tag = ATAG_NONE;
@@ -344,7 +344,7 @@ static void try_this_kernel(void)
 	if (this_board->close)
 		(this_board->close)();
 
-	puts ("Starting --->\n\n");
+	puts("Starting --->\n\n");
 	indicate(UI_IND_KERNEL_START);
 
 	/*
