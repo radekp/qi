@@ -30,6 +30,9 @@
 #include <setup.h>
 #include <ext2.h>
 
+
+typedef void (*the_kernel_fn)(int zero, int arch, uint params);
+
 unsigned long partition_offset_blocks = 0;
 unsigned long partition_length_blocks = 0;
 
@@ -276,7 +279,7 @@ static int do_crc(const image_header_t *hdr, const void *kernel_dram)
 
 static void try_this_kernel(void)
 {
-	void	(*the_kernel)(int zero, int arch, uint params);
+	the_kernel_fn the_kernel;
 	unsigned int initramfs_len = 0;
 	static char commandline_rootfs_append[512] = "";
 	int ret;
@@ -368,8 +371,7 @@ static void try_this_kernel(void)
 	if (!do_crc(hdr, kernel_dram))
 		return;
 
-	the_kernel = (void (*)(int, int, uint))
-				(((char *)hdr) + sizeof(image_header_t));
+	the_kernel = (the_kernel_fn) (((char *)hdr) + sizeof(image_header_t));
 
 	do_params(initramfs_len, commandline_rootfs_append);
 
