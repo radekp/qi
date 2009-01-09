@@ -313,6 +313,39 @@ static the_kernel_fn load_uimage(void *kernel_dram)
 	return (the_kernel_fn) (((char *)hdr) + sizeof(image_header_t));
 }
 
+static the_kernel_fn load_zimage(void *kernel_dram)
+{
+	u32 magic = *(u32 *) (kernel_dram + 0x24);
+	u32 size = *(u32 *) (kernel_dram + 0x2c);
+	int got;
+
+	if (magic != 0x016f2818) {
+		puts("bad magic ");
+		print32(magic);
+		puts("\n");
+		return NULL;
+	}
+
+	puts("         Size: ");
+	printdec(size >> 10);
+	puts(" KiB\n");
+
+	got = read_file(this_kernel->filepath, kernel_dram, size);
+	if (got < 0) {
+		indicate(UI_IND_KERNEL_PULL_FAIL);
+		return NULL;
+	}
+
+	if (got != size) {
+		puts("short kernel\n");
+		return NULL;
+	}
+
+	indicate(UI_IND_KERNEL_PULL_OK);
+
+	return (the_kernel_fn) kernel_dram;
+}
+
 static void try_this_kernel(void)
 {
 	the_kernel_fn the_kernel;
@@ -363,6 +396,8 @@ static void try_this_kernel(void)
 		return;
 
 	the_kernel = load_uimage(kernel_dram);
+	if (!the_kernel)
+		the_kernel = load_zimage(kernel_dram);
 	if (!the_kernel)
 		return;
 
