@@ -223,6 +223,29 @@ static void do_params(unsigned initramfs_len,
 	params->hdr.size = 0;
 }
 
+static int do_crc(const image_header_t *hdr, const void *kernel_dram)
+{
+	unsigned long crc;
+
+	/*
+	 * It's good for now to know that our kernel is intact from
+	 * the storage before we jump into it and maybe crash silently
+	 * even though it costs us some time
+	 */
+	crc = crc32(0, kernel_dram + sizeof(image_header_t),
+						   __be32_to_cpu(hdr->ih_size));
+	if (crc == __be32_to_cpu(hdr->ih_dcrc))
+		return 1;
+
+	puts("\nKernel CRC ERROR: read 0x");
+	print32(crc);
+	puts(" vs hdr CRC 0x");
+	print32(__be32_to_cpu(hdr->ih_dcrc));
+	puts("\n");
+
+	return 0;
+}
+
 static void try_this_kernel(void)
 {
 	void	(*the_kernel)(int zero, int arch, uint params);
@@ -232,7 +255,6 @@ static void try_this_kernel(void)
 	static int last_block_init_result = 0;
 	int ret;
 	void * kernel_dram = (void *)this_board->linux_mem_start + 0x8000;
-	unsigned long crc;
 	image_header_t	*hdr;
 	u32 kernel_size;
 
@@ -333,21 +355,8 @@ static void try_this_kernel(void)
 		indicate(UI_IND_INITRAMFS_PULL_OK);
 	}
 
-	/*
-	 * It's good for now to know that our kernel is intact from
-	 * the storage before we jump into it and maybe crash silently
-	 * even though it costs us some time
-	 */
-	crc = crc32(0, kernel_dram + sizeof(image_header_t),
-						   __be32_to_cpu(hdr->ih_size));
-	if (crc != __be32_to_cpu(hdr->ih_dcrc)) {
-		puts("\nKernel CRC ERROR: read 0x");
-		print32(crc);
-		puts(" vs hdr CRC 0x");
-		print32(__be32_to_cpu(hdr->ih_dcrc));
-		puts("\n");
+	if (!do_crc(hdr, kernel_dram))
 		return;
-	}
 
 	the_kernel = (void (*)(int, int, uint))
 				(((char *)hdr) + sizeof(image_header_t));
