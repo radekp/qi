@@ -116,7 +116,7 @@ static int do_block_init(void)
 		puts("block device init failed\n");
 		if (this_kernel->block_init != last_block_init)
 			indicate(UI_IND_MOUNT_FAIL);
-		last_block_init = this_kernel[1].block_init;
+		last_block_init = NULL;
 		return 0;
 	}
 	last_block_init = this_kernel->block_init;
