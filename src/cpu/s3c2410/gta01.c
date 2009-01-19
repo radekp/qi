@@ -209,31 +209,34 @@ static void close_gta01(void)
 	(bb_s3c24xx.close)();
 }
 
-static u8 get_ui_keys_gta02(void)
+/* Here we will care only about AUX button as polling for PWR button
+ * through i2c slows down the boot */
+
+static u8 get_ui_keys_gta01(void)
 {
 	u8 keys;
-	u8 ret;
+	u8 ret = 0;
 	static u8 old_keys = 0; /* previous state for debounce */
-	static u8 old_ret = 0; /* previous debounced output for edge detect */
+	static u8 older_keys = 0; /* previous debounced output for edge detect */
 
-	/* GPF6 is AUX on GTA01, map to UI_ACTION_ADD_DEBUG, down = 1 */
+	/* GPF6 is AUX on GTA01, map to UI_ACTION_SKIPKERNEL, down = 0 */
 	keys = ! (rGPFDAT & (1 << 6));
 
-	if (keys == old_keys)
-		ret = keys;
-	else
-		ret = old_keys;
-
 	/* edge action */
-	if ((ret & 1) && !(old_ret & 1))
+	if ((old_keys & 1) && !(older_keys & 1))
 		ret |= UI_ACTION_SKIPKERNEL;
 
+	older_keys = old_keys;
 	old_keys = keys;
-	old_ret = ret;
 
 	return ret;
 }
 
+static u8 get_ui_debug_gta01(void)
+{
+	/* PWR button state can be seen in OOCS b0, down = 0, map to UI_ACTION_ADD_DEBUG */
+	return !(i2c_read_sync(&bb_s3c24xx, PCF50606_I2C_ADS, PCF50606_REG_OOCS) & 1);
+}
 
 /*
  * API for bootloader on this machine
@@ -250,7 +253,8 @@ const struct board_api board_api_gta01 = {
 	.port_init = port_init_gta01,
 	.putc = putc_gta01,
 	.close = close_gta01,
-	.get_ui_keys = get_ui_keys_gta02,
+	.get_ui_keys = get_ui_keys_gta01,
+	.get_ui_debug = get_ui_debug_gta01,
 
 	.commandline_board = "mtdparts=" \
 				"neo1973-nand:" \
