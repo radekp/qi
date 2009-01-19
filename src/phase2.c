@@ -234,8 +234,8 @@ static void do_params(unsigned initramfs_len,
 	 * to have the debugging options added to the commandline
 	 */
 
-	if (this_board->commandline_board_debug && this_board->get_ui_keys)
-		if ((this_board->get_ui_keys)() & UI_ACTION_SKIPKERNEL)
+	if (this_board->commandline_board_debug && this_board->get_ui_debug)
+		if ((this_board->get_ui_debug)())
 			cmdline += strlen(strcpy(cmdline, this_board->
 					      commandline_board_debug));
 

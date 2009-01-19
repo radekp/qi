@@ -104,6 +104,7 @@ struct board_api {
 	void (*putc)(char);
 	void (*close)(void);
 	u8 (*get_ui_keys)(void);
+	u8 (*get_ui_debug)(void);
 	void (*set_ui_indication)(enum ui_indication);
 
 	struct kernel_source kernel_source[8];
