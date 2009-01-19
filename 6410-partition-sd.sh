@@ -8,7 +8,7 @@
 # VFAT takes up remaining space here
 # then...
 #
-EXT3_ROOTFS_SECTORS=$(( 64 * 1024 * 2 ))
+EXT3_ROOTFS_SECTORS=$(( 256 * 1024 * 2 ))
 EXT3_BACKUP_FS_SECTORS=$(( 8 * 1024 * 2 ))
 QI_ALLOCATION=$(( 256 * 2 ))
 #
@@ -103,7 +103,7 @@ if [ -z "$4" ] ; then
   echo "p" >>$FDISK_SCRIPT
   echo "1" >>$FDISK_SCRIPT
   # first partition == 1
-  echo "1" >>$FDISK_SCRIPT
+  echo "64" >>$FDISK_SCRIPT
   echo "+$FATMB"M >>$FDISK_SCRIPT
 
   # add the normal EXT3 rootfs
