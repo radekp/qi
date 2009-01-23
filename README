@@ -57,6 +57,9 @@ through these device-specific storage devices in order and tries to boot the
 first viable kernel it finds, usually /boot/<uImage-device>.bin for example
 /boot/uImage-GTA02.bin.
 
+The default order for GTA02 is: 1st SD primary partition, 2nd primary
+partition, 3rd primary partition, NAND kernel partition.
+
 You can disable a rootfs for consideration for boot if you add a file
 /boot/noboot-<device>, eg, /boot/noboot-GTA02.  This differs from renaming or
 deleting the kernel image because updating the kernel package would give you a
@@ -87,6 +90,38 @@ Initrd support
 Initrd or initramfs in separate file is supported to be loaded at given
 memory address in addition to kernel image.  The ATAGs are issued accordingly.
 
+
+Interactive UI
+==============
+
+Being minimalistic by its nature, Qi has very limited abilities to
+interact with a user. On GTA02 the red LED and the vibrator are used
+(if the battery is in good condition) to notify user of the following
+actions:
+
+The LED is turned on either on:
+ - Successful partition mount
+ - Successful kernel pull
+ - Successful initramfs pull
+
+The LED is turned off and vibrator runs briefly either on:
+ - Fail of kernel pull
+ - Fail of initramfs pull
+ - Fail of mount partition
+ - Skipping of current boot possibility
+
+The LED is turned off either on:
+ - Start of the kernel
+ - Start of the mem test
+ - Start of the kernel pull
+ - Start of the initramfs pull
+
+If a user presses the AUX button after successful partition mount and
+before start of the kernel pull (that is, while the red LED is on),
+this boot possibility is skipped (and GTA02 owners can feel
+vibration). If a user holds the POWER button just before start of the
+kernel, debugging parameters are added to the kernel command line
+and a lot of information is output to the screen.
 
 Functional Differences from U-Boot on GTA02
 ===========================================
