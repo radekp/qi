@@ -181,6 +181,7 @@ static void do_params(unsigned initramfs_len,
 					      (this_board->get_board_variant)();
 	const char *p;
 	char * cmdline;
+	char * p1;
 	struct tag *params = (struct tag *)this_board->linux_tag_placement;
 
 	/* eat leading white space */
@@ -227,6 +228,12 @@ static void do_params(unsigned initramfs_len,
 		if (commandline_rootfs_append[0])
 			cmdline += strlen(strcpy(cmdline,
 				      commandline_rootfs_append));
+
+	/* deal with any trailing newlines that hitched a ride */
+
+	p1 = cmdline + strlen(cmdline) - 1;
+	while (*p1 == '\n')
+		*p1-- = '\0';
 
 	/*
 	 * if he's still holding down the UI_ACTION_SKIPKERNEL key
