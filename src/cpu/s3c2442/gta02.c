@@ -45,6 +45,9 @@ const struct pcf50633_init pcf50633_init[] = {
 	{ PCF50633_REG_OOCMODE,		0x55 },
 	{ PCF50633_REG_OOCCTL,		0x47 },
 
+	{ PCF50633_REG_GPIO2CFG,	0x00 },	/* GSM_ON = 0 */
+	{ PCF50633_REG_GPIOCTL,		0x01 },	/* only GPIO1 is input */
+
 	{ PCF50633_REG_SVMCTL,		0x08 },	/* 3.10V SYS vth, 62ms filter */
 	{ PCF50633_REG_BVMCTL,		0x02 },	/* 2.80V BAT vth, 62ms filter */
 
