@@ -653,7 +653,7 @@ static char *ext2fs_read_symlink(ext2fs_node_t node) {
 	/* If the filesize of the symlink is bigger than
 	   60 the symlink is stored in a separate block,
 	   otherwise it is stored in the inode.  */
-	if (__le32_to_cpu(diro->inode.size) <= 60) {
+	if (__le32_to_cpu(diro->inode.size) < 60) {
 		strncpy(symlink, diro->inode.b.symlink,
 			 __le32_to_cpu(diro->inode.size));
 	} else {
