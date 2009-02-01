@@ -103,28 +103,32 @@ static int do_block_init(void)
 {
 	static void * last_block_init = NULL;
 	static int last_block_init_result = 0;
+	int fresh = 0;
 
 	/* if this device needs initializing, try to init it */
 	if (!this_kernel->block_init)
-		return 1;
+		return 1; /* happy */
 
 	/*
 	 * cache result to limit attempts for same
 	 * block device to one time
 	 */
-	if (this_kernel->block_init != last_block_init)
+	if (this_kernel->block_init != last_block_init) {
+		last_block_init = this_kernel->block_init;
 		last_block_init_result = (this_kernel->block_init)();
+		fresh = 1;
+	}
 
 	if (last_block_init_result) {
 		puts("block device init failed\n");
-		if (this_kernel->block_init != last_block_init)
+		if (fresh)
 			indicate(UI_IND_MOUNT_FAIL);
-		last_block_init = NULL;
-		return 0;
+
+		return 0; /* failed */
 	}
 	last_block_init = this_kernel->block_init;
 
-	return 1;
+	return 1; /* happy */
 }
 
 static int do_partitions(void *kernel_dram)
