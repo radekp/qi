@@ -42,9 +42,12 @@ static int battery_condition_reasonable = 0;
 extern unsigned long partition_offset_blocks;
 extern unsigned long partition_length_blocks;
 
+const struct board_api board_api_gta02;
+
 struct nand_dynparts {
 	const char *name; /* name of this partition for Linux */
 	u32 good_length; /* bytes needed from good sectors in this partition */
+	u32 true_offset;
 };
 
 /*
@@ -134,6 +137,10 @@ void port_init_gta02(void)
 	unsigned int * UPLLCON = (unsigned int *)0x4c000008;
 	unsigned int * CLKDIVN = (unsigned int *)0x4c000014;
 	int n;
+	u32 block512 = 0;
+	u32 start_block512 = 0;
+	const u32 GTA02_NAND_READBLOCK_SIZE = 2048;
+	extern int s3c2442_nand_is_bad_block(unsigned long block_index_512);
 
 	//CAUTION:Follow the configuration order for setting the ports.
 	// 1) setting value(GPnDAT)
@@ -297,6 +304,44 @@ void port_init_gta02(void)
 	 * evil beast
 	 */
 	glamo_core_init();
+
+	/*
+	 * dynparts computation
+	 */
+
+	n = 0;
+	while (n < ARRAY_SIZE(nand_dynparts)) {
+
+		if (nand_dynparts[n].good_length)
+			while (nand_dynparts[n].good_length) {
+				if (!s3c2442_nand_is_bad_block(block512))
+					nand_dynparts[n].good_length -=
+						      GTA02_NAND_READBLOCK_SIZE;
+				block512 += GTA02_NAND_READBLOCK_SIZE / 512;
+			}
+		else
+			/*
+			 * cannot afford to compute real size of last block
+			 * set it to extent - end of last block
+			 */
+			block512 = nand_extent_block512;
+
+		/* stash a copy of real offset for each partition */
+		nand_dynparts[n].true_offset = start_block512;
+
+		/* and the accurate length */
+		nand_dynparts[n].good_length = block512 - start_block512;
+
+		start_block512 = block512;
+
+		n++;
+	}
+
+	/* fix up the true start of kernel partition */
+
+	((struct board_api *)&board_api_gta02)->kernel_source[3].
+	     offset_blocks512_if_no_partition = nand_dynparts[2].true_offset;
+
 }
 
 /**
@@ -484,7 +529,6 @@ void post_serial_init_gta02(void)
 		puts("BATTERY CONDITION LOW\n");
 }
 
-const struct board_api board_api_gta02;
 
 /*
  * create and append device-specific Linux kernel commandline
@@ -497,11 +541,6 @@ char * append_device_specific_cmdline_gta02(char * cmdline)
 {
 	int n = 0;
 	int len;
-	u32 block512 = 0;
-	u32 start_block512 = 0;
-	char term = ',';
-	const u32 GTA02_NAND_READBLOCK_SIZE = 2048;
-	extern int s3c2442_nand_is_bad_block(unsigned long block_index_512);
 	static char mac[64];
 	struct kernel_source const * real_kernel = this_kernel;
 
@@ -514,37 +553,19 @@ char * append_device_specific_cmdline_gta02(char * cmdline)
 
 	while (n < ARRAY_SIZE(nand_dynparts)) {
 
-		if (nand_dynparts[n].good_length)
-			while (nand_dynparts[n].good_length) {
-				if (!s3c2442_nand_is_bad_block(block512))
-					nand_dynparts[n].good_length -=
-						      GTA02_NAND_READBLOCK_SIZE;
-				block512 += GTA02_NAND_READBLOCK_SIZE / 512;
-			}
-		else {
-			/*
-			 * cannot afford to compute real size of last block
-			 * set it to extent - end of last block
-			 */
-			block512 = nand_extent_block512;
-			term = ' ';
-		}
-
 		*cmdline++ = '0';
 		*cmdline++ = 'x';
-		set32(cmdline, (block512 - start_block512) * 512);
+		set32(cmdline, nand_dynparts[n].good_length * 512);
 		cmdline += 8;
 		*cmdline++ = '(';
 		cmdline += strlen(strcpy(cmdline, nand_dynparts[n].name));
 		*cmdline++ = ')';
-		*cmdline++ = term;
 
-		/* stash a copy of real offset for each partition */
-		nand_dynparts[n].good_length = start_block512;
+		if (++n == ARRAY_SIZE(nand_dynparts))
+			*cmdline++ = ' ';
+		else
+			*cmdline++ = ',';
 
-		start_block512 = block512;
-
-		n++;
 	}
 
 	*cmdline = '\0';
@@ -554,7 +575,7 @@ char * append_device_specific_cmdline_gta02(char * cmdline)
 	 */
 
 	/* position ourselves at true start of GTA02 identity partition */
-	partition_offset_blocks = nand_dynparts[4].good_length;
+	partition_offset_blocks = nand_dynparts[4].true_offset;
 	partition_length_blocks = 0x40000 / 512;
 
 	/*
@@ -653,6 +674,7 @@ const struct board_api board_api_gta02 = {
 		[3] = {
 			.name = "NAND Kernel",
 			.block_read = nand_read_ll,
+			/* NOTE offset below is replaced at runtime */
 			.offset_blocks512_if_no_partition = 0x80000 / 512,
 			.filesystem = FS_RAW,
 			.commandline_append = " rootfstype=jffs2 " \
