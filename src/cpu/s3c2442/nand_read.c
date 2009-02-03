@@ -80,14 +80,18 @@ int s3c2442_nand_is_bad_block(unsigned long block_index)
 	return 0;
 }
 
-static int nand_read_page_ll(unsigned char *buf, unsigned long block512)
+static int nand_read_page_ll(unsigned char *buf, unsigned long block512, int blocks512)
 {
 	unsigned short *ptr16 = (unsigned short *)buf;
 	unsigned int i, page_num;
-#if 0
-	unsigned char ecc[64];
-	unsigned short *p16 = (unsigned short *)ecc;
-#endif
+	unsigned int block_amount;
+	int blocks_possible = (3 - (block512 & 3)) + 1;
+
+
+	if (blocks512 > blocks_possible)
+		blocks512 = blocks_possible;
+
+	block_amount = (NAND_PAGE_SIZE / 4 / 2) * blocks512;
 
 	nand_clear_RnB();
 
@@ -96,22 +100,19 @@ static int nand_read_page_ll(unsigned char *buf, unsigned long block512)
 	page_num = block512 >> 2; /* 512 block -> 2048 block */
 	/* Write Address */
 	NFADDR = 0;
-	NFADDR = 0;
+	NFADDR = (block512 & 3) << 1; /* which 512 block in 2048 */
 	NFADDR = page_num & 0xff;
 	NFADDR = (page_num >> 8) & 0xff;
 	NFADDR = (page_num >> 16) & 0xff;
 	NFCMD = NAND_CMD_READSTART;
 	nand_wait();
 
-	for (i = 0; i < NAND_PAGE_SIZE/2; i++)
+	for (i = 0; i < block_amount; i++)
 		*ptr16++ = NFDATA16;
-#if 0
-	for (i = 0; i < 64 / 2; i++) {
-		*p16++ = NFDATA16;
-	}
-#endif
-	return 4;
+
+	return blocks512;
 }
+
 
 /* low level nand read function */
 int nand_read_ll(unsigned char *buf, unsigned long start_block512,
@@ -119,9 +120,6 @@ int nand_read_ll(unsigned char *buf, unsigned long start_block512,
 {
 	int i, j;
 	int bad_count = 0;
-
-	if (start_block512 & 3) /* inside 2048-byte block */
-		return -1;
 
 	/* chip Enable */
 	nand_select();
@@ -140,7 +138,7 @@ int nand_read_ll(unsigned char *buf, unsigned long start_block512,
 			continue;
 		}
 
-		j = nand_read_page_ll(buf, start_block512);
+		j = nand_read_page_ll(buf, start_block512, blocks512);
 		start_block512 += j;
 		buf += j << 9;
 		blocks512 -= j;
