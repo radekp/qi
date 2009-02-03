@@ -39,6 +39,7 @@ int ext2fs_devread(int sector, int filesystem_block_log2, int byte_offset, int b
 
 	sector = sector << filesystem_block_log2;
 
+
 /*
  *  Check partition boundaries
  */
@@ -93,8 +94,7 @@ int ext2fs_devread(int sector, int filesystem_block_log2, int byte_offset, int b
 		u8 p[SECTOR_SIZE];
 
 		block_len = SECTOR_SIZE;
-		this_kernel->block_read(p,
-		       partition_offset_blocks + sector, 1);
+		this_kernel->block_read(p,partition_offset_blocks + sector, 1);
 		memcpy(buf, p, byte_len);
 		return 1;
 	}

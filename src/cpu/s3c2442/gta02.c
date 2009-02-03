@@ -31,12 +31,16 @@
 #include <pcf50633.h>
 #include <glamo-init.h>
 #include <string.h>
+#include <ext2.h>
 
 #define GTA02_DEBUG_UART 2
 #define PCF50633_I2C_ADS 0x73
 #define BOOST_TO_400MHZ 1
 
 static int battery_condition_reasonable = 0;
+
+extern unsigned long partition_offset_blocks;
+extern unsigned long partition_length_blocks;
 
 struct nand_dynparts {
 	const char *name; /* name of this partition for Linux */
@@ -480,18 +484,30 @@ void post_serial_init_gta02(void)
 		puts("BATTERY CONDITION LOW\n");
 }
 
+const struct board_api board_api_gta02;
+
 /*
- * create and append dynparts Linux kernel commandline
+ * create and append device-specific Linux kernel commandline
+ *
+ * This takes care of legacy dyanmic partition sizing and USB Ethernet
+ * MAC address identity information.
  */
 
 char * append_device_specific_cmdline_gta02(char * cmdline)
 {
 	int n = 0;
+	int len;
 	u32 block512 = 0;
 	u32 start_block512 = 0;
 	char term = ',';
 	const u32 GTA02_NAND_READBLOCK_SIZE = 2048;
 	extern int s3c2442_nand_is_bad_block(unsigned long block_index_512);
+	static char mac[64];
+	struct kernel_source const * real_kernel = this_kernel;
+
+	/*
+	 * dynparts computation
+	 */
 
 	cmdline += strlen(strcpy(cmdline,
 			       " mtdparts=physmap-flash:-(nor);neo1973-nand:"));
@@ -530,6 +546,47 @@ char * append_device_specific_cmdline_gta02(char * cmdline)
 
 		n++;
 	}
+
+	*cmdline = '\0';
+
+	/*
+	 * Identity
+	 */
+
+	/* position ourselves at true start of GTA02 identity partition */
+	partition_offset_blocks = nand_dynparts[4].good_length;
+	partition_length_blocks = 0x40000 / 512;
+
+	/*
+	 * lie that we are in NAND context... GTA02 specific
+	 * all filesystem access is completed before we are called
+	 */
+	this_kernel = &board_api_gta02.kernel_source[3];
+
+	if (!ext2fs_mount()) {
+		puts("Unable to mount ext2 filesystem\n");
+		goto bail;
+	}
+
+	len = ext2fs_open("usb");
+	if (len < 0) {
+		puts(" Open failed\n");
+		goto bail;
+	}
+
+	n = ext2fs_read(mac, sizeof(mac));
+	if (n < 0) {
+		puts(" Read failed\n");
+		goto bail;
+	}
+
+	mac[len] = '\0';
+
+	cmdline += strlen(strcpy(cmdline, " g_ether.host_addr="));
+	cmdline += strlen(strcpy(cmdline, &mac[2]));
+	*cmdline += ' ' ;
+bail:
+	this_kernel = real_kernel;
 
 	*cmdline = '\0';
 
