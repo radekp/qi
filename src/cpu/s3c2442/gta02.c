@@ -30,12 +30,37 @@
 #include <i2c-bitbang-s3c24xx.h>
 #include <pcf50633.h>
 #include <glamo-init.h>
+#include <string.h>
 
 #define GTA02_DEBUG_UART 2
 #define PCF50633_I2C_ADS 0x73
 #define BOOST_TO_400MHZ 1
 
 static int battery_condition_reasonable = 0;
+
+struct nand_dynparts {
+	const char *name; /* name of this partition for Linux */
+	u32 good_length; /* bytes needed from good sectors in this partition */
+};
+
+/*
+ * These are the NAND partitions U-Boot leaves in GTA02 NAND.
+ * The "dynparts" business means that in the case of bad blocks, all the
+ * following partitions move up accordingly to have the right amount of
+ * good blocks.  To allow for this, the length of the last, largest
+ * partition is computed according to the bad blocks that went before.
+ */
+
+static struct nand_dynparts nand_dynparts[] = {
+	{ "qi",            0x40000 },
+	{ "depr-ub-env",   0x40000 },
+	{ "kernel",       0x800000 },
+	{ "depr",          0xa0000 },
+	{ "identity-ext2", 0x40000 },
+	{ "rootfs",              0 },
+};
+
+static u32 nand_extent_block512 = 256 * 1024 * 1024 / 512;
 
 const struct pcf50633_init pcf50633_init[] = {
 
@@ -400,7 +425,7 @@ static u8 get_ui_keys_gta02(void)
 
 	older_keys = old_keys;
 	old_keys = keys;
-	
+
 	return ret;
 }
 
@@ -455,6 +480,61 @@ void post_serial_init_gta02(void)
 		puts("BATTERY CONDITION LOW\n");
 }
 
+/*
+ * create and append dynparts Linux kernel commandline
+ */
+
+char * append_device_specific_cmdline_gta02(char * cmdline)
+{
+	int n = 0;
+	u32 block512 = 0;
+	u32 start_block512 = 0;
+	char term = ',';
+	const u32 GTA02_NAND_READBLOCK_SIZE = 2048;
+	extern int s3c2442_nand_is_bad_block(unsigned long block_index_512);
+
+	cmdline += strlen(strcpy(cmdline,
+			       " mtdparts=physmap-flash:-(nor);neo1973-nand:"));
+
+	while (n < ARRAY_SIZE(nand_dynparts)) {
+
+		if (nand_dynparts[n].good_length)
+			while (nand_dynparts[n].good_length) {
+				if (!s3c2442_nand_is_bad_block(block512))
+					nand_dynparts[n].good_length -=
+						      GTA02_NAND_READBLOCK_SIZE;
+				block512 += GTA02_NAND_READBLOCK_SIZE / 512;
+			}
+		else {
+			/*
+			 * cannot afford to compute real size of last block
+			 * set it to extent - end of last block
+			 */
+			block512 = nand_extent_block512;
+			term = ' ';
+		}
+
+		*cmdline++ = '0';
+		*cmdline++ = 'x';
+		set32(cmdline, (block512 - start_block512) * 512);
+		cmdline += 8;
+		*cmdline++ = '(';
+		cmdline += strlen(strcpy(cmdline, nand_dynparts[n].name));
+		*cmdline++ = ')';
+		*cmdline++ = term;
+
+		/* stash a copy of real offset for each partition */
+		nand_dynparts[n].good_length = start_block512;
+
+		start_block512 = block512;
+
+		n++;
+	}
+
+	*cmdline = '\0';
+
+	return cmdline;
+}
 
 /*
  * our API for bootloader on this machine
@@ -470,20 +550,13 @@ const struct board_api board_api_gta02 = {
 	.is_this_board = is_this_board_gta02,
 	.port_init = port_init_gta02,
 	.post_serial_init = post_serial_init_gta02,
+	.append_device_specific_cmdline = append_device_specific_cmdline_gta02,
 	.putc = putc_gta02,
 	.close = close_gta02,
 	.get_ui_keys = get_ui_keys_gta02,
 	.get_ui_debug = get_ui_debug_gta02,
 	.set_ui_indication = set_ui_indication_gta02,
-	.commandline_board = "mtdparts=physmap-flash:-(nor);" \
-				       "neo1973-nand:" \
-				       "0x00040000(qi)," \
-				       "0x00040000(cmdline)," \
-				       "0x00800000(backupkernel)," \
-				       "0x000a0000(extra)," \
-				       "0x00040000(identity)," \
-				       "0x0f6a0000(backuprootfs) " \
-				      "loglevel=4 " \
+	.commandline_board = "loglevel=4 " \
 				      "console=tty0 " \
 				      "console=ttySAC2,115200 " \
 				      "init=/sbin/init " \
