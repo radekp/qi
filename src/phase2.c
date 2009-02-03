@@ -185,7 +185,6 @@ static void do_params(unsigned initramfs_len,
 					      (this_board->get_board_variant)();
 	const char *p;
 	char * cmdline;
-	char * p1;
 	struct tag *params = (struct tag *)this_board->linux_tag_placement;
 
 	/* eat leading white space */
@@ -225,7 +224,18 @@ static void do_params(unsigned initramfs_len,
 	/* kernel commandline */
 
 	cmdline = params->u.cmdline.cmdline;
+
+	/* start with the fixed device part of the commandline */
+
 	cmdline += strlen(strcpy(cmdline, p));
+
+	/* if the board itself needs a computed commandline, add it now */
+
+	if (this_board->append_device_specific_cmdline)
+		cmdline = (this_board->append_device_specific_cmdline)(cmdline);
+
+	/* If he is giving an append commandline for this rootfs, apply that */
+
 	if (this_kernel->commandline_append)
 		cmdline += strlen(strcpy(cmdline,
 				      this_kernel->commandline_append));
@@ -235,9 +245,10 @@ static void do_params(unsigned initramfs_len,
 
 	/* deal with any trailing newlines that hitched a ride */
 
-	p1 = cmdline + strlen(cmdline) - 1;
-	while (*p1 == '\n')
-		*p1-- = '\0';
+	while (*(cmdline - 1) == '\n')
+		cmdline--;
+
+	*cmdline = '\0';
 
 	/*
 	 * if he's still holding down the UI_ACTION_SKIPKERNEL key
