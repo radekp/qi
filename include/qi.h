@@ -101,6 +101,7 @@ struct board_api {
 	int (*is_this_board)(void);
 	void (*early_port_init)(void);
 	void (*port_init)(void);
+	void (*post_serial_init)(void); /* print device-specific things */
 	void (*putc)(char);
 	void (*close)(void);
 	u8 (*get_ui_keys)(void);

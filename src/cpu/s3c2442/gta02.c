@@ -447,6 +447,15 @@ static void set_ui_indication_gta02(enum ui_indication ui_indication)
 }
 
 
+void post_serial_init_gta02(void)
+{
+	if (battery_condition_reasonable)
+		puts("Battery condition reasonable\n");
+	else
+		puts("BATTERY CONDITION LOW\n");
+}
+
+
 /*
  * our API for bootloader on this machine
  */
@@ -460,6 +469,7 @@ const struct board_api board_api_gta02 = {
 	.get_board_variant = get_board_variant_gta02,
 	.is_this_board = is_this_board_gta02,
 	.port_init = port_init_gta02,
+	.post_serial_init = post_serial_init_gta02,
 	.putc = putc_gta02,
 	.close = close_gta02,
 	.get_ui_keys = get_ui_keys_gta02,

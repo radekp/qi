@@ -450,6 +450,11 @@ static void try_this_kernel(void)
 
 void bootloader_second_phase(void)
 {
+	/* give device a chance to print device-specific things */
+
+	if (this_board->post_serial_init)
+		(this_board->post_serial_init)();
+
 	/* we try the possible kernels for this board in order */
 
 	for (this_kernel = this_board->kernel_source; this_kernel->name;
