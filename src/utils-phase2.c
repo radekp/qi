@@ -109,3 +109,26 @@ void hexdump(unsigned char *start, int len)
 		len -= 16;
 	}
 }
+
+void setnybble(char *p, unsigned char n)
+{
+	if (n < 10)
+		*p = '0' + n;
+	else
+		*p = 'a' + n - 10;
+}
+
+void set8(char *p, unsigned char n)
+{
+	setnybble(p, (n >> 4) & 15);
+	setnybble(p + 1, n & 15);
+}
+
+void set32(char *p, unsigned int u)
+{
+	set8(p, u >> 24);
+	set8(p + 2, u >> 16);
+	set8(p + 4, u >> 8);
+	set8(p + 6, u);
+}
+

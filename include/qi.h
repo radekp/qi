@@ -126,6 +126,10 @@ void printdec(int n);
 void hexdump(unsigned char *start, int len);
 void udelay(int n);
 
+/* phase2 only */
+void setnybble(char *p, unsigned char n);
+void set8(char *p, unsigned char n);
+void set32(char *p, unsigned int u);
 
 unsigned long crc32(unsigned long crc, const unsigned char *buf,
 							      unsigned int len);
