@@ -56,11 +56,12 @@ static inline void nand_wait(void)
 #define	NAND_BLOCK_MASK		(NAND_PAGE_SIZE - 1)
 #define NAND_BLOCK_SIZE		(NAND_PAGE_SIZE * 64)
 
-static int is_bad_block(unsigned long block_index)
+int s3c2442_nand_is_bad_block(unsigned long block_index)
 {
 	unsigned char data;
 	unsigned long page_num;
 
+	nand_select();
 	nand_clear_RnB();
 	page_num = block_index >> 2; /* addr / 2048 */
 	NFCMD = NAND_CMD_READ0;
@@ -130,8 +131,8 @@ int nand_read_ll(unsigned char *buf, unsigned long start_block512,
 		;
 
 	while (blocks512 > 0) {
-		if (is_bad_block(start_block512) ||
-				is_bad_block(start_block512 + 4)) {
+		if (s3c2442_nand_is_bad_block(start_block512) ||
+				s3c2442_nand_is_bad_block(start_block512 + 4)) {
 			start_block512 += 4;
 			blocks512 += 4;
 			if (bad_count++ == 4)
