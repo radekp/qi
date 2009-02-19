@@ -103,7 +103,7 @@ if [ -z "$4" ] ; then
   echo "p" >>$FDISK_SCRIPT
   echo "1" >>$FDISK_SCRIPT
   # first partition == 1
-  echo "64" >>$FDISK_SCRIPT
+  echo "" >>$FDISK_SCRIPT
   echo "+$FATMB"M >>$FDISK_SCRIPT
 
   # add the normal EXT3 rootfs
