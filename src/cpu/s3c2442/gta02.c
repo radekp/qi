@@ -608,7 +608,7 @@ char * append_device_specific_cmdline_gta02(char * cmdline)
 
 	cmdline += strlen(strcpy(cmdline, " g_ether.dev_addr="));
 	cmdline += strlen(strcpy(cmdline, &mac[2]));
-	*cmdline++ += ' ' ;
+	*cmdline++ = ' ' ;
 bail:
 	this_kernel = real_kernel;
 
