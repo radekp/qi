@@ -127,7 +127,11 @@ static const struct board_variant board_variants[] = {
 	[1] = {
 		.name = "A6 PCB",
 		.machine_revision = 0x360,
-	}
+	},
+	[9] = { /* 01001 */
+		.name = "A7 PCB",
+		.machine_revision = 0x360, /* report as A6 */
+	},
 };
 
 
@@ -373,8 +377,8 @@ int gta02_get_pcb_revision(void)
 	u = rGPDDAT;
 	n |= (u << (0 + 2))  & 0x004;
 
-	n |= (u << (8 - 3))  & 0x100;
-	n |= (u << (9 - 4))  & 0x200;
+	n |= (u << (3 - 3))  & 0x008;
+	n |= (u << (4 - 4))  & 0x010;
 
 	/*
 	 * when not being interrogated, all of the revision GPIO
@@ -424,7 +428,12 @@ int is_this_board_gta02(void)
 
 const struct board_variant const * get_board_variant_gta02(void)
 {
-	return &board_variants[gta02_get_pcb_revision() & 1];
+	int rev = gta02_get_pcb_revision() & 0x1f;
+
+	if (!board_variants[rev].name)
+		return &board_variants[1]; /* A6 */
+
+	return &board_variants[rev];
 }
 
 static __attribute__ (( section (".steppingstone") )) void putc_gta02(char c)
