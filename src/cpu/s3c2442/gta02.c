@@ -145,7 +145,7 @@ void port_init_gta02(void)
 	//CAUTION:Follow the configuration order for setting the ports.
 	// 1) setting value(GPnDAT)
 	// 2) setting control register  (GPnCON)
-	// 3) configure pull-up resistor(GPnUP)
+	// 3) configure pull-down resistor(GPnUP)
 
 	/* 32bit data bus configuration   */
 	/*
@@ -236,11 +236,11 @@ void port_init_gta02(void)
 	 *     Binary :   10   ,  10     10 , 11    11  , 10   10 , 10   10 , 10    10
 	 */
 	/* pulldown on GPH08: UEXTCLK, just floats!
-	 * pulldown GPH0 -- nCTS0 / RTS_MODEM -- floats when GSM off
-	 * pulldown GPH3 -- RXD[0] / TX_MODEM -- floats when GSM off
+	 * pulldown GPH1 -- nCTS0 / RTS_MODEM -- floats when GSM off
+	 * pulldown GPH2 -- RXD[0] / TX_MODEM -- floats when GSM off
 	 */
-	rGPHCON = 0x001AAAAA;
-	rGPHUP = 0x000007FF & ~(1 << 8) & ~(1 << 0) & ~(1 << 3);
+	rGPHCON = 0x001AAA82; /* H1 and H2 are INPUTs to start with, not UART */
+	rGPHUP = 0x000007FF & ~(1 << 8) & ~(1 << 1) & ~(1 << 3);
 	rGPHDAT = 0x00000000;
 
 	/* pulldown on GPJ00: input, just floats! */
