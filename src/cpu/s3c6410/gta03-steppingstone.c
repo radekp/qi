@@ -91,6 +91,7 @@ const struct board_api board_api_gta03 = {
 			     "loglevel=8 " \
 			     "rootdelay=1 " \
 			     "ro ",
+	.commandline_board_debug =  " loglevel=8",
 	.kernel_source = {
 		[0] = {
 			.name = "SD Card rootfs",
