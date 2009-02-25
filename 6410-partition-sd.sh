@@ -55,7 +55,7 @@ fi
 # default: use cat as a no-op
 USE_SED='cat'
 case "$(lsb_release --short --description)" in
-  Ubuntu\ 7*)
+  Ubuntu\ 7*|Debian\ *)
     CUT_COLUMN=5
     ;;
   Ubuntu\ 8.04*)
