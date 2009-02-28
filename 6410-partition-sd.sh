@@ -50,34 +50,8 @@ if [ ! -z "`grep $1 /proc/mounts`" ] ; then
   exit 2
 fi
 
-# set CUT_COLUMN for each OS
-# set USE_SED=some editing command
-# default: use cat as a no-op
-USE_SED='cat'
-case "$(lsb_release --short --description)" in
-  Ubuntu\ 7*|Debian\ *)
-    CUT_COLUMN=5
-    ;;
-  Ubuntu\ 8.04*)
-    CUT_COLUMN=5
-    USE_SED='sed s/^\[[[:space:]]*/[/'
-    ;;
-  *)
-    CUT_COLUMN=4
-    ;;
-esac
-
-DMESG_LINE=$(dmesg | ${USE_SED} | grep "$1" | grep "512-byte hardware" | tail -n 1)
-SECTORS=$(echo "${DMESG_LINE}" | cut -d' ' -f"${CUT_COLUMN}")
-
-if ! echo "${SECTORS}" | grep '^[[:digit:]]\+$'
-then
-  echo "problem finding size for /dev/$1 check CUT_COLUMN value for your os"
-  echo "CUT_COLUMN=${CUT_COLUMN}  -->  ${SECTORS}"
-  echo "dmesg line was:"
-  echo "${DMESG_LINE}"
-  exit 3
-fi
+bytes=`echo p | fdisk /dev/$1 2>&1 | sed '/^Disk.*, \([0-9]*\) bytes/s//\1/p;d'`
+SECTORS=`expr $bytes / 512`
 
 if [ $SECTORS -le 0 ] ; then
   echo "problem finding size for /dev/$1"
