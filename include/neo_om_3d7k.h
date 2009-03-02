@@ -22,7 +22,7 @@
 
 #ifndef __ASM_MODE__
 #include <qi.h>
-extern const struct board_api board_api_gta03;
+extern const struct board_api board_api_om_3d7k;
 #endif
 
-#define TEXT_BASE_GTA03 0x53000000
+#define TEXT_BASE_OM_3D7K 0x53000000

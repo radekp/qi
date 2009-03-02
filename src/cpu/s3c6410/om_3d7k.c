@@ -1,5 +1,5 @@
 #include <qi.h>
-#include <neo_gta03.h>
+#include <neo_om_3d7k.h>
 #include <s3c6410.h>
 #include <serial-s3c64xx.h>
 #include <i2c-bitbang-s3c6410.h>
@@ -7,7 +7,7 @@
 
 #define PCF50633_I2C_ADS 0x73
 
-const struct pcf50633_init gta03_pcf50633_init[] = {
+const struct pcf50633_init om_3d7k_pcf50633_init[] = {
 
 	{ PCF50633_REG_OOCWAKE,		0xd3 }, /* wake from ONKEY,EXTON!,RTC,USB,ADP */
 	{ PCF50633_REG_OOCTIM1,		0xaa },	/* debounce 14ms everything */
@@ -50,40 +50,40 @@ const struct pcf50633_init gta03_pcf50633_init[] = {
 
 static const struct board_variant board_variants[] = {
 	[0] = {
-		.name = "GTA03 unknown",
+		.name = "OM 3D7K unknown",
 		.machine_revision = 0
 	},
 	[1] = {
-		.name = "GTA03 A1",
+		.name = "OM 3D7K A1",
 		.machine_revision = 1
 	},
 	[2] = {
-		.name = "GTA03 A2",
+		.name = "OM 3D7K A2",
 		.machine_revision = 2
 	},
 	[3] = {
-		.name = "GTA03 A3",
+		.name = "OM 3D7K A3",
 		.machine_revision = 3
 	},
 	[4] = {
-		.name = "GTA03 A4",
+		.name = "OM 3D7K A4",
 		.machine_revision = 4
 	},
 	[5] = {
-		.name = "GTA03 A5",
+		.name = "OM 3D7K A5",
 		.machine_revision = 5
 	},
 	[6] = {
-		.name = "GTA03 A6",
+		.name = "OM 3D7K A6",
 		.machine_revision = 6
 	},
 	[7] = {
-		.name = "GTA03 A7",
+		.name = "OM 3D7K A7",
 		.machine_revision = 7
 	}
 };
 
-void port_init_gta03(void)
+void port_init_om_3d7k(void)
 {
 	int n;
 
@@ -821,14 +821,14 @@ void port_init_gta03(void)
 	/*
 	 * We have to talk to the PMU a little bit
 	 */
-	for (n = 0; n < ARRAY_SIZE(gta03_pcf50633_init); n++)
+	for (n = 0; n < ARRAY_SIZE(om_3d7k_pcf50633_init); n++)
 		i2c_write_sync(&bb_s3c6410, PCF50633_I2C_ADS,
-			       gta03_pcf50633_init[n].index,
-			       gta03_pcf50633_init[n].value);
+			       om_3d7k_pcf50633_init[n].index,
+			       om_3d7k_pcf50633_init[n].value);
 
 }
 
-int gta03_get_pcb_revision(void)
+int om_3d7k_get_pcb_revision(void)
 {
 	u32 v = __REG(GPIDAT);
         /*
@@ -847,8 +847,8 @@ int gta03_get_pcb_revision(void)
                 );
 }
 
-const struct board_variant const * get_board_variant_gta03(void)
+const struct board_variant const * get_board_variant_om_3d7k(void)
 {
-	return &board_variants[gta03_get_pcb_revision()];
+	return &board_variants[om_3d7k_get_pcb_revision()];
 }
 

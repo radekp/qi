@@ -1,34 +1,34 @@
 #include <qi.h>
-#include <neo_gta03.h>
+#include <neo_om_3d7k.h>
 #include <s3c6410.h>
 #include <serial-s3c64xx.h>
 
-#define GTA03_DEBUG_UART 3
+#define OM_3D7K_DEBUG_UART 3
 
 /* out of steppingstone */
-extern const struct board_variant const * get_board_variant_gta03(void);
-extern void port_init_gta03(void);
+extern const struct board_variant const * get_board_variant_om_3d7k(void);
+extern void port_init_om_3d7k(void);
 
 
-int is_this_board_gta03(void)
+int is_this_board_om_3d7k(void)
 {
-	/* FIXME: find something gta03 specific */
+	/* FIXME: find something om_3d7k specific */
 	return 1;
 }
 
-static void putc_gta03(char c)
+static void putc_om_3d7k(char c)
 {
-	serial_putc_s3c64xx(GTA03_DEBUG_UART, c);
+	serial_putc_s3c64xx(OM_3D7K_DEBUG_UART, c);
 }
 
-int sd_card_init_gta03(void)
+int sd_card_init_om_3d7k(void)
 {
 	extern int s3c6410_mmc_init(int verbose);
 
 	return s3c6410_mmc_init(1);
 }
 
-int sd_card_block_read_gta03(unsigned char * buf, unsigned long start512,
+int sd_card_block_read_om_3d7k(unsigned char * buf, unsigned long start512,
 							       int blocks512)
 {
 unsigned long s3c6410_mmc_bread(int dev_num, unsigned long blknr, unsigned long blkcnt,
@@ -47,14 +47,14 @@ unsigned long s3c6410_mmc_bread(int dev_num, unsigned long blknr, unsigned long 
  *  "root=/dev/ram ramdisk_size=6000000"
  */
 
-static u8 get_ui_keys_gta03(void)
+static u8 get_ui_keys_om_3d7k(void)
 {
 	u8 keys;
 	u8 ret;
 	static u8 old_keys = 0; /* previous state for debounce */
 	static u8 old_ret = 0; /* previous debounced output for edge detect */
 
-	/* GPN1 is MINUS on GTA03, map to UI_ACTION_ADD_DEBUG, down = 1 */
+	/* GPN1 is MINUS on OM_3D7K, map to UI_ACTION_ADD_DEBUG, down = 1 */
 	keys = !!(__REG(GPMDAT) & (1 << 1));
 
 	if (keys == old_keys)
@@ -72,19 +72,19 @@ static u8 get_ui_keys_gta03(void)
 	return ret;
 }
 
-const struct board_api board_api_gta03 = {
-	.name = "GTA03",
-	.linux_machine_id = 1866,
+const struct board_api board_api_om_3d7k = {
+	.name = "OM_3D7K",
+	.linux_machine_id = 2120,
 	.linux_mem_start = 0x50000000,
 	.linux_mem_size = (128 * 1024 * 1024),
 	.linux_tag_placement = 0x50000000 + 0x100,
-	.get_board_variant = get_board_variant_gta03,
-	.is_this_board = is_this_board_gta03,
-	.port_init = port_init_gta03,
-	.putc = putc_gta03,
-	.noboot = "boot/noboot-GTA03",
-	.append = "boot/append-GTA03",
-	.get_ui_keys = get_ui_keys_gta03,
+	.get_board_variant = get_board_variant_om_3d7k,
+	.is_this_board = is_this_board_om_3d7k,
+	.port_init = port_init_om_3d7k,
+	.putc = putc_om_3d7k,
+	.noboot = "boot/noboot-OM_3D7K",
+	.append = "boot/append-OM_3D7K",
+	.get_ui_keys = get_ui_keys_om_3d7k,
 	.commandline_board = "console=tty0 " \
 			     "console=ttySAC3,115200 " \
 			     "init=/bin/sh " \
@@ -95,18 +95,18 @@ const struct board_api board_api_gta03 = {
 	.kernel_source = {
 		[0] = {
 			.name = "SD Card rootfs",
-			.block_read = sd_card_block_read_gta03,
+			.block_read = sd_card_block_read_om_3d7k,
 			.filesystem = FS_EXT2,
 			.partition_index = 2,
-			.filepath = "boot/uImage-GTA03.bin",
+			.filepath = "boot/uImage-OM_3D7K.bin",
 			.commandline_append = "root=/dev/mmcblk0p2 ",
 		},
 		[1] = {
 			.name = "SD Card backup rootfs",
-			.block_read = sd_card_block_read_gta03,
+			.block_read = sd_card_block_read_om_3d7k,
 			.filesystem = FS_EXT2,
 			.partition_index = 3,
-			.filepath = "boot/uImage-GTA03.bin",
+			.filepath = "boot/uImage-OM_3D7K.bin",
 			.commandline_append = "root=/dev/mmcblk0p3 ",
 		},
 	},

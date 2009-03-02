@@ -27,7 +27,6 @@
 #include <qi.h>
 #include "nand_read.h"
 #include <neo_gta02.h>
-#include <neo_gta03.h>
 
 #define stringify2(s) stringify1(s)
 #define stringify1(s) #s
