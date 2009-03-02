@@ -239,11 +239,31 @@ void port_init_gta02(void)
 	 *     Signal : CLKOUT1 CLKOUT0 UCLK RXD2 TXD2 RXD1 TXD1 RXD0 TXD0 nRTS0 nCTS0
 	 *     Binary :   10   ,  10     10 , 11    11  , 10   10 , 10   10 , 10    10
 	 */
+
+/*
+ * FIXME the following should be removed eventually and only the first stanza
+ * kept unconditionally.  As it stands it allows TX and RTS to drive high into
+ * a powered-down GSM unit, which draws considerable fault current.
+ *
+ * However kernels earlier than andy-tracking from end Feb 2009 do not enforce
+ * the mode of these GPIOs, so Qi doing the correct thing here "breaks GSM"
+ * apparently for those users.
+ *
+ * Upgrading to current kernel will solve this, so after most distros are on
+ * 2.6.29-rc3 and later, we should return here and again disable driving out
+ * into unpowered GSM.
+ */
+
+#if 0
+	rGPHCON = 0x001AAA82; /* H1 and H2 are INPUTs to start with, not UART */
+#else
+	rGPHCON = 0x001AAAAA; /* Wrong but compatible: H1 and H2 = UART */
+#endif
+
 	/* pulldown on GPH08: UEXTCLK, just floats!
 	 * pulldown GPH1 -- nCTS0 / RTS_MODEM -- floats when GSM off
-	 * pulldown GPH2 -- RXD[0] / TX_MODEM -- floats when GSM off
+	 * pulldown GPH3 -- RXD[0] / RX_MODEM -- floats when GSM off
 	 */
-	rGPHCON = 0x001AAA82; /* H1 and H2 are INPUTs to start with, not UART */
 	rGPHUP = 0x000007FF & ~(1 << 8) & ~(1 << 1) & ~(1 << 3);
 	rGPHDAT = 0x00000000;
 
