@@ -21,13 +21,17 @@ const struct pcf50633_init om_3d7k_pcf50633_init[] = {
 	{ PCF50633_REG_AUTOENA,		0x01 },	/* always on */
 
 	{ PCF50633_REG_DOWN1OUT,	0x17 }, /* 1.2V (0x17 * .025V + 0.625V) */
+
+	/* all of these are down in 3d7k suspend */
+
 	{ PCF50633_REG_DOWN1ENA,	0x02 }, /* enabled if GPIO1 = HIGH */
-	{ PCF50633_REG_LDO1ENA,		0x00 }, /* LCM power on */
-	{ PCF50633_REG_LDO2ENA,		0x00 }, /* LCM power on */
-	{ PCF50633_REG_LDO3ENA,		0x01 }, /* Codec power on */
-	{ PCF50633_REG_LDO4ENA,		0x01 }, /* SD power on */
-	{ PCF50633_REG_LDO5ENA,		0x00 }, /* LCM power on */
-	{ PCF50633_REG_LDO6ENA,		0x00 }, /* LCM power on */
+	{ PCF50633_REG_HCLDOENA,	0x02 }, /* Camera 2.8V power off */
+	{ PCF50633_REG_LDO1ENA,		0x02 }, /* Gsensor power off */
+	{ PCF50633_REG_LDO2ENA,		0x02 }, /* Camera 1.5V power off */
+	{ PCF50633_REG_LDO3ENA,		0x03 }, /* Codec power ON */
+	{ PCF50633_REG_LDO4ENA,		0x03 }, /* SD power ON */
+	{ PCF50633_REG_LDO5ENA,		0x02 }, /* BT power off */
+	{ PCF50633_REG_LDO6ENA,		0x02 }, /* LCM power off */
 
 	{ PCF50633_REG_INT1M,		0x00 },
 	{ PCF50633_REG_INT2M,		0x00 },

@@ -87,7 +87,7 @@ const struct board_api board_api_om_3d7k = {
 	.get_ui_keys = get_ui_keys_om_3d7k,
 	.commandline_board = "console=tty0 " \
 			     "console=ttySAC3,115200 " \
-			     "init=/bin/sh " \
+			     "init=/sbin/init " \
 			     "loglevel=8 " \
 			     "rootdelay=1 no_console_suspend " \
 			     "ro ",
