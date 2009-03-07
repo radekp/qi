@@ -51,9 +51,16 @@ if [ ! -z "`grep $1 /proc/mounts`" ] ; then
 fi
 
 bytes=`echo p | fdisk /dev/$1 2>&1 | sed '/^Disk.*, \([0-9]*\) bytes/s//\1/p;d'`
+echo bytes = $bytes
+
 SECTORS=`expr $bytes / 512`
 
-if [ $SECTORS -le 0 ] ; then
+if [ -z "$SECTORS" ] ; then
+  echo "problem finding size for /dev/$1"
+  exit 4
+fi
+
+if [ "$SECTORS" -le 0 ] ; then
   echo "problem finding size for /dev/$1"
   exit 3
 fi

@@ -89,7 +89,7 @@ const struct board_api board_api_om_3d7k = {
 			     "console=ttySAC3,115200 " \
 			     "init=/bin/sh " \
 			     "loglevel=8 " \
-			     "rootdelay=1 " \
+			     "rootdelay=1 no_console_suspend " \
 			     "ro ",
 	.commandline_board_debug =  " loglevel=8",
 	.kernel_source = {

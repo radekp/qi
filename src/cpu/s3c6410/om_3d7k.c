@@ -22,7 +22,12 @@ const struct pcf50633_init om_3d7k_pcf50633_init[] = {
 
 	{ PCF50633_REG_DOWN1OUT,	0x17 }, /* 1.2V (0x17 * .025V + 0.625V) */
 	{ PCF50633_REG_DOWN1ENA,	0x02 }, /* enabled if GPIO1 = HIGH */
-	{ PCF50633_REG_LDO6ENA,		0x01 }, /* LCM power off */
+	{ PCF50633_REG_LDO1ENA,		0x00 }, /* LCM power on */
+	{ PCF50633_REG_LDO2ENA,		0x00 }, /* LCM power on */
+	{ PCF50633_REG_LDO3ENA,		0x01 }, /* Codec power on */
+	{ PCF50633_REG_LDO4ENA,		0x01 }, /* SD power on */
+	{ PCF50633_REG_LDO5ENA,		0x00 }, /* LCM power on */
+	{ PCF50633_REG_LDO6ENA,		0x00 }, /* LCM power on */
 
 	{ PCF50633_REG_INT1M,		0x00 },
 	{ PCF50633_REG_INT2M,		0x00 },
@@ -100,8 +105,8 @@ void port_init_om_3d7k(void)
 		(2 << 28)   /* GPA7  - UART_RTS1 */
 	;
 
-	__REG(GPAPUD) =  /* all pullup and pulldown disabled */
-		0
+	__REG(GPAPUD) =  /* pullup inputs */
+		0x2222
 	;
 	__REG(GPADAT) = 0; /* just for determinism */
 
@@ -129,8 +134,8 @@ void port_init_om_3d7k(void)
 	/* ---------------------------- Port B ---------------------------- */
 
 	__REG(GPBCON) =
-		(2 << 0)  | /* GPB0  - UART_RXD2 */
-		(2 << 4)  | /* GPB1  - UART_TXD2 */
+		(1 << 0)  | /* GPB0  - (NC) output low */
+		(1 << 4)  | /* GPB1  - (NC) output low */
 		(2 << 8)  | /* GPB2  - UART_RXD3 */
 		(2 << 12) | /* GPB3  - UART_TXD3 */
 		(1 << 16) | /* GPB4  - (NC) output low */
@@ -180,7 +185,7 @@ void port_init_om_3d7k(void)
 	;
 
 	__REG(GPCPUD) =  /* all pullup and pulldown disabled */
-		0
+		(1 << 0)
 	;
 	__REG(GPCDAT) = 0; /* just for determinism */
 
@@ -283,11 +288,13 @@ void port_init_om_3d7k(void)
 		(2 << 22) | /* GPF11 - CAMIF_YDATA6 */
 		(2 << 24) | /* GPF12 - CAMIF_YDATA7 */
 		(1 << 26) | /* GPF13 - OUTPUT Vibrator */
-		(3 << 28) | /* GPF14 - CLKOUT0 */
+		(1 << 28) | /* GPF14 - output not CLKOUT0 */
 		(1 << 30)   /* GPF15 - OUTPUT CAM_PWRDN */
 	;
 
-	__REG(GPFPUD) = 0; /* all pullup and pulldown disabled */
+	__REG(GPFPUD) = (1 << (2 * 12)) | (1 << (2 * 11)) | (1 << (2 * 10)) |
+		(1 << (2 * 9)) | (1 << (2 * 8)) | (1 << (2 * 7)) |
+		(1 << (2 * 6)) | (1 << (2 * 5)); /* all cam data pulldown */
 
 	__REG(GPFDAT) = (1 << 15); /* assert CAM_PWRDN */
 
@@ -368,21 +375,21 @@ void port_init_om_3d7k(void)
 	/* ---------------------------- Port H ---------------------------- */
 
 	__REG(GPHCON0) =
-		(2 << 0)  | /* GPH0  - MMC_CLK1 */
-		(2 << 4)  | /* GPH1  - MMC_CMD1 */
-		(2 << 8)  | /* GPH2  - MMC_DATA01 */
-		(2 << 12) | /* GPH3  - MMC_DATA11 */
-		(2 << 16) | /* GPH4  - MMC_DATA21 */
-		(2 << 20) | /* GPH5  - MMC_DATA31 */
+		(0 << 0)  | /* GPH0  - NC OUT 0 */
+		(0 << 4)  | /* GPH1  - NC OUT 0 */
+		(0 << 8)  | /* GPH2  - NC OUT 0 */
+		(0 << 12) | /* GPH3  - NC OUT 0 */
+		(0 << 16) | /* GPH4  - NC OUT 0 */
+		(0 << 20) | /* GPH5  - NC OUT 0 */
 		(1 << 24) | /* GPH6  - OUTPUT nWLAN_RESET */
 		(1 << 28)   /* GPH7  - OUTPUT HDQ */
 	;
 	__REG(GPHCON1) =
 		(1 << 0) | /* GPH8  - OUTPUT nWLAN_PD */
-		(1 << 4)   /* GPH9  - OUTPUT (NC) */
+		(0 << 4)   /* GPH9  - OUTPUT (NC) */
 	;
 
-	__REG(GPHPUD) = 0; /* all pullup and pulldown disabled */
+	__REG(GPHPUD) = 0x40555; /* all NC pulldown */
 
 	__REG(GPHDAT) = 0;
 
@@ -530,26 +537,26 @@ void port_init_om_3d7k(void)
 
 	__REG(GPKCON0) =
 		(1 << 0)  | /* GPK0  - OUTPUT  nWLAN_POWERON */
-		(1 << 4)  | /* GPK1  - OUTPUT  (NC) */
+		(0 << 4)  | /* GPK1  - input  (NC) */
 		(1 << 8)  | /* GPK2  - OUTPUT  (nMODEM_ON) */
-		(1 << 12) | /* GPK3  - OUTPUT  (NC) */
-		(1 << 16) | /* GPK4  - OUTPUT  (NC) */
-		(1 << 20) | /* GPK5  - OUTPUT  (NC) */
-		(1 << 24) | /* GPK6  - OUTPUT  (NC) */
-		(1 << 28)   /* GPK7  - OUTPUT  (NC) */
+		(0 << 12) | /* GPK3  - input  (NC) */
+		(0 << 16) | /* GPK4  - input  (NC) */
+		(0 << 20) | /* GPK5  - input  (NC) */
+		(0 << 24) | /* GPK6  - input  (NC) */
+		(0 << 28)   /* GPK7  - input  (NC) */
 	;
 	__REG(GPKCON1) =
-		(1 << 0)  | /* GPK8  - OUTPUT  (NC) */
-		(1 << 4)  | /* GPK9  - OUTPUT  (NC) */
-		(1 << 8)  | /* GPK10 - OUTPUT  (NC) */
-		(1 << 12) | /* GPK11 - OUTPUT  (NC) */
-		(1 << 16) | /* GPK12 - OUTPUT  (NC) */
-		(1 << 20) | /* GPK13 - OUTPUT  (NC) */
-		(1 << 24) | /* GPK14 - OUTPUT  (NC) */
-		(1 << 28)   /* GPK15 - OUTPUT  (NC) */
+		(0 << 0)  | /* GPK8  - input  (NC) */
+		(0 << 4)  | /* GPK9  - input  (NC) */
+		(0 << 8)  | /* GPK10 - input  (NC) */
+		(0 << 12) | /* GPK11 - input  (NC) */
+		(0 << 16) | /* GPK12 - input  (NC) */
+		(0 << 20) | /* GPK13 - input  (NC) */
+		(0 << 24) | /* GPK14 - input  (NC) */
+		(0 << 28)   /* GPK15 - input  (NC) */
 	;
 
-	__REG(GPKPUD) = 0; /* all pullup and pulldown disabled */
+	__REG(GPKPUD) = 0x55555544; /* all input pulldown */
 
 	__REG(GPKDAT) =
 		(1 << 2)  | /* deassert nMODEM_ON */
@@ -559,14 +566,14 @@ void port_init_om_3d7k(void)
 	/* ---------------------------- Port L ---------------------------- */
 
 	__REG(GPLCON0) =
-		(1 << 0)  | /* GPL0  - OUTPUT  (NC) */
-		(1 << 4)  | /* GPL1  - OUTPUT  (NC) */
-		(1 << 8)  | /* GPL2  - OUTPUT  (NC) */
-		(1 << 12) | /* GPL3  - OUTPUT  (NC) */
-		(1 << 16) | /* GPL4  - OUTPUT  (NC) */
-		(1 << 20) | /* GPL5  - OUTPUT  (NC) */
-		(1 << 24) | /* GPL6  - OUTPUT  (NC) */
-		(1 << 28)   /* GPL7  - OUTPUT  (NC) */
+		(0 << 0)  | /* GPL0  - OUTPUT  (NC) */
+		(0 << 4)  | /* GPL1  - OUTPUT  (NC) */
+		(0 << 8)  | /* GPL2  - OUTPUT  (NC) */
+		(0 << 12) | /* GPL3  - OUTPUT  (NC) */
+		(0 << 16) | /* GPL4  - OUTPUT  (NC) */
+		(0 << 20) | /* GPL5  - OUTPUT  (NC) */
+		(0 << 24) | /* GPL6  - OUTPUT  (NC) */
+		(0 << 28)   /* GPL7  - OUTPUT  (NC) */
 	;
 	__REG(GPLCON1) =
 		(1 << 0)  | /* GPL8  - OUTPUT  (NC) */
@@ -578,7 +585,7 @@ void port_init_om_3d7k(void)
 		(1 << 24)   /* GPL14 - OUTPUT  (NC) */
 	;
 
-	__REG(GPLPUD) = 0; /* all pullup and pulldown disabled */
+	__REG(GPLPUD) = 0x5555; /* all pullup and pulldown disabled */
 
 	__REG(GPLDAT) = 0;
 
@@ -629,23 +636,23 @@ void port_init_om_3d7k(void)
 	__REG(GPOCON) =
 		(2 << 0)  | /* GPO0  - XM0CS2 (nNANDCS0) */
 		(1 << 2)  | /* GPO1  - OUTPUT (nMODEM_RESET) */
-		(1 << 4)  | /* GPO2  - OUTPUT  (NC) */
-		(1 << 6)  | /* GPO3  - OUTPUT  (NC) */
-		(1 << 8)  | /* GPO4  - OUTPUT  (NC) */
-		(1 << 10) | /* GPO5  - OUTPUT  (NC) */
-		(1 << 12) | /* GPO6  - OUTPUT  (NC) */
-		(1 << 14) | /* GPO7  - OUTPUT  (NC) */
-		(1 << 16) | /* GPO8  - OUTPUT  (NC) */
-		(1 << 18) | /* GPO9  - OUTPUT  (NC) */
-		(1 << 20) | /* GPO10 - OUTPUT  (NC) */
-		(1 << 22) | /* GPO11 - OUTPUT  (NC) */
-		(1 << 24) | /* GPO12 - OUTPUT  (NC) */
-		(1 << 26) | /* GPO13 - OUTPUT  (NC) */
-		(1 << 28) | /* GPO14 - OUTPUT  (NC) */
-		(1 << 30)   /* GPO15 - OUTPUT  (NC) */
+		(0 << 4)  | /* GPO2  - input  (NC) */
+		(0 << 6)  | /* GPO3  - input  (NC) */
+		(0 << 8)  | /* GPO4  - input  (NC) */
+		(0 << 10) | /* GPO5  - input  (NC) */
+		(0 << 12) | /* GPO6  - input  (NC) */
+		(0 << 14) | /* GPO7  - input  (NC) */
+		(0 << 16) | /* GPO8  - input  (NC) */
+		(0 << 18) | /* GPO9  - input  (NC) */
+		(0 << 20) | /* GPO10 - input  (NC) */
+		(0 << 22) | /* GPO11 - input  (NC) */
+		(0 << 24) | /* GPO12 - input  (NC) */
+		(0 << 26) | /* GPO13 - input  (NC) */
+		(0 << 28) | /* GPO14 - input  (NC) */
+		(0 << 30)   /* GPO15 - input  (NC) */
 	;
 
-	__REG(GPOPUD) = 0; /* all pullup and pulldown disabled */
+	__REG(GPOPUD) = 0x55555550; /* all NC pulldown */
 
 	__REG(GPODAT) = (1 << 15); /* assert CAM_PWRDN */
 
@@ -690,25 +697,25 @@ void port_init_om_3d7k(void)
 	/* ---------------------------- Port P ---------------------------- */
 
 	__REG(GPPCON) =
-		(1 << 0)  | /* GPP0  - OUTPUT  (NC) */
-		(1 << 2)  | /* GPP1  - OUTPUT  (NC) */
-		(1 << 4)  | /* GPP2  - OUTPUT  (NC) */
-		(1 << 6)  | /* GPP3  - OUTPUT  (NC) */
-		(1 << 8)  | /* GPP4  - OUTPUT  (NC) */
-		(1 << 10) | /* GPP5  - OUTPUT  (NC) */
-		(1 << 12) | /* GPP6  - OUTPUT  (NC) */
-		(1 << 14) | /* GPP7  - OUTPUT  (NC) */
-		(1 << 16) | /* GPP8  - OUTPUT  (NC) */
-		(1 << 18) | /* GPP9  - OUTPUT  (NC) */
-		(1 << 20) | /* GPP10 - OUTPUT  (NC) */
-		(1 << 22) | /* GPP11 - OUTPUT  (NC) */
-		(1 << 24) | /* GPP12 - OUTPUT  (NC) */
-		(1 << 26) | /* GPP13 - OUTPUT  (NC) */
-		(1 << 28) | /* GPP14 - OUTPUT  (NC) */
-		(1 << 30)   /* GPP15 - OUTPUT  (NC) */
+		(0 << 0)  | /* GPP0  - input  (NC) */
+		(0 << 2)  | /* GPP1  - input  (NC) */
+		(0 << 4)  | /* GPP2  - input  (NC) */
+		(0 << 6)  | /* GPP3  - input  (NC) */
+		(0 << 8)  | /* GPP4  - input  (NC) */
+		(0 << 10) | /* GPP5  - input  (NC) */
+		(0 << 12) | /* GPP6  - input  (NC) */
+		(0 << 14) | /* GPP7  - input  (NC) */
+		(0 << 16) | /* GPP8  - input  (NC) */
+		(0 << 18) | /* GPP9  - input  (NC) */
+		(0 << 20) | /* GPP10 - input  (NC) */
+		(0 << 22) | /* GPP11 - input  (NC) */
+		(0 << 24) | /* GPP12 - input  (NC) */
+		(0 << 26) | /* GPP13 - input  (NC) */
+		(0 << 28) | /* GPP14 - input  (NC) */
+		(0 << 30)   /* GPP15 - input  (NC) */
 	;
 
-	__REG(GPPPUD) = 0; /* all pullup and pulldown disabled */
+	__REG(GPPPUD) = 0x15555555; /* all pulldown */
 
 	__REG(GPPDAT) = 0; /* assert CAM_PWRDN */
 
@@ -753,25 +760,18 @@ void port_init_om_3d7k(void)
 	/* ---------------------------- Port Q ---------------------------- */
 
 	__REG(GPQCON) =
-		(1 << 0)  | /* GPQ0  - OUTPUT  (NC) */
-		(1 << 2)  | /* GPQ1  - OUTPUT  (NC) */
-		(1 << 4)  | /* GPQ2  - OUTPUT  (NC) */
-		(1 << 6)  | /* GPQ3  - OUTPUT  (NC) */
-		(1 << 8)  | /* GPQ4  - OUTPUT  (NC) */
-		(1 << 10) | /* GPQ5  - OUTPUT  (NC) */
-		(1 << 12) | /* GPQ6  - OUTPUT  (NC) */
-		(1 << 14) | /* GPQ7  - OUTPUT  (NC) */
-		(1 << 16) | /* GPQ8  - OUTPUT  (NC) */
-		(1 << 18) | /* GPQ9  - OUTPUT  (NC) */
-		(1 << 20) | /* GPQ10 - OUTPUT  (NC) */
-		(1 << 22) | /* GPQ11 - OUTPUT  (NC) */
-		(1 << 24) | /* GPQ12 - OUTPUT  (NC) */
-		(1 << 26) | /* GPQ13 - OUTPUT  (NC) */
-		(1 << 28) | /* GPQ14 - OUTPUT  (NC) */
-		(1 << 30)   /* GPQ15 - OUTPUT  (NC) */
+		(0 << 0)  | /* GPQ0  - input  (NC) */
+		(0 << 2)  | /* GPQ1  - input  (NC) */
+		(0 << 4)  | /* GPQ2  - input  (NC) */
+		(0 << 6)  | /* GPQ3  - input  (NC) */
+		(0 << 8)  | /* GPQ4  - input  (NC) */
+		(0 << 10) | /* GPQ5  - input  (NC) */
+		(0 << 12) | /* GPQ6  - input  (NC) */
+		(0 << 14) | /* GPQ7  - input  (NC) */
+		(0 << 16)   /* GPQ8  - input  (NC) */
 	;
 
-	__REG(GPQPUD) = 0; /* all pullup and pulldown disabled */
+	__REG(GPQPUD) = 0x15555; /* all pulldown */
 
 	__REG(GPQDAT) = 0; /* assert CAM_PWRDN */
 
