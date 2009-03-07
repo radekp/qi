@@ -564,7 +564,8 @@ void port_init_om_3d7k(void)
 
 	__REG(GPKDAT) =
 		(1 << 2)  | /* deassert nMODEM_ON */
-		(1 << 0)    /* deassert nWLAN_POWERON */
+		(1 << 0)  |  /* deassert nWLAN_POWERON */
+		(1 << 6)    /* deassert LCM_RESET */
 	;
 
 	/* ---------------------------- Port L ---------------------------- */
