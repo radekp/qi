@@ -307,13 +307,13 @@ void port_init_gta02(void)
 		*UPLLCON = ((88 << 12) + (4 << 4) + 2);
 		/* Magic delay: Page 7-19, seven nops between UPLL and MPLL */
 		asm __volatile__ (
-			"nop\n"\
-			"nop\n"\
-			"nop\n"\
-			"nop\n"\
-			"nop\n"\
-			"nop\n"\
-			"nop\n"\
+			"nop\n"
+			"nop\n"
+			"nop\n"
+			"nop\n"
+			"nop\n"
+			"nop\n"
+			"nop\n"
 		);
 		/* configure MPLL */
 		*MPLLCON = ((42 << 12) + (1 << 4) + 0);
@@ -666,10 +666,10 @@ const struct board_api board_api_gta02 = {
 	.get_ui_keys = get_ui_keys_gta02,
 	.get_ui_debug = get_ui_debug_gta02,
 	.set_ui_indication = set_ui_indication_gta02,
-	.commandline_board = "loglevel=4 " \
-				      "console=tty0 " \
-				      "console=ttySAC2,115200 " \
-				      "init=/sbin/init " \
+	.commandline_board = "loglevel=4 "
+				      "console=tty0 "
+				      "console=ttySAC2,115200 "
+				      "init=/sbin/init "
 				      "ro ",
 	.commandline_board_debug =  " loglevel=8",
 	.noboot = "boot/noboot-GTA02",
@@ -709,7 +709,7 @@ const struct board_api board_api_gta02 = {
 			/* NOTE offset below is replaced at runtime */
 			.offset_blocks512_if_no_partition = 0x80000 / 512,
 			.filesystem = FS_RAW,
-			.commandline_append = " rootfstype=jffs2 " \
+			.commandline_append = " rootfstype=jffs2 "
 					      "root=/dev/mtdblock6 ",
 		},
 	},

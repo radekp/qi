@@ -146,13 +146,13 @@ void port_init_gta01(void)
 	*MPLLCON = ((0x7d << 12) + (0x1 << 4) + 0x1);
 	/* Delay after update of PLL: Page 7-19, seven nops */
 	asm __volatile__ (
-		"nop\n"\
-		"nop\n"\
-		"nop\n"\
-		"nop\n"\
-		"nop\n"\
-		"nop\n"\
-		"nop\n"\
+		"nop\n"
+		"nop\n"
+		"nop\n"
+		"nop\n"
+		"nop\n"
+		"nop\n"
+		"nop\n"
 	);
 
 	
@@ -256,17 +256,17 @@ const struct board_api board_api_gta01 = {
 	.get_ui_keys = get_ui_keys_gta01,
 	.get_ui_debug = get_ui_debug_gta01,
 
-	.commandline_board = "mtdparts=" \
-				"neo1973-nand:" \
-				 "0x00040000(qi)," \
-				 "0x00004000(u-boot_env)," \
-				 "0x00200000(kernel)," \
-				 "0x000a0000(splash)," \
-				 "0x03d1c000(rootfs) " \
-			       "loglevel=4 " \
-			       "console=tty0 "\
-			       "console=ttySAC0,115200 " \
-			       "init=/sbin/init "\
+	.commandline_board = "mtdparts="
+				"neo1973-nand:"
+				 "0x00040000(qi),"
+				 "0x00004000(u-boot_env),"
+				 "0x00200000(kernel),"
+				 "0x000a0000(splash),"
+				 "0x03d1c000(rootfs) "
+			       "loglevel=4 "
+			       "console=tty0 "
+			       "console=ttySAC0,115200 "
+			       "init=/sbin/init "
 			       "ro ",
 	.commandline_board_debug = " loglevel=8 ",
 	.noboot = "boot/noboot-GTA01",
@@ -305,7 +305,7 @@ const struct board_api board_api_gta01 = {
 			.block_read = nand_read_ll,
 			.offset_blocks512_if_no_partition = 0x44000 / 512,
 			.filesystem = FS_RAW,
-			.commandline_append = "rootfstype=jffs2 " \
+			.commandline_append = "rootfstype=jffs2 "
 				       "root=/dev/mtdblock4 ",
 		},
 	},
