@@ -546,7 +546,7 @@ void port_init_om_3d7k(void)
 		(0 << 12) | /* GPK3  - input  (NC) */
 		(0 << 16) | /* GPK4  - input  (NC) */
 		(0 << 20) | /* GPK5  - input  (NC) */
-		(0 << 24) | /* GPK6  - input  (NC) */
+		(1 << 24) | /* GPK6  - output  */
 		(0 << 28)   /* GPK7  - input  (NC) */
 	;
 	__REG(GPKCON1) =
