@@ -70,8 +70,8 @@ echo "$1 is $SECTORS 512-byte blocks"
 if [ -z "$4" ] ; then
 
 
-  FATSECTORS=$(( $SECTORS - $EXT3_TOTAL_SECTORS + $REARSECTORS ))
-  FATMB=$(( $FATSECTORS / 2048 - 16 ))
+  FATSECTORS=$(( $SECTORS - $EXT3_TOTAL_SECTORS - $REARSECTORS ))
+  FATMB=$(( $FATSECTORS / 2048 ))
 
   echo "Creating VFAT section $FATMB MB"
 
