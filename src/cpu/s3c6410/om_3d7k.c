@@ -107,6 +107,39 @@ void port_init_om_3d7k(void)
 {
 	int n;
 
+	__REG(PWR_CFG) =
+		(0 << 17) | /* kill OSCotg clock pad */
+		(1 << 10) | /* RTC alarm wakeup source */
+		(0 << 0)    /* 27MHz osc off */
+	;
+
+	__REG(STOP_MEM_CFG) =
+		(0 << 6) | /* modem */
+		(0 << 5) | /* host IF */
+		(1 << 4) | /* OTG */
+		(1 << 3) | /* HSMMC */
+		(0 << 2) | /* iROM */
+		(0 << 1) | /* IRDA */
+		(1 << 0)   /* NFCON / steppingstone */
+	;
+
+	__REG(NOR_CFG) = 
+		(1 << 31) | /* reserved */
+		(0 << 30) | /* iROM */
+		(0x1fff << 17) | /* reserved */
+		(1 << 16) | /* ETM domain */
+		(1 << 15) | /* S domain */
+		(1 << 14) | /* F domain / LCD */
+		(0 << 13) | /* P domain / 2D, scaler, TV encoder */
+		(0 << 12) | /* I domain / JPEG / Camera */
+		(1 << 11) | /* reserved */
+		(0 << 10) | /* G domain / 3D */
+		(0 << 9)  | /* V domain / MFC */
+		(1 << 8)  | /* reserved */
+		(0x00 << 0) /* reserved */
+	;
+
+
 	__REG(HCLK_GATE) =
 		(0 << 31) | /* 3D unit */
 		(1 << 30) | /* reserved */
@@ -207,6 +240,7 @@ void port_init_om_3d7k(void)
 		(0 << 1) | /* JPEG */
 		(1 << 0)  /* reserved */
 	;
+
 
 	/* ---------------------------- Port A ---------------------------- */
 
