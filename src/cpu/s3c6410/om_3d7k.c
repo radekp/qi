@@ -107,9 +107,16 @@ void port_init_om_3d7k(void)
 {
 	int n;
 
+/*
+ * We leave iROM up for clock and power otherwise resume fails
+ */
+
+	__REG(EINT_MASK) =
+		(0 << 4)  /* PMU interrupt */
+	;
+
 	__REG(PWR_CFG) =
-		(0 << 17) | /* kill OSCotg clock pad */
-		(1 << 10) | /* RTC alarm wakeup source */
+		(1 << 17) | /* kill OSCotg clock pad */
 		(0 << 0)    /* 27MHz osc off */
 	;
 
@@ -118,14 +125,14 @@ void port_init_om_3d7k(void)
 		(0 << 5) | /* host IF */
 		(1 << 4) | /* OTG */
 		(1 << 3) | /* HSMMC */
-		(0 << 2) | /* iROM */
+		(1 << 2) | /* iROM */
 		(0 << 1) | /* IRDA */
 		(1 << 0)   /* NFCON / steppingstone */
 	;
 
 	__REG(NOR_CFG) = 
 		(1 << 31) | /* reserved */
-		(0 << 30) | /* iROM */
+		(1 << 30) | /* iROM */
 		(0x1fff << 17) | /* reserved */
 		(1 << 16) | /* ETM domain */
 		(1 << 15) | /* S domain */
@@ -145,9 +152,9 @@ void port_init_om_3d7k(void)
 		(1 << 30) | /* reserved */
 		(0 << 29) | /* USB host */
 		(0 << 28) | /* "security subsystem" */
-		(1 << 27) | /* SDMA1 */
-		(1 << 26) | /* SDMA0 */
-		(0 << 25) | /* iROM */
+		(0 << 27) | /* SDMA1 */
+		(0 << 26) | /* SDMA0 */
+		(1 << 25) | /* iROM */
 		(1 << 24) | /* DDR 1 */
 		(1 << 23) | /* reserved */
 		(1 << 22) | /* DMC1 */
@@ -167,8 +174,8 @@ void port_init_om_3d7k(void)
 		(0 << 8) | /* 2D */
 		(0 << 7) | /* TV */
 		(1 << 6) | /* reserved */
-		(0 << 5) | /* POST0 */
-		(0 << 4) | /* rotator */
+		(1 << 5) | /* POST0 */
+		(1 << 4) | /* rotator */
 		(1 << 3) | /* LCD controller */
 		(1 << 2) | /* TZICs */
 		(1 << 1) | /* VICs */
@@ -223,12 +230,12 @@ void port_init_om_3d7k(void)
 		(0 << 18) | /* TV encoder */
 		(0 << 17) | /* scaler 27 */
 		(0 << 16) | /* scaler */
-		(0 << 15) | /* LCD 27MHz */
+		(1 << 15) | /* LCD 27MHz */
 		(1 << 14) | /* LCD */
 		(1 << 13) | /* camera and LCD */
-		(0 << 12) | /* POST0 */
-		(0 << 11) | /* AUDIO2 */
-		(0 << 10) | /* POST0 again */
+		(1 << 12) | /* POST0 */
+		(1 << 11) | /* AUDIO2 */
+		(1 << 10) | /* POST0 again */
 		(1 << 9) | /* IIS1 */
 		(1 << 8) | /* IIS0 */
 		(0 << 7) | /* security */
@@ -377,7 +384,7 @@ void port_init_om_3d7k(void)
 		(S0 << 0)  | /* GPD0 */
 		(S0 << 2)  | /* GPD1 */
 		(S0 << 4)  | /* GPD2 */
-		(S0 << 6)  | /* GPD3 */
+		(SIN << 6)  | /* GPD3 */
 		(S0 << 8)    /* GPD4 */
 	;
 
@@ -385,7 +392,7 @@ void port_init_om_3d7k(void)
 		(SNP << 0)  | /* GPD0 */
 		(SNP << 2)  | /* GPD1 */
 		(SNP << 4)  | /* GPD2 */
-		(SNP << 6)  | /* GPD3 */
+		(SPD << 6)  | /* GPD3 */
 		(SNP << 8)    /* GPD4 */
 	;
 
@@ -407,7 +414,7 @@ void port_init_om_3d7k(void)
 		(S0 << 0)  | /* GPE0 */
 		(S0 << 2)  | /* GPE1 */
 		(S0 << 4)  | /* GPE2 */
-		(S0 << 6)  | /* GPE3 */
+		(SIN << 6)  | /* GPE3 */
 		(S0 << 8)    /* GPE4 */
 	;
 
@@ -415,7 +422,7 @@ void port_init_om_3d7k(void)
 		(SNP << 0)  | /* GPE0 */
 		(SNP << 2)  | /* GPE1 */
 		(SNP << 4)  | /* GPE2 */
-		(SNP << 6)  | /* GPE3 */
+		(SPD << 6)  | /* GPE3 */
 		(SNP << 8)    /* GPE4 */
 	;
 
@@ -455,7 +462,7 @@ void port_init_om_3d7k(void)
 	__REG(GPFCONSLP) =
 		(S0 << 0)  | /* GPF0 */
 		(S0 << 2)  | /* GPF1 */
-		(S0 << 4)  | /* GPF2 */
+		(SIN << 4)  | /* GPF2 */
 		(S0 << 6)  | /* GPF3 */
 		(S0 << 8)  | /* GPF4 */
 		(SIN << 10) | /* GPF5 */
@@ -472,14 +479,15 @@ void port_init_om_3d7k(void)
 	;
 
 	__REG(GPFPUDSLP) =
-		(1 << 10) | /* GPF5  - pull down */
-		(1 << 12) | /* GPF6  - pull down */
-		(1 << 14) | /* GPF7  - pull down */
-		(1 << 16) | /* GPF8  - pull down */
-		(1 << 18) | /* GPF9  - pull down */
-		(1 << 20) | /* GPF10 - pull down */
-		(1 << 22) | /* GPF11 - pull down */
-		(1 << 24)   /* GPF12 - pull down */
+		(SPD << 4)  | /* GPF2  - pull down */
+		(SPD << 10) | /* GPF5  - pull down */
+		(SPD << 12) | /* GPF6  - pull down */
+		(SPD << 14) | /* GPF7  - pull down */
+		(SPD << 16) | /* GPF8  - pull down */
+		(SPD << 18) | /* GPF9  - pull down */
+		(SPD << 20) | /* GPF10 - pull down */
+		(SPD << 22) | /* GPF11 - pull down */
+		(SPD << 24)   /* GPF12 - pull down */
 	;
 
 	/* ---------------------------- Port G ---------------------------- */
@@ -499,16 +507,24 @@ void port_init_om_3d7k(void)
 	__REG(GPGDAT) = 0; /* just for determinism */
 
 	__REG(GPGCONSLP) =
-		(S0 << 0)  | /* GPG0  - it's not powered*/
-		(S0 << 2)  | /* GPG1 */
-		(S0 << 4)  | /* GPG2 */
-		(S0 << 6)  | /* GPG3 */
-		(S0 << 8)  | /* GPG4 */
-		(S0 << 10) | /* GPG5 */
-		(S0 << 12)   /* GPG6 */
+		(SIN << 0)  | /* GPG0  - it's not powered*/
+		(SIN << 2)  | /* GPG1 */
+		(SIN << 4)  | /* GPG2 */
+		(SIN << 6)  | /* GPG3 */
+		(SIN << 8)  | /* GPG4 */
+		(SIN << 10) | /* GPG5 */
+		(SIN << 12)   /* GPG6 */
 	;
 
-	__REG(GPGPUDSLP) = 0;
+	__REG(GPGPUDSLP) =
+		(SPD << 0)  | /* GPG0  - it's not powered*/
+		(SPD << 2)  | /* GPG1 */
+		(SPD << 4)  | /* GPG2 */
+		(SPD << 6)  | /* GPG3 */
+		(SPD << 8)  | /* GPG4 */
+		(SPD << 10) | /* GPG5 */
+		(SPD << 12)   /* GPG6 */
+	;
 
 	/* ---------------------------- Port H ---------------------------- */
 
@@ -539,12 +555,12 @@ void port_init_om_3d7k(void)
 		(S0 << 8)  | /* GPH4 */
 		(S0 << 10) | /* GPH5 */
 		(S0 << 12) | /* GPH6 */
-		(SHOLD << 14) | /* GPH7  - INPUT (HDQ) */
+		(SIN << 14) | /* GPH7  - INPUT (HDQ) */
 		(S0 << 16) | /* GPH8 */
 		(SIN << 18)   /* GPH9 */
 	;
 
-	__REG(GPHPUDSLP) = (SPU << (9 * 2));
+	__REG(GPHPUDSLP) = (SPU << (7 * 2)) | (SPU << (9 * 2));
 
 	/* ---------------------------- Port I ---------------------------- */
 
@@ -759,20 +775,20 @@ void port_init_om_3d7k(void)
 	__REG(GPOCON) =
 		(2 << 0)  | /* GPO0  - XM0CS2 (nNANDCS0) */
 		(1 << 2)  | /* GPO1  - OUTPUT (nMODEM_RESET) */
-		(1 << 4)  | /* GPO2  - input  (NC) */
-		(1 << 6)  | /* GPO3  - input  (NC) */
-		(1 << 8)  | /* GPO4  - input  (NC) */
-		(1 << 10) | /* GPO5  - input  (NC) */
-		(1 << 12) | /* GPO6  - input  (NC) */
-		(1 << 14) | /* GPO7  - input  (NC) */
-		(1 << 16) | /* GPO8  - input  (NC) */
-		(1 << 18) | /* GPO9  - input  (NC) */
-		(1 << 20) | /* GPO10 - input  (NC) */
-		(1 << 22) | /* GPO11 - input  (NC) */
-		(1 << 24) | /* GPO12 - input  (NC) */
-		(1 << 26) | /* GPO13 - input  (NC) */
-		(1 << 28) | /* GPO14 - input  (NC) */
-		(1 << 30)   /* GPO15 - input  (NC) */
+		(1 << 4)  | /* GPO2  - OUTPUT  (NC) */
+		(1 << 6)  | /* GPO3  - OUTPUT  (NC) */
+		(1 << 8)  | /* GPO4  - OUTPUT  (NC) */
+		(1 << 10) | /* GPO5  - OUTPUT  (NC) */
+		(1 << 12) | /* GPO6  - OUTPUT  (NC) */
+		(1 << 14) | /* GPO7  - OUTPUT  (NC) */
+		(1 << 16) | /* GPO8  - OUTPUT  (NC) */
+		(1 << 18) | /* GPO9  - OUTPUT  (NC) */
+		(1 << 20) | /* GPO10 - OUTPUT  (NC) */
+		(1 << 22) | /* GPO11 - OUTPUT  (NC) */
+		(1 << 24) | /* GPO12 - OUTPUT  (NC) */
+		(1 << 26) | /* GPO13 - OUTPUT  (NC) */
+		(1 << 28) | /* GPO14 - OUTPUT  (NC) */
+		(1 << 30)   /* GPO15 - OUTPUT  (NC) */
 	;
 
 	__REG(GPOPUD) = 0; /* no pulling */
@@ -819,8 +835,7 @@ void port_init_om_3d7k(void)
 		(1 << 22) | /* GPP11 - input  (NC) */
 		(1 << 24) | /* GPP12 - input  (NC) */
 		(1 << 26) | /* GPP13 - input  (NC) */
-		(1 << 28) | /* GPP14 - input  (NC) */
-		(1 << 30)   /* GPP15 - input  (NC) */
+		(1 << 28)   /* GPP14 - input  (NC) */
 	;
 
 	__REG(GPPPUD) = 0; /* no pull */
@@ -842,8 +857,7 @@ void port_init_om_3d7k(void)
 		(S0 << 22) | /* GPP11 - OUTPUT 0 */
 		(S0 << 24) | /* GPP12 - OUTPUT 0 */
 		(S0 << 26) | /* GPP13 - OUTPUT 0 */
-		(S0 << 28) | /* GPP14 - OUTPUT 0 */
-		(S0 << 30)   /* GPP15 - OUTPUT 0 */
+		(S0 << 28)   /* GPP14 - OUTPUT 0 */
 	;
 
 	__REG(GPPPUDSLP) = 0;
@@ -851,20 +865,20 @@ void port_init_om_3d7k(void)
 	/* ---------------------------- Port Q ---------------------------- */
 
 	__REG(GPQCON) =
-		(1 << 0)  | /* GPQ0  - input  (NC) */
-		(1 << 2)  | /* GPQ1  - input  (NC) */
-		(1 << 4)  | /* GPQ2  - input  (NC) */
-		(1 << 6)  | /* GPQ3  - input  (NC) */
-		(1 << 8)  | /* GPQ4  - input  (NC) */
-		(1 << 10) | /* GPQ5  - input  (NC) */
-		(1 << 12) | /* GPQ6  - input  (NC) */
-		(1 << 14) | /* GPQ7  - input  (NC) */
-		(1 << 16)   /* GPQ8  - input  (NC) */
+		(1 << 0)  | /* GPQ0  - OUTPUT  (NC) */
+		(1 << 2)  | /* GPQ1  - OUTPUT  (NC) */
+		(1 << 4)  | /* GPQ2  - OUTPUT  (NC) */
+		(1 << 6)  | /* GPQ3  - OUTPUT  (NC) */
+		(1 << 8)  | /* GPQ4  - OUTPUT  (NC) */
+		(1 << 10) | /* GPQ5  - OUTPUT  (NC) */
+		(1 << 12) | /* GPQ6  - OUTPUT  (NC) */
+		(1 << 14) | /* GPQ7  - OUTPUT  (NC) */
+		(1 << 16)   /* GPQ8  - OUTPUT  (NC) */
 	;
 
-	__REG(GPQPUD) = 0; /* all pulldown */
+	__REG(GPQPUD) = 0; /* no pull */
 
-	__REG(GPQDAT) = 0; /* assert CAM_PWRDN */
+	__REG(GPQDAT) = 0;
 
 	__REG(GPQCONSLP) =
 		(S0 << 0)  | /* GPQ0  - OUTPUT 0 */
@@ -883,7 +897,7 @@ void port_init_om_3d7k(void)
 	/* LCD Controller enable */
 
 	__REG(0x7410800c) = 0;
-	__REG(0x7f0081a0) = 0xbfc11501;
+	__REG(0x7f0081a0) = 0xbfc115c1;
 
 	/*
 	 * We have to talk to the PMU a little bit
