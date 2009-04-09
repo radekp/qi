@@ -119,7 +119,6 @@ int nand_read_ll(unsigned char *buf, unsigned long start_block512,
 								  int blocks512)
 {
 	int i, j;
-	int bad_count = 0;
 
 	/* chip Enable */
 	nand_select();
@@ -129,11 +128,10 @@ int nand_read_ll(unsigned char *buf, unsigned long start_block512,
 		;
 
 	while (blocks512 > 0) {
-		if (s3c2442_nand_is_bad_block(start_block512) ||
-				s3c2442_nand_is_bad_block(start_block512 + 4)) {
+		if (s3c2442_nand_is_bad_block(start_block512)) {
 			start_block512 += 4;
-			blocks512 += 4;
-			if (bad_count++ == 4)
+			if (start_block512 >> 2 > BAD_BLOCK_OFFSET)
+				/* end of NAND */
 				return -1;
 			continue;
 		}
