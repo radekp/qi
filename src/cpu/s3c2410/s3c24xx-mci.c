@@ -70,6 +70,7 @@ static u8 mmc_buf[MMC_BLOCK_SIZE];
 static mmc_csd_t mmc_csd;
 static int mmc_ready = 0;
 static int wide = 0;
+static int is_sdhc = 0;
 
 
 #define CMD_F_RESP	0x01
@@ -162,7 +163,10 @@ static int mmc_block_read(u8 *dst, u32 src, u32 len)
 	SDIDCON = dcon;
 
 	/* send read command */
-	resp = mmc_cmd(MMC_CMD_READ_BLOCK, src, CMD_F_RESP);
+	if (!is_sdhc)
+		resp = mmc_cmd(MMC_CMD_READ_BLOCK, src, CMD_F_RESP);
+	else
+		resp = mmc_cmd(MMC_CMD_READ_BLOCK, src / MMC_BLOCK_SIZE, CMD_F_RESP);
 
 	while (len > 0) {
 		u32 sdidsta = SDIDSTA;
@@ -449,6 +453,7 @@ int s3c24xx_mmc_init(int verbose)
  	int retries, rc = -2;
 	int is_sd = 0;
 	u32 *resp;
+	u32 hcs = 0;
 
 	SDICON = S3C2410_SDICON_FIFORESET | S3C2410_SDICON_CLOCKTYPE;
 	SDIBSIZE = 512;
@@ -474,11 +479,20 @@ int s3c24xx_mmc_init(int verbose)
 	retries = 10;
 	resp = mmc_cmd(MMC_CMD_RESET, 0, 0);
 
+	resp = mmc_cmd(8, 0x000001aa, CMD_F_RESP);
+	if ((resp[0] & 0xff) == 0xaa) {
+		puts("The card is either SD2.0 or SDHC\n");
+		hcs = 0x40000000;
+	}
+ 
 	puts("trying to detect SD Card...\n");
 	while (retries--) {
 		udelay(1000000);
 		resp = mmc_cmd(55, 0x00000000, CMD_F_RESP);
-		resp = mmc_cmd(41, 0x00300000, CMD_F_RESP);
+		resp = mmc_cmd(41, hcs | 0x00300000, CMD_F_RESP);
+
+		if (resp[0] & (1 << 30))
+			is_sdhc = 1;
 
 		if (resp[0] & (1 << 31)) {
 			is_sd = 1;
@@ -490,7 +504,7 @@ int s3c24xx_mmc_init(int verbose)
 		return -3;
 
 	/* try to get card id */
-	resp = mmc_cmd(MMC_CMD_ALL_SEND_CID, 0, CMD_F_RESP|CMD_F_RESP_LONG);
+	resp = mmc_cmd(MMC_CMD_ALL_SEND_CID, hcs, CMD_F_RESP|CMD_F_RESP_LONG);
 	if (resp) {
 		if (!is_sd) {
 			/* TODO configure mmc driver depending on card
