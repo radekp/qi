@@ -558,6 +558,22 @@ void post_serial_init_gta02(void)
 		puts("BATTERY CONDITION LOW\n");
 }
 
+/*
+ * Increment a hexadecimal digit represented by a char and
+ * return 1 if an overflow occured.
+ */
+static char inc_hexchar(char * p)
+{
+	if (*p == '9')
+		*p = 'A';
+	else if (*p != 'F')
+		(*p)++;
+	else {
+		*p = '0';
+		return 1;
+	}
+	return 0;
+}
 
 /*
  * create and append device-specific Linux kernel commandline
@@ -569,6 +585,7 @@ void post_serial_init_gta02(void)
 char * append_device_specific_cmdline_gta02(char * cmdline)
 {
 	int n = 0;
+	int i;
 	int len;
 	static char mac[64];
 	struct kernel_source const * real_kernel = this_kernel;
@@ -632,10 +649,17 @@ char * append_device_specific_cmdline_gta02(char * cmdline)
 
 	mac[len] = '\0';
 
-	cmdline += strlen(strcpy(cmdline, " g_ether.host_addr="));
+	cmdline += strlen(strcpy(cmdline, " g_ether.dev_addr="));
 	cmdline += strlen(strcpy(cmdline, &mac[2]));
 
-	cmdline += strlen(strcpy(cmdline, " g_ether.dev_addr="));
+	for (i = 0; i != 10; i++) {
+		if ((i % 3) == 2)
+			continue;
+		if (!inc_hexchar(mac + 18 - i))
+			break; /* Carry not needed. */
+	}
+
+	cmdline += strlen(strcpy(cmdline, " g_ether.host_addr="));
 	cmdline += strlen(strcpy(cmdline, &mac[2]));
 	*cmdline++ = ' ' ;
 bail:
