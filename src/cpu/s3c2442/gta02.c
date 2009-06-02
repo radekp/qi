@@ -103,7 +103,7 @@ const struct pcf50633_init pcf50633_init[] = {
 	{ PCF50633_REG_MBCC3,		0x19 },	/* 25/255 == 98mA pre-charge */
 	{ PCF50633_REG_MBCC4,		0xff }, /* 255/255 == 1A adapter fast */
 	{ PCF50633_REG_MBCC5,		0xff },	/* 255/255 == 1A usb fast */
-	{ PCF50633_REG_MBCC6,		0x00 }, /* cutoff current 1/32 * Ichg */
+	{ PCF50633_REG_MBCC6,		0x01 }, /* cutoff current 2/32 * Ichg */
 	{ PCF50633_REG_MBCC7,		0x00 },	/* 1.6A max bat curr, USB 100mA */
 	{ PCF50633_REG_MBCC8,		0x00 },
 	{ PCF50633_REG_MBCC1,		0xff }, /* chgena */
