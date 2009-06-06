@@ -263,7 +263,6 @@ const struct board_api board_api_gta01 = {
 				 "0x00200000(kernel),"
 				 "0x000a0000(splash),"
 				 "0x03d1c000(rootfs) "
-			       "loglevel=4 "
 			       "console=tty0 "
 			       "console=ttySAC0,115200 "
 			       "init=/sbin/init "

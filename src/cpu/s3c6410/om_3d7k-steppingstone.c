@@ -88,7 +88,6 @@ const struct board_api board_api_om_3d7k = {
 	.commandline_board = "console=tty0 "
 			     "console=ttySAC3,115200 "
 			     "init=/sbin/init "
-			     "loglevel=8 "
 			     "rootdelay=1 no_console_suspend "
 			     "ro ",
 	.commandline_board_debug =  " loglevel=8",
