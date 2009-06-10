@@ -690,7 +690,8 @@ const struct board_api board_api_gta02 = {
 	.get_ui_keys = get_ui_keys_gta02,
 	.get_ui_debug = get_ui_debug_gta02,
 	.set_ui_indication = set_ui_indication_gta02,
-	.commandline_board = "console=tty0 "
+	.commandline_board = "loglevel=4 "
+				      "console=tty0 "
 				      "console=ttySAC2,115200 "
 				      "init=/sbin/init "
 				      "ro ",
