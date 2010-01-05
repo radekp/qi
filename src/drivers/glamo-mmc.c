@@ -184,8 +184,8 @@ static int mmc_cmd(int opcode, int arg, int flags,
 	}
 
 	/* if we can't do it, reject as busy */
-	if (!glamo_reg_read(GLAMO_REGOFS_MMC + GLAMO_REG_MMC_RB_STAT1) &
-	     GLAMO_STAT1_MMC_IDLE)
+	if (!(glamo_reg_read(GLAMO_REGOFS_MMC + GLAMO_REG_MMC_RB_STAT1) &
+	     GLAMO_STAT1_MMC_IDLE))
 		return -1;
 
 	/* create an array in wire order for CRC computation */
