@@ -34,6 +34,10 @@ typedef unsigned int uint32_t;
 typedef unsigned short uint16_t;
 typedef unsigned char uint8_t;
 
+typedef unsigned long ulong;
+typedef unsigned int uint;
+typedef unsigned short ushort;
+
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
 enum filesystem {

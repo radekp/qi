@@ -359,7 +359,7 @@ u32 s3c24xx_mmc_bread(int dev_num, u32 blknr, u32 blkcnt, void *dst)
 
 /* MMC_DEFAULT_RCA should probably be just 1, but this may break other code
    that expects it to be shifted. */
-static u_int16_t rca = MMC_DEFAULT_RCA >> 16;
+static uint16_t rca = MMC_DEFAULT_RCA >> 16;
 
 #if 0
 static u32 mmc_size(const struct mmc_csd *csd)

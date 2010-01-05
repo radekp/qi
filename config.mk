@@ -2,13 +2,6 @@
 # Include the make variables (CC, etc...)
 #
 
-CROSS_PATH=/usr/local/openmoko/arm
-CROSS_COMPILE=${CROSS_PATH}/bin/arm-angstrom-linux-gnueabi-
-
-####
-COMPILER_LIB_PATH_PRE=${CROSS_PATH}/lib/gcc/arm-angstrom-linux-gnueabi
-COMPILER_LIB_PATH=${COMPILER_LIB_PATH_PRE}/`ls ${COMPILER_LIB_PATH_PRE}`
-
 AS	= $(CROSS_COMPILE)as
 LD	= $(CROSS_COMPILE)ld
 CC	= $(CROSS_COMPILE)gcc

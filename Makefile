@@ -42,7 +42,7 @@ C_OBJS	= $(patsubst %.c,%.o, $(C_SRCS))
 
 SRCS	= ${S_SRCS} ${C_SRCS}
 OBJS	= ${S_OBJS} ${C_OBJS}
-LIBS	= -L${COMPILER_LIB_PATH} -lgcc
+LIBS	= `$(CC) -print-libgcc-file-name`
 
 ifeq ($(CPU),s3c2410)
   # GTA01 U-Boot IDs
