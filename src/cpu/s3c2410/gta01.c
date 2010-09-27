@@ -305,8 +305,9 @@ const struct board_api board_api_gta01 = {
 			.block_read = nand_read_ll,
 			.offset_blocks512_if_no_partition = 0x44000 / 512,
 			.filesystem = FS_RAW,
-			.commandline_append = "rootfstype=jffs2 "
-				       "root=/dev/mtdblock4 ",
+			.commandline_append = " rootfstype=ubifs " \
+				       " ubi.mtd=4,512 " \
+				       " root=ubi0:om-gta01-rootfs ",
 		},
 	},
 };

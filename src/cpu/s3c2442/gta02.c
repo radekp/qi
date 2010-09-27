@@ -733,8 +733,9 @@ const struct board_api board_api_gta02 = {
 			/* NOTE offset below is replaced at runtime */
 			.offset_blocks512_if_no_partition = 0x80000 / 512,
 			.filesystem = FS_RAW,
-			.commandline_append = " rootfstype=jffs2 "
-					      "root=/dev/mtdblock6 ",
+			.commandline_append = " rootfstype=ubifs " \
+			                      " ubi.mtd=6,2048 " \
+			                      " root=ubi0:om-gta02-rootfs ",
 		},
 	},
 };
