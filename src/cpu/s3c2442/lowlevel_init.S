@@ -65,10 +65,10 @@
 
 /* BANK1CON: Smedia Glamo 3362 (on GTA02) */
 #define B1_Tacs		 	0x0	/*  0clk */
-#define B1_Tcos		 	0x3	/*  4clk */
+#define B1_Tcos		 	0x2	/*  2clk */
 #define B1_Tacc		 	0x3	/*  4clk */
-#define B1_Tcoh		 	0x3	/*  4clk */
-#define B1_Tah		 		0x0	/*  0clk */
+#define B1_Tcoh		 	0x2	/*  2clk */
+#define B1_Tah		 	0x0	/*  0clk */
 #define B1_Tacp		 	0x0
 #define B1_PMC		 	0x0
 
